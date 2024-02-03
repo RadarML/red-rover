@@ -1,6 +1,7 @@
 """DCA1000EVM API Defines."""
 
 from enum import Enum
+from beartype.typing import cast
 
 
 class Command(Enum):
@@ -66,9 +67,30 @@ class DataCapture(Enum):
 FPGA_CONFIG_DEFAULT_TIMER = 30
 """LVDS timeout is always 30 (units not documented / unknown)."""
 
+MAX_BYTES_PER_PACKET = 1470
+"""Maximum number of bytes in a single FPGA data packet."""
+
+FPGA_CLK_CONVERSION_FACTOR = 1000
+"""Record packet delay clock conversion factor."""
+
+FPGA_CLK_PERIOD_IN_NANO_SEC = 8
+"""Record packet delay clock period in ns."""
+
 
 class Status:
     """Status codes."""
 
     SUCCESS = 0
     FAILURE = 1
+
+
+def ipv4_to_int(ipv4: str) -> tuple[int, int, int, int]:
+    """Parse ipv4 string as a tuple of 4 integers."""
+    addr = tuple(reversed(list(int(x) for x in ipv4.split('.'))))
+    return cast(tuple[int, int, int, int], addr)
+
+
+def mac_to_int(mac: str) -> tuple[int, int, int, int, int, int]:
+    """Parse MAC address string as a tuple of 6 integers."""
+    addr = tuple(reversed(list(int(x, 16) for x in mac.split(':'))))
+    return cast(tuple[int, int, int, int, int, int], addr)

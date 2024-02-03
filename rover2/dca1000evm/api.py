@@ -12,7 +12,7 @@ import socket
 import logging
 import struct
 
-from beartype.typing import NamedTuple
+from beartype.typing import NamedTuple, Optional
 import dca_types as types
 
 
@@ -97,25 +97,23 @@ class DCA1000EVM:
 
     def __init__(
         self, sys_ip: str = "192.168.33.30", fpga_ip: str = "192.168.33.180",
-        data_port: int = 4098, config_port: int = 4096, timeout: float = 1.0,
+        record_port: int = 4098, config_port: int = 4096, timeout: float = 1.0,
         name: str = "DCA1000EVM"
     ) -> None:
         self.log = logging.getLogger(name=name)
 
-        self.config_addr = (fpga_ip, config_port)
-        self.response_addr = (sys_ip, config_port)
-        self.data_addr = (sys_ip, data_port)
-        self.config_socket = self._create_socket(self.response_addr, timeout)
-        self.data_socket = self._create_socket(self.data_addr, timeout)
+        self.sys_ip = sys_ip
+        self.fpga_ip = fpga_ip
+        self.config_port = config_port
+        self.record_port = record_port
+
+        self.config_socket = self._create_socket((sys_ip, config_port), timeout)
+        self.data_socket = self._create_socket((sys_ip, record_port), timeout)
 
     def system_aliveness(self) -> None:
         """Simple ping to query system status."""
         cmd = CommandRequest(types.Command.SYSTEM_ALIVENESS, bytes())
-        resp = self.config_request(cmd)
-        if resp.status == types.Status.SUCCESS:
-            self.log.info("FPGA system connectivity verified.")
-        else:
-            self.log.error("FPGA returned failure status.")
+        self.config_request(cmd, desc="Verify FPGA connectivity")
 
     # untested
     def reset_ar_device(self) -> CommandRequest:
@@ -126,42 +124,68 @@ class DCA1000EVM:
         self, log: types.Log, lvds: types.LVDS, transfer: types.DataTransfer,
         capture: types.DataCapture, format: types.DataFormat
     ) -> None:
-        """Configure FPGA."""
+        """Configure FPGA.
+        
+        NOTE: This seems to cause the FPGA to ignore requests for a short time
+        after. Sending `system_aliveness` pings until it responds seems to be
+        the best way to check when it's ready again.
+        """
         self.log.info("Configuring FPGA: {}, {}, {}, {}, {}".format(
             log, lvds, transfer, capture, format))
         cfg = struct.pack(
             "HHHHHH", log.value, lvds.value, transfer.value,
             capture.value, format.value, types.FPGA_CONFIG_DEFAULT_TIMER)
         cmd = CommandRequest(types.Command.CONFIG_FPGA, cfg)
-        resp = self.config_request(cmd)
-        if resp.status == types.Status.SUCCESS:
-            self.log.info("Configured FPGA.")
-        else:
-            self.log.error("FPGA config returned failure status.")
+        self.config_request(cmd, desc="Configure FPGA")
 
-    # untested
-    def config_eeprom(self) -> None:
-        pass
+        self.log.info("Testing/waiting for FPGA to respond to new requests.")
+        for _ in range(30):
+            try:
+                return self.system_aliveness()
+            except TimeoutError:
+                pass
+        else:
+            self.log.error(
+                "FPGA stopped responding to requests after configuring.")
+
+    def config_eeprom(
+        self, sys_ip: str = "192.168.33.30", fpga_ip: str = "192.168.33.180",
+        fpga_mac: str = "12:34:56:78:90:12",
+        config_port: int = 4096, record_port: int = 4098
+    ) -> None:
+        """Configure EEPROM; contains IP, MAC, port information.
+        
+        NOTE: Use with extreme caution. This should never be used in normal
+        operation. May require delay before use depending on the previous cmd.
+        """
+        cfg = struct.pack(
+            "B" * (4 + 4 + 6) + "HH",
+            *types.ipv4_to_int(sys_ip), *types.ipv4_to_int(fpga_ip),
+            *types.mac_to_int(fpga_mac), config_port, record_port)
+
+        cmd = CommandRequest(types.Command.CONFIG_EEPROM, cfg)
+        self.config_request(cmd, desc="Configure EEPROM")
 
     # untested
     def start_record(self) -> None:
-        pass
+        """Start recording data."""
+        cmd = CommandRequest(types.Command.START_RECORD, bytes())
+        self.config_request(cmd, desc="Start recording")
 
     # untested
     def stop_record(self) -> None:
-        pass
+        """Stop recording data."""
+        cmd = CommandRequest(types.Command.STOP_RECORD, bytes())
+        self.config_request(cmd, desc="Stop recording")
 
-    # untested
-    def stop_record_async(self) -> None:
-        pass
-
-    def read_fpga_version(self) -> None:
+    def read_fpga_version(self) -> tuple[int, int, bool]:
         """Get current FPGA version."""
         cmd = CommandRequest(types.Command.READ_FPGA_VERSION, bytes())
         resp = self.config_request(cmd)
         if resp.status < 0:
             self.log.error(
                 "Unable to read FPGA version: {}".format(resp.status))
+            return (0, 0, False)
         else:
             major = resp.status & 0x7F
             minor = 0x7f & (resp.status >> 7)
@@ -169,20 +193,35 @@ class DCA1000EVM:
             self.log.info(
                 "FPGA Version: {}.{} [mode={}]".format(
                     major, minor, "playback" if playback else "record"))
+            return (major, minor, playback != 0)
 
-    # untested
-    def config_data_packet(self) -> None:
-        pass
+    def config_record(self, delay: float = 25.0) -> None:
+        """Configure data packets (with a packet delay in us)."""
+        converted = int(
+            delay * types.FPGA_CLK_CONVERSION_FACTOR
+            / types.FPGA_CLK_PERIOD_IN_NANO_SEC)
+        cfg = struct.pack("HHH", types.MAX_BYTES_PER_PACKET, converted, 0)
+        cmd = CommandRequest(types.Command.CONFIG_RECORD, cfg)
+        self.config_request(cmd, desc="Configure recording")
 
-    def config_request(self, cmd: CommandRequest) -> CommandResponse:
+    def config_request(
+        self, cmd: CommandRequest, desc: Optional[str] = None
+    ) -> CommandResponse:
         """Send config command."""
         payload = cmd.to_bytes()
-        self.config_socket.sendto(payload, self.config_addr)
+        self.config_socket.sendto(payload, (self.fpga_ip, self.config_port))
         self.log.debug("Sent: {}".format(cmd))
 
         raw, _ = self.config_socket.recvfrom(self._MAX_PACKET_SIZE)
         response = CommandResponse.from_bytes(raw)
         self.log.debug("Received: {}".format(response))
+
+        if desc is not None:
+            if response.status == 0:
+                self.log.info("Success: {}".format(desc))
+            else:
+                self.log.error("Failure: {} (status={})".format(
+                    desc, response.status))
         return response
             
 
@@ -194,3 +233,4 @@ dca.config_fpga(
     log=types.Log.RAW_MODE, lvds=types.LVDS.FOUR_LANE,
     transfer=types.DataTransfer.CAPTURE, format=types.DataFormat.BIT16,
     capture=types.DataCapture.ETH_STREAM)
+dca.config_record(delay=25)
