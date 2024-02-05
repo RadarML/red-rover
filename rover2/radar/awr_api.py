@@ -89,15 +89,15 @@ class AWR1843:
         self, subframe: int = -1, enable_header: bool = True,
         data_format: LVDSFormat = LVDSFormat.ADC, sw_enabled: bool = False
     ) -> None:
-        """Configure LVDS stream (to the DCA1000EVM).
+        """Configure LVDS stream (to the DCA1000EVM); `LvdsStreamCfg`.
 
         Parameters
         ----------
-        subFrameIdx: subframe to apply to. If `-1`, applies to all subframes.
-        enableHeader: HSI (High speed interface; refers to LVDS) Header
+        subframe: subframe to apply to. If `-1`, applies to all subframes.
+        enable_header: HSI (High speed interface; refers to LVDS) Header
             enabled/disabled flag; only applies to HW streaming. Must be
             enabled for the DCA1000EVM [4].
-        dataFmt: LVDS format; we assume `LVDSFormat.ADC`.
+        data_format: LVDS format; we assume `LVDSFormat.ADC`.
         sw_enabled: Use software (SW) instead of hardware streaming; causes
             chirps to be streamed during the inter-frame time after processing.
             We assume HW streaming.
