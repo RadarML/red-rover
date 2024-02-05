@@ -17,8 +17,10 @@
     - Make sure to install the matlab runtime engine noted in step 4.
     - You may need to install the [mmWave SDK](https://www.ti.com/tool/MMWAVE-SDK).
     - Make sure that all 6 COM ports are detected as shown in Step 6 / Figure 4. If the `XDS110 Class` ports are not detected, see the note about installing [EMUPACK](http://processors.wiki.ti.com/index.php/XDS_Emulation_Software_Package).
+    - *CMU Internal*: ask Tianshu for a pre-downloaded collection of all required installation files.
     - **NOTE**: you may need to disable windows firewall, which might block the ports used by the radar by default.
     - **NOTE**: keep a copy of the mmWave installer. If the radar computer loses power while mmWave studio is running, it may become corrupted in a subtle way and require reinstallation (the symptoms we observed were a "null reference" error when trying to start data collection (but not initialize the radar/capture card), and mmWave studio failing to read the FPGA version).
+    - **NOTE**: both the DCA1000EVM and the AWR1843Boost need to be fully plugged in during the installation process; otherwise, mmWave Studio will refuse to load full until started with both connected.
 
 3. Clone this repository and install dependencies.
     ```sh

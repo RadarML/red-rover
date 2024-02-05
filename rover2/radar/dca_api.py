@@ -1,4 +1,4 @@
-"""DCA1000EVM API."""
+"""DCA1000EVM API [1,2]."""
 
 import socket
 import logging
@@ -13,8 +13,18 @@ from .dca_writer import RadarDataWriter
 class DCA1000EVM:
     """DCA1000EVM Interface.
     
-    Documented by [1]; based on a UDP protocol (Sec 5, [1]). Included C++
-    source code exerpts from the mmWave API are used as a secondary reference.
+    Documented by [1]; based on a (little-endian) UDP protocol (Sec 5).
+    Included C++ source code exerpts from the mmWave API are used as a
+    secondary reference [2].
+
+    Parameters
+    ----------
+    sys_ip: IP of this computer associated with the desired ethernet interface.
+    fpga_ip: Static IP of the DCA1000EVM FPGA.
+    data_port: Port used for recording data.
+    config_port: Port used for configuration.
+    timeout: Socket read timeout.
+    name: Human-readable name.
 
     Raises
     ------
@@ -53,7 +63,7 @@ class DCA1000EVM:
 
     def __init__(
         self, sys_ip: str = "192.168.33.30", fpga_ip: str = "192.168.33.180",
-        record_port: int = 4098, config_port: int = 4096, timeout: float = 1.0,
+        data_port: int = 4098, config_port: int = 4096, timeout: float = 1.0,
         name: str = "DCA1000EVM"
     ) -> None:
         self.log = logging.getLogger(name=name)
@@ -61,19 +71,17 @@ class DCA1000EVM:
         self.sys_ip = sys_ip
         self.fpga_ip = fpga_ip
         self.config_port = config_port
-        self.record_port = record_port
+        self.data_port = data_port
         self.recording = False
         self.thread = None
 
         self.config_socket = self._create_socket(
             (sys_ip, config_port), timeout)
         self.data_socket = self._create_socket(
-            (sys_ip, record_port), timeout)
+            (sys_ip, data_port), timeout)
 
     def setup(
-        self, delay=25, lvds=types.LVDS.TWO_LANE, log=types.Log.RAW_MODE,
-        transfer=types.DataTransfer.CAPTURE, format=types.DataFormat.BIT16,
-        capture=types.DataCapture.ETH_STREAM
+        self, delay=25, lvds=types.LVDS.TWO_LANE
     ) -> None:
         """Configure DCA1000EVM capture card.
         
@@ -81,28 +89,25 @@ class DCA1000EVM:
         ----------
         delay: packet delay in microseconds.
         lvds: `FOUR_LANE` or `TWO_LANE`; select based on radar.
-        log: raw or data separated mode; we assume `RAW_MODE`.
-        transfer: capture or playback; we assume `CAPTURE`.
-        format: ADC bit depth; we assume `BIT16`.
-        capture: data capture mode; we assume `ETH_STREAM`.
         """
         self.system_aliveness()
         self.read_fpga_version()
         self.configure_record(delay=delay)
         self.configure_fpga(
-            log=log, lvds=lvds, transfer=transfer,
-            format=format, capture=capture)
+            log=types.Log.RAW_MODE, lvds=lvds,
+            transfer=types.DataTransfer.CAPTURE,
+            format=types.DataFormat.BIT16,
+            capture=types.DataCapture.ETH_STREAM)
 
     def start(self, writer: RadarDataWriter) -> None:
         """Start data collection."""
         assert self.recording is False
-
-        self.reset_ar_device()
-        self.start_record()
-
         self.recording = True
         self.thread = threading.Thread(target=self._loop, args=(writer,))
         self.thread.start()
+
+        self.reset_ar_device()
+        self.start_record()
 
     def stop(self) -> None:
         """Stop data collection."""
@@ -133,14 +138,23 @@ class DCA1000EVM:
         self._config_request(cmd, "Reset AR Device")
 
     def configure_fpga(
-        self, lvds: types.LVDS, log: types.Log, transfer: types.DataTransfer,
-        capture: types.DataCapture, format: types.DataFormat
+        self, lvds=types.LVDS.TWO_LANE, log=types.Log.RAW_MODE,
+        transfer=types.DataTransfer.CAPTURE, format=types.DataFormat.BIT16,
+        capture=types.DataCapture.ETH_STREAM
     ) -> None:
         """Configure FPGA.
         
         NOTE: This seems to cause the FPGA to ignore requests for a short time
         after. Sending `system_aliveness` pings until it responds seems to be
         the best way to check when it's ready again.
+
+        Parameters
+        ----------
+        lvds: `FOUR_LANE` or `TWO_LANE`; select based on radar.
+        log: raw or data separated mode; we assume `RAW_MODE`.
+        transfer: capture or playback; we assume `CAPTURE`.
+        format: ADC bit depth; we assume `BIT16`.
+        capture: data capture mode; we assume `ETH_STREAM`.
         """
         self.log.info("Configuring FPGA: {}, {}, {}, {}, {}".format(
             log, lvds, transfer, capture, format))
@@ -164,7 +178,7 @@ class DCA1000EVM:
     def configure_eeprom(
         self, sys_ip: str = "192.168.33.30", fpga_ip: str = "192.168.33.180",
         fpga_mac: str = "12:34:56:78:90:12",
-        config_port: int = 4096, record_port: int = 4098
+        config_port: int = 4096, data_port: int = 4098
     ) -> None:
         """Configure EEPROM; contains IP, MAC, port information.
         
@@ -178,7 +192,7 @@ class DCA1000EVM:
         cfg = struct.pack(
             "B" * (4 + 4 + 6) + "HH",
             *types.ipv4_to_int(sys_ip), *types.ipv4_to_int(fpga_ip),
-            *types.mac_to_int(fpga_mac), config_port, record_port)
+            *types.mac_to_int(fpga_mac), config_port, data_port)
 
         cmd = types.Request(types.Command.CONFIG_EEPROM, cfg)
         self._config_request(cmd, desc="Configure EEPROM")

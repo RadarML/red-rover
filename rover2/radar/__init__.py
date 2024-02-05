@@ -8,8 +8,10 @@ r"""AWR1843Boost Radar & DCA1000EVM Capture Card API.
 References
 ----------
 [1] DCA1000EVM Data Capture Card User's Guide (Rev A)
-[2] SourceCode folder in `mmWaveStudio/ReferenceCode/DCA1000`; some exerpts
-    are provided in this repository.
+[2] `ReferenceCode/DCA1000/SourceCode` folder in the mmWave Studio install
+    directory; relevant exerpts are included in `reference/mmWave_API`.
+[3] `packages/ti/demo/xwr18xx/mmw` folder in the mmWave SDK install directory;
+    relevant exerpts are included in `reference/demo_xwr18xx`.
 """
 
 from . import dca_types
