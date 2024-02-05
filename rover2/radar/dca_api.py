@@ -5,7 +5,7 @@ import logging
 import struct
 import threading
 
-from beartype.typing import Optional
+from beartype.typing import Optional, cast
 from . import dca_types as types
 from .dca_writer import RadarDataWriter
 
@@ -73,7 +73,7 @@ class DCA1000EVM:
         self.config_port = config_port
         self.data_port = data_port
         self.recording = False
-        self.thread = None
+        self.thread: Optional[threading.Thread] = None
 
         self.config_socket = self._create_socket(
             (sys_ip, config_port), timeout)
@@ -111,9 +111,10 @@ class DCA1000EVM:
 
     def stop(self) -> None:
         """Stop data collection."""
+        assert self.recording is True
         self.recording = False
         self.stop_record()
-        self.thread.join()
+        cast(threading.Thread, self.thread).join()
 
     def _loop(self, writer: RadarDataWriter) -> None:
         """Main read loop."""
@@ -132,8 +133,11 @@ class DCA1000EVM:
         self._config_request(cmd, desc="Verify FPGA connectivity")
 
     # untested
-    def reset_ar_device(self) -> types.Request:
-        """Reset AR device; it's not clear what an 'AR Device' is."""
+    def reset_ar_device(self) -> None:
+        """Reset AR (Automotive Radar?) device.
+
+        Most likely resets the FPGA buffer.
+        """
         cmd = types.Request(types.Command.RESET_AR_DEV, bytes())
         self._config_request(cmd, "Reset AR Device")
 

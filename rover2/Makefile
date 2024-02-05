@@ -7,7 +7,7 @@ VENV=./env/bin
 
 env:
 	$(PYTHON) -m venv env
-	$(ENV)/pip install -r requirements.txt
+	$(VENV)/pip install -r requirements.txt
 
 
 .PHONY: radar-if

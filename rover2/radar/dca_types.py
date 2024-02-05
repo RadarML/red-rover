@@ -5,7 +5,7 @@ from enum import Enum
 from beartype.typing import cast, NamedTuple
 
 
-class DCA100EVMException:
+class DCA100EVMException(Exception):
     """Error raised by the FPGA (via non-0 status)."""
     pass
 

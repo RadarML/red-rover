@@ -5,7 +5,6 @@ import logging
 import struct
 import time
 import json
-from io import TextIOWrapper
 
 from .dca_types import DataPacket
 
@@ -44,7 +43,7 @@ class RadarDataWriter:
             json.dump(datatypes, f, indent=4)
 
 
-    def _open(self, path: str, buf: int) -> TextIOWrapper:
+    def _open(self, path: str, buf: int):
         path = os.path.join(self.path, path)
         if os.path.exists(path):
             raise ValueError("File already exists: {}".format(path))
