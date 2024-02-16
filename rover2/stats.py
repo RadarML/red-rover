@@ -1,25 +1,45 @@
 """Real time statistics."""
 
+import numpy as np
+from time import perf_counter
 
-class DutyCycle:
+from beartype.typing import Callable
 
-    def __init__(self) -> None:
-        self.min = 1.0
-        self.max = 0.0
-        self.m1 = 0.
-        self.m2 = 0.
-        self.n = 0
 
-    def observe(self, x: float = 0) -> None:
-        self.min = min(self.min, x)
-        self.max = max(self.max, x)
-        self.m1 += x
-        self.m2 += x**2
-        self.n += 1
+class RTStats:
 
-    def print(self):
-        print("min:", self.min)
-        print("max:", self.max)
-        print("avg:", self.m1 / self.n)
-        print("std:", ((self.m2 / self.n) - (self.m1 / self.n)**2)**0.5)
+    _stats: dict[str, Callable[[np.ndarray], float]] = {
+        "mean": np.mean,
+        "median": np.median,
+        "std": np.std,
+        "p1": lambda x: np.percentile(x, 1),
+        "p5": lambda x: np.percentile(x, 5),
+        "p95": lambda x: np.percentile(x, 95),
+        "p99": lambda x: np.percentile(x, 99)
+    }
 
+    def __init__(self, fps: float = 1.0) -> None:
+        self.period: list[float] = []
+        self.runtime: list[float] = []
+        self.prev_time = perf_counter()
+        self.start_time = 0.0
+        self.fps = fps
+
+    def start(self) -> None:
+        self.start_time = perf_counter()
+
+    def end(self) -> None:
+        assert self.start_time > 0
+        end = perf_counter()
+
+        self.period.append(end - self.prev_time)
+        self.runtime.append(end - self.start_time)
+        self.prev_time = end
+
+    def summary(self) -> dict[str, dict[str, float]]:
+        period = np.array(self.period)
+        runtime = np.array(self.runtime)
+        return {
+            "frequency": {k: 1 / v(period) for k, v in self._stats.items()},
+            "utilization": {
+                k: v(runtime) * self.fps for k, v in self._stats.items()}}

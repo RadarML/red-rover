@@ -9,7 +9,7 @@ import subprocess
 import struct
 import json
 
-from stats import DutyCycle
+from stats import RTStats
 
 
 class Camera:
@@ -75,16 +75,20 @@ class Camera:
         with open(os.path.join(path, "metadata.json"), 'w') as f:
             json.dump(self.meta, f, indent=4)
 
-        stats = DutyCycle()
 
         fourcc = cv2.VideoWriter_fourcc(*'MJPG')
         out = cv2.VideoWriter(
             os.path.join(path, "video.avi"), fourcc,
             self.fps, (self.width, self.height))
-        ts = open(os.path.join(path, "timestamp.f64"), 'wb')
+        ts = open(os.path.join(path, "ts"), 'wb')
+
+        stats = RTStats()
         for i in range(600):
             ret = self.cap.grab()
+
             t = time.time()
+            stats.start()
+
             ts.write(struct.pack('d', t))
             if ret:
                 ret, frame = self.cap.retrieve()
@@ -93,9 +97,9 @@ class Camera:
                 print("Timed out: i={}".format(i))
                 break
 
-            stats.observe((time.time() - t) * self.fps)
+            stats.end()
 
-        stats.print()
+        print(json.dumps(stats.summary(), indent=4))
         out.release()
         ts.close()
 

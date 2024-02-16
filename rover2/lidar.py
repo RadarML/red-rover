@@ -4,10 +4,12 @@ import numpy as np
 import subprocess
 import time
 import lzma
+import json
+import struct
 from multiprocessing.pool import ThreadPool
 from beartype.typing import Optional
 
-from stats import DutyCycle
+from stats import RTStats
 
 
 class Lidar:
@@ -18,8 +20,6 @@ class Lidar:
     ) -> None:
         self.addr = self.get_ip() if addr is None else addr
         self.fps = fps
-
-        print(self.addr)
 
         config = client.SensorConfig()
         config.udp_port_lidar = port_lidar
@@ -67,6 +67,7 @@ class Lidar:
             k: lzma.open(os.path.join(path, k), mode='wb')
             for k in ["rfl", "nir", "rng"]
         }
+        ts = open(os.path.join(path, "ts"), 'wb')
 
         stream = client.Scans.stream(
             hostname=self.addr, lidar_port=7502, complete=True, timeout=1.0)
@@ -74,10 +75,14 @@ class Lidar:
         def _read(scan, field):
             return client.destagger(stream.metadata, scan.field(field))
 
-        stats = DutyCycle()
+        stats = RTStats(fps=10.0)
 
         for i, scan in enumerate(stream):
             t = time.time()
+            ts.write(struct.pack('d', t))
+
+            stats.start()
+
             data = {
                 "rfl": client.destagger(
                     stream.metadata, scan.field(client.ChanField.REFLECTIVITY)
@@ -93,14 +98,15 @@ class Lidar:
             def _compress(args):
                 k, v = args
                 out[k].write(lzma.compress(v.tobytes()))
-
             ThreadPool(3).map(_compress, list(data.items()))            
 
-            stats.observe((time.time() - t) * self.fps)
+            stats.end()
+
             if i > 100:
+                print(i)
                 break
 
-        stats.print()
+        print(json.dumps(stats.summary(), indent=4))
 
         for k, v in out.items():
             v.close()
