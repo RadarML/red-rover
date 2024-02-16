@@ -1,1 +1,0 @@
-ar1.StopFrame()
