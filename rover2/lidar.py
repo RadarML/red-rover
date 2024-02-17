@@ -2,21 +2,65 @@ from ouster import client
 import os
 import numpy as np
 import subprocess
-import time
 import lzma
-import json
-import struct
 from multiprocessing.pool import ThreadPool
 from beartype.typing import Optional
 
-from stats import RTStats
+from common import BaseCapture
+
+
+class LidarCapture(BaseCapture):
+    """Lidar capture data.
+    
+    Parameters
+    ----------
+    path: directory path to save to.
+    fps: target framerate.
+    compression: compression level; may need to be lowered until utilization
+        is reliably <1. Set `compression=1` for the i7-1360p.
+    """
+
+    _META = {
+        "rfl": {
+            "format": "lzma", "type": "u8", "shape": (64, 2048),
+            "description": "Object NIR reflectivity"},
+        "nir": {
+            "format": "lzma", "type": "u16", "shape": (64, 2048),
+            "description": "Near infrared ambient photons"},
+        "rng": {
+            "format": "lzma", "type": "u16", "shape": (64, 2048),
+            "description": "Range, in millimeters"}
+    }
+
+    def __init__(
+        self, path: str, fps: float = 10.0, compression: int = 1
+    ) -> None:
+        super().__init__(path, meta=self._META, fps=fps)
+
+        self.outputs = {
+            k: lzma.open(
+                os.path.join(path, k), mode='wb', preset=compression
+            ) for k in self._META}
+
+    def write(self, data: dict[str, np.ndarray]) -> None:
+        """Write compressed lzma streams."""
+        def _compress(args):
+            k, v = args
+            self.outputs[k].write(v.tobytes())
+        ThreadPool(3).map(_compress, list(data.items()))
+
+    def close(self) -> None:
+        """Close files and clean up."""
+        super().close()
+        for v in self.outputs.values():
+            v.close()
 
 
 class Lidar:
 
     def __init__(
         self, addr: Optional[str] = None, port_lidar: int = 7502,
-        port_imu: int = 7503, fps: float = 10
+        port_imu: int = 7503, fps: float = 10.0
     ) -> None:
         self.addr = self.get_ip() if addr is None else addr
         self.fps = fps
@@ -26,21 +70,6 @@ class Lidar:
         config.udp_port_imu = port_imu
         config.operating_mode = client.OperatingMode.OPERATING_NORMAL
         client.set_config(self.addr, config, persist=True, udp_dest_auto=True)
-
-        self.meta = {
-            "rfl": {
-                "format": "lzma", "type": "u8", "shape": (64, 2048),
-                "description": "Object NIR reflectivity"},
-            "nir": {
-                "format": "lzma", "type": "u16", "shape": (64, 2048),
-                "description": "Near infrared ambient photons"},
-            "rng": {
-                "format": "lzma", "type": "u16", "shape": (64, 2048),
-                "description": "Range, in millimeters"},
-            "ts": {
-                "format": "raw", "type": "f64", "shape": (),
-                "description": "System epoch time"}
-        }
 
     @staticmethod
     def get_ip() -> str:
@@ -60,29 +89,15 @@ class Lidar:
             raise Exception("Ouster Lidar not found.")
 
     def capture(self, path: str) -> None:
-
-        os.makedirs(path)
-
-        out = {
-            k: lzma.open(os.path.join(path, k), mode='wb')
-            for k in ["rfl", "nir", "rng"]
-        }
-        ts = open(os.path.join(path, "ts"), 'wb')
+        out = LidarCapture(path, fps=self.fps, compression=1)
 
         stream = client.Scans.stream(
             hostname=self.addr, lidar_port=7502, complete=True, timeout=1.0)
-
         def _read(scan, field):
             return client.destagger(stream.metadata, scan.field(field))
 
-        stats = RTStats(fps=10.0)
-
         for i, scan in enumerate(stream):
-            t = time.time()
-            ts.write(struct.pack('d', t))
-
-            stats.start()
-
+            out.start()
             data = {
                 "rfl": client.destagger(
                     stream.metadata, scan.field(client.ChanField.REFLECTIVITY)
@@ -94,22 +109,19 @@ class Lidar:
                     stream.metadata, scan.field(client.ChanField.RANGE))
                 ).astype(np.uint16)
             }
+            out.write(data)
+            out.end()
 
-            def _compress(args):
-                k, v = args
-                out[k].write(lzma.compress(v.tobytes()))
-            ThreadPool(3).map(_compress, list(data.items()))            
+            if (i + 1) % 20 == 0:
+                out.reset_stats()
 
-            stats.end()
-
-            if i > 100:
-                print(i)
+            if i > 10 * 30:
                 break
 
-        print(json.dumps(stats.summary(), indent=4))
+        out.close()
 
-        for k, v in out.items():
-            v.close()
+    def close(self):
+        pass
 
 
-Lidar().capture("test_lidar")
+# Lidar().capture("test/lidar")

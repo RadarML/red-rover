@@ -3,13 +3,37 @@
 
 import os
 import cv2
-import time
-import sys
-import subprocess
-import struct
-import json
+import numpy as np
 
-from stats import RTStats
+from common import BaseCapture
+
+
+class CameraCapture(BaseCapture):
+    """Camera capture data."""
+
+    def __init__(
+        self, path: str, width: int = 1920, height: int = 1080,
+        fps: float = 60.0
+    ) -> None:
+        _meta = {
+            "video.avi": {
+                "format": "mjpg", "type": "u8", "shape": (height, width, 3),
+                "description": "Ordinary camera video"}
+        }
+        super().__init__(path, _meta, fps=fps)
+
+        fourcc = cv2.VideoWriter_fourcc(*'MJPG')
+        self.video = cv2.VideoWriter(
+            os.path.join(path, "video.avi"), fourcc, fps, (width, height))
+
+    def write(self, frame: np.ndarray) -> None:
+        """Write MJPG stream."""
+        self.video.write(frame)
+
+    def close(self) -> None:
+        """Close files and clean up."""
+        super().close()
+        self.video.release()
 
 
 class Camera:
@@ -29,84 +53,36 @@ class Camera:
         self.width = width
         self.height = height
 
-        # self._reset_odd_state()
         self.cap = cv2.VideoCapture(idx)
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
         self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
         self.cap.set(cv2.CAP_PROP_FPS, fps)
 
-        self.meta = {
-            "video.avi": {
-                "format": "mjpg", "type": "u8", "shape": (height, width, 3),
-                "description": "Ordinary camera video"},
-            "ts": {
-                "format": "raw", "type": "f64", "shape": (),
-                "description": "System epoch time"}
-        }
-
-    def _reset_odd_state(self) -> None:
-        """Reset "odd" state.
-        
-        Our capture card seems to fail every other time on linux. This seems
-        to happen to all programs, including ffmpeg and v4l2.
-
-        Workaround:
-        - Try to read it.
-        - If this fails, we are now in the "good" state.
-        - If this succeeds, we are now in the "bad" state, so run it again.
-        """
-        cmd = [
-            sys.executable, "-c",
-            "import cv2; cv2.VideoCapture({}).read()".format(self.idx)]
-        try:
-            subprocess.run(cmd, timeout=1.0)
-        except subprocess.TimeoutExpired:
-            pass
-        else:
-            try:
-                subprocess.run(cmd, timeout=1.0)
-            except subprocess.TimeoutExpired:
-                pass
-
     def capture(self, path: str) -> None:
 
-        os.makedirs(path)
-
-        with open(os.path.join(path, "metadata.json"), 'w') as f:
-            json.dump(self.meta, f, indent=4)
-
-
-        fourcc = cv2.VideoWriter_fourcc(*'MJPG')
-        out = cv2.VideoWriter(
-            os.path.join(path, "video.avi"), fourcc,
-            self.fps, (self.width, self.height))
-        ts = open(os.path.join(path, "ts"), 'wb')
-
-        stats = RTStats()
-        for i in range(600):
+        out = CameraCapture(
+            path, width=self.width, height=self.height, fps=self.fps)
+        out.start()
+        for i in range(60 * 30):
             ret = self.cap.grab()
-
-            t = time.time()
-            stats.start()
-
-            ts.write(struct.pack('d', t))
-            if ret:
-                ret, frame = self.cap.retrieve()
-                out.write(frame)
-            else:
+            out.start()
+            if not ret:
                 print("Timed out: i={}".format(i))
                 break
 
-            stats.end()
+            _, frame = self.cap.retrieve()
+            out.write(frame)
+            out.end()
+            
+            if (i + 1) % 120 == 0:
+                out.reset_stats()
 
-        print(json.dumps(stats.summary(), indent=4))
-        out.release()
-        ts.close()
+        out.close()
 
     def close(self):
         self.cap.release()
 
 
-cam = Camera(0)
-cam.capture("test")
-cam.close()
+# cam = Camera(0)
+# cam.capture("test/camera")
+# cam.close()
