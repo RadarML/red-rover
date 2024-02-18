@@ -1,11 +1,10 @@
-"""Camera data collection.
-"""
+"""Camera data collection."""
 
-import os
+import os, sys
 import cv2
 import numpy as np
 
-from common import BaseCapture
+from common import BaseCapture, BaseSensor, SensorException
 
 
 class CameraCapture(BaseCapture):
@@ -36,45 +35,59 @@ class CameraCapture(BaseCapture):
         self.video.release()
 
 
-class Camera:
-    """Video camera implementation.
+class Camera(BaseSensor):
+    """Video camera.
     
     Parameters
     ----------
     idx: camera index in `/dev`, i.e. `/dev/video0`.
+    width: frame width, in pixels.
+    height: frame height, in pixels.
+    fps: camera framerate. Make sure the camera/capture card supports this
+        exact framerate!
+    name: sensor name, i.e. "camera".
     """
 
     def __init__(
         self, idx: int = 0, width: int = 1920, height: int = 1080,
-        fps: float = 60.
+        fps: float = 60., name: str = "camera"
     ) -> None:
+        super().__init__(name=name)
+
         self.idx = idx
         self.fps = fps
         self.width = width
         self.height = height
 
         self.cap = cv2.VideoCapture(idx)
+        if not self.cap.isOpened():
+            self.log.critical("Failed to open camera; is it connected?")
+            raise SensorException
+
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
         self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
         self.cap.set(cv2.CAP_PROP_FPS, fps)
 
     def capture(self, path: str) -> None:
-
+        """Create capture (while `active` is set)."""
         out = CameraCapture(
             path, width=self.width, height=self.height, fps=self.fps)
         out.start()
-        for i in range(60 * 30):
+        i = 0
+        while self.active:
             ret = self.cap.grab()
             out.start()
             if not ret:
-                print("Timed out: i={}".format(i))
+                self.log.error("Capture timed out.")
+                self.active = False
                 break
 
             _, frame = self.cap.retrieve()
             out.write(frame)
             out.end()
-            
-            if (i + 1) % 120 == 0:
+
+            i = (i + 1) % 120
+            if i == 0:
                 out.reset_stats()
 
         out.close()
@@ -83,6 +96,9 @@ class Camera:
         self.cap.release()
 
 
-# cam = Camera(0)
-# cam.capture("test/camera")
-# cam.close()
+if __name__ == '__main__':
+    try:
+        Camera.from_config(*sys.argv[1:]).loop()
+        exit(0)
+    except SensorException:
+        exit(-1)

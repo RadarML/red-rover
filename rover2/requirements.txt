@@ -1,5 +1,7 @@
 # Common
+numpy
 beartype
+pyyaml
 # Radar
 pyserial
 # Camera

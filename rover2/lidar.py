@@ -1,12 +1,15 @@
-from ouster import client
-import os
-import numpy as np
+"""Lidar data collection."""
+
+import os, sys
 import subprocess
 import lzma
 from multiprocessing.pool import ThreadPool
 from beartype.typing import Optional
 
-from common import BaseCapture
+import numpy as np
+from ouster import client
+
+from common import BaseCapture, BaseSensor, SensorException
 
 
 class LidarCapture(BaseCapture):
@@ -16,31 +19,31 @@ class LidarCapture(BaseCapture):
     ----------
     path: directory path to save to.
     fps: target framerate.
+    height: number of radar beams, e.g. 32, 64, 128.
     compression: compression level; may need to be lowered until utilization
         is reliably <1. Set `compression=1` for the i7-1360p.
     """
 
-    _META = {
-        "rfl": {
-            "format": "lzma", "type": "u8", "shape": (64, 2048),
-            "description": "Object NIR reflectivity"},
-        "nir": {
-            "format": "lzma", "type": "u16", "shape": (64, 2048),
-            "description": "Near infrared ambient photons"},
-        "rng": {
-            "format": "lzma", "type": "u16", "shape": (64, 2048),
-            "description": "Range, in millimeters"}
-    }
-
     def __init__(
-        self, path: str, fps: float = 10.0, compression: int = 1
+        self, path: str, fps: float = 10.0, height: int = 64,
+        compression: int = 1
     ) -> None:
-        super().__init__(path, meta=self._META, fps=fps)
+        _meta = {
+            "rfl": {
+                "format": "lzma", "type": "u8", "shape": (height, 2048),
+                "description": "Object NIR reflectivity"},
+            "nir": {
+                "format": "lzma", "type": "u16", "shape": (height, 2048),
+                "description": "Near infrared ambient photons"},
+            "rng": {
+                "format": "lzma", "type": "u16", "shape": (height, 2048),
+                "description": "Range, in millimeters"}
+        }
+        super().__init__(path, meta=_meta, fps=fps)
 
         self.outputs = {
-            k: lzma.open(
-                os.path.join(path, k), mode='wb', preset=compression
-            ) for k in self._META}
+            k: lzma.open(os.path.join(path, k), mode='wb', preset=compression)
+            for k in _meta}
 
     def write(self, data: dict[str, np.ndarray]) -> None:
         """Write compressed lzma streams."""
@@ -56,13 +59,30 @@ class LidarCapture(BaseCapture):
             v.close()
 
 
-class Lidar:
+class Lidar(BaseSensor):
+    """Ouster Lidar sensor.
+    
+    Parameters
+    ----------
+    addr: lidar IP address; found automatically via
+        `avahi-browse -lrt _roger._tcp` if not manually specified.
+    port_lidar: lidar port; default 7502.
+    port_im: integrated imu port; default 7503.
+    fps: lidar framerate.
+    name: sensor name, i.e. "lidar".
+    """
 
     def __init__(
         self, addr: Optional[str] = None, port_lidar: int = 7502,
-        port_imu: int = 7503, fps: float = 10.0
+        port_imu: int = 7503, fps: float = 10.0, name: str = "lidar"
     ) -> None:
+        super().__init__(name=name)
+
         self.addr = self.get_ip() if addr is None else addr
+        if self.addr is None:
+            self.log.critical("No Ouster lidar found; is it connected?")
+            raise SensorException
+
         self.fps = fps
 
         config = client.SensorConfig()
@@ -86,17 +106,16 @@ class Lidar:
             if match:
                 return entries[7]
         else:
-            raise Exception("Ouster Lidar not found.")
+            return None
 
     def capture(self, path: str) -> None:
+        """Create capture (while `active` is set)."""
         out = LidarCapture(path, fps=self.fps, compression=1)
 
         stream = client.Scans.stream(
             hostname=self.addr, lidar_port=7502, complete=True, timeout=1.0)
-        def _read(scan, field):
-            return client.destagger(stream.metadata, scan.field(field))
-
-        for i, scan in enumerate(stream):
+        i = 0
+        for scan in stream:
             out.start()
             data = {
                 "rfl": client.destagger(
@@ -112,16 +131,19 @@ class Lidar:
             out.write(data)
             out.end()
 
-            if (i + 1) % 20 == 0:
+            i = (i + 1) % 120
+            if i == 0:
                 out.reset_stats()
 
-            if i > 10 * 30:
+            if not self.active:
                 break
 
         out.close()
 
-    def close(self):
-        pass
 
-
-# Lidar().capture("test/lidar")
+if __name__ == '__main__':
+    try:
+        Lidar.from_config(*sys.argv[1:]).loop()
+        exit(0)
+    except SensorException:
+        exit(-1)

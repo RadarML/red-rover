@@ -1,0 +1,19 @@
+lidar:
+  script: "lidar.py"
+  args:
+    addr: null
+    port_lidar: 7502
+    port_imu: 7503
+    fps: 10.0
+camera:
+  script: "camera.py"
+  args:
+    idx: 0
+    width: 1920
+    height: 1080
+    fps: 60.0
+radar:
+  script: "radar.py"
+  args:
+    samples: 256
+    fps: 2000.0

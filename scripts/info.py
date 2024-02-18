@@ -1,15 +1,13 @@
+"""Get collected data metadata."""
+
 import os
 import json
-import sys
 import struct
 import math
 
 
-path = sys.argv[1]
-
-
 def _size(
-    x: int, units: list[str] = ['B', 'KB', 'MB', 'GB', 'TB'], suffix: str = ''
+    x: int, units: list = ['B', 'KB', 'MB', 'GB', 'TB'], suffix: str = ''
 ) -> str:
     if x < 1000:
         return "{:4.3g} {}".format(x, units[0]) + suffix
@@ -59,12 +57,16 @@ def report(path: str) -> dict:
     return report
 
 
-def print_report(report: dict):
-    """Print out human-readable data collection report."""
+def _parse(p):
+    p.add_argument("-p", "--path", help="Target path.")
+
+
+def _main(args):
+    rpt = report(args.path)
 
     print("total: {} ({})".format(
-        _size(report["size"]), _size(report["rate"], suffix='/s')))
-    for sensor, info in report["sensors"].items():
+        _size(rpt["size"]), _size(rpt["rate"], suffix='/s')))
+    for sensor, info in rpt["sensors"].items():
         print("{}: n={}, t={:.2f}".format(
             sensor, info["samples"], info["duration"]))
         for channel, ch_info in info["channels"].items():
@@ -73,6 +75,3 @@ def print_report(report: dict):
                     channel.split('.')[0], _size(ch_info["size"]),
                     _size(ch_info["raw_size"]), ch_info["ratio"],
                     _size(ch_info["rate"], suffix='/s')))
-
-
-print_report(report(path))
