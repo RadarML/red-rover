@@ -74,7 +74,8 @@ class Lidar(BaseSensor):
 
     def __init__(
         self, addr: Optional[str] = None, port_lidar: int = 7502,
-        port_imu: int = 7503, fps: float = 10.0, name: str = "lidar"
+        port_imu: int = 7503, fps: float = 10.0, height: int = 64,
+        name: str = "lidar"
     ) -> None:
         super().__init__(name=name)
 
@@ -84,6 +85,7 @@ class Lidar(BaseSensor):
             raise SensorException
 
         self.fps = fps
+        self.height = height
 
         config = client.SensorConfig()
         config.udp_port_lidar = port_lidar
@@ -110,7 +112,8 @@ class Lidar(BaseSensor):
 
     def capture(self, path: str) -> None:
         """Create capture (while `active` is set)."""
-        out = LidarCapture(path, fps=self.fps, compression=1)
+        out = LidarCapture(
+            path, fps=self.fps, height=self.height, compression=1)
 
         stream = client.Scans.stream(
             hostname=self.addr, lidar_port=7502, complete=True, timeout=1.0)

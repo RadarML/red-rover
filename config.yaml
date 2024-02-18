@@ -5,6 +5,7 @@ lidar:
     port_lidar: 7502
     port_imu: 7503
     fps: 10.0
+    height: 64
 camera:
   script: "camera.py"
   args:
