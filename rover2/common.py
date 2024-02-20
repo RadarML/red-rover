@@ -27,7 +27,6 @@ class BaseCapture:
     _STATS: dict[str, Callable[[np.ndarray], float]] = {
         "mean": np.mean,
         "p1": lambda x: np.percentile(x, 1),
-        "p50": lambda x: np.percentile(x, 50),
         "p99": lambda x: np.percentile(x, 99)
     }
 
@@ -78,11 +77,11 @@ class BaseCapture:
         self.ts.close()
         self.util.close()
 
-    def reset_stats(self) -> None:
+    def reset_stats(self, logger) -> None:
         """Reset tracked statistics."""
         period = np.array(self.period)
         runtime = np.array(self.runtime)
-        print("freq: {}  util: {}".format(
+        logger.info("freq: {}  util: {}".format(
             " ".join("{}={:5.2f}".format(
                 k, 1 / v(period)) for k, v in self._STATS.items()),
             " ".join("{}={:5.2f}".format(
@@ -103,13 +102,16 @@ class BaseSensor:
     ----------
     name: sensor name, e.g. lidar, camera, radar
     addr: socket base address, i.e. `/tmp/rover`
+    report_interval: logging interval for statistics
     """
 
     def __init__(
-        self, name: str, addr: str = "/tmp/rover"
+        self, name: str, addr: str = "/tmp/rover",
+        report_interval: float = 10.0,
     ) -> None:
         self.name = name
         self.log = logging.getLogger(name=name)
+        self.report_interval = report_interval
 
         sock = os.path.join(addr, name)
         if os.path.exists(sock):
@@ -146,25 +148,21 @@ class BaseSensor:
         elif path is None:
             self.log.error("A valid path must be provided to start.")
         else:
+            self.log.info("Starting capture: {}".format(path))
             self.active = True
             self._thread = threading.Thread(target=partial(self.capture, path))
             self._thread.start()
 
-    def _end_capture(self) -> None:
+    def _stop_capture(self) -> None:
         """End capture."""
         if not self.active:
             return
 
+        self.log.debug("Stopping capture...")
         self.active = False
         self._thread.join()
         self._thread = None
-
-    def log(self, msg: dict) -> None:
-        """Send log message."""
-        self._socket_lock.acquire()
-        self._socket.send(struct.pack('I', len(msg)))
-        self._socket.send(json.dump(msg))
-        self._socket_lock.release()
+        self.log.info("Stopped capture.")
 
     def _recv(self) -> None:
         """Receive message (spins until a valid message is received)."""
@@ -181,13 +179,16 @@ class BaseSensor:
     def loop(self) -> None:
         """Main control loop (spins until `exit` is received)."""
         while True:
-            msg = self._recv()
-            cmd = msg.get("command")
-            if cmd["type"] == 'start':
+            cmd = self._recv()
+            cmd_type = cmd.get("type")
+            if cmd_type == 'start':
                 self._start_capture(cmd.get("path", ""))
-            elif cmd["type"] == 'end':
-                self._end_capture()
-            elif cmd["type"] == 'exit':
-                self._end_capture()
+            elif cmd_type == 'stop':
+                self._stop_capture()
+            elif cmd_type == 'exit':
+                self.log.info("Exiting...")
+                self._stop_capture()
                 break
+            else:
+                self.log.error("Invalid command type: {}".format(cmd_type))
         self.close()

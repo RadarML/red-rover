@@ -3,6 +3,7 @@
 import os
 import socket
 import json
+import yaml
 
 
 class Controller:
@@ -17,7 +18,7 @@ class Controller:
         for sensor in self.sensors:
             tx = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
             tx.connect(os.path.join(self.addr, sensor))
-            tx.send(json.dumps(msg))
+            tx.send(json.dumps(msg).encode())
             tx.close()
 
     def start(self, path: str) -> None:
@@ -31,6 +32,8 @@ class Controller:
 
 
 def _parse(p):
+    p.add_argument(
+        "-c", "--config", default="config.yaml", help="Config file.")
     p.add_argument("-a", "--action", help="Action to run.")
     p.add_argument("-p", "--path", help="Target path (if applicable).")
     p.add_argument(
@@ -38,7 +41,10 @@ def _parse(p):
 
 
 def _main(args):
-    ctrl = Controller(sensors=args.sensors)
+    with open(args.config) as f:
+        cfg = yaml.load(f, Loader=yaml.FullLoader)
+
+    ctrl = Controller(sensors=list(cfg.keys()))
     if args.action == 'start':
         ctrl.start(os.path.abspath(args.path))
     elif args.action == 'stop':

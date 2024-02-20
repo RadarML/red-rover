@@ -1,5 +1,6 @@
 """Camera data collection."""
 
+import logging
 import os, sys
 import cv2
 import numpy as np
@@ -67,11 +68,14 @@ class Camera(BaseSensor):
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
         self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
         self.cap.set(cv2.CAP_PROP_FPS, fps)
+        self.log.info("Initialized camera {}: {}x{} @ {}fps".format(
+            idx, width, height, fps))
 
     def capture(self, path: str) -> None:
         """Create capture (while `active` is set)."""
         out = CameraCapture(
-            path, width=self.width, height=self.height, fps=self.fps)
+            os.path.join(path, self.name),
+            width=self.width, height=self.height, fps=self.fps)
         out.start()
         i = 0
         while self.active:
@@ -86,9 +90,9 @@ class Camera(BaseSensor):
             out.write(frame)
             out.end()
 
-            i = (i + 1) % 120
+            i = (i + 1) % int(self.fps * self.report_interval)
             if i == 0:
-                out.reset_stats()
+                out.reset_stats(self.log)
 
         out.close()
 
@@ -98,6 +102,7 @@ class Camera(BaseSensor):
 
 if __name__ == '__main__':
     try:
+        logging.basicConfig(level=logging.DEBUG)
         Camera.from_config(*sys.argv[1:]).loop()
         exit(0)
     except SensorException:

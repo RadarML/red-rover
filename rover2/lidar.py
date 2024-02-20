@@ -1,5 +1,6 @@
 """Lidar data collection."""
 
+import logging
 import os, sys
 import subprocess
 import lzma
@@ -86,6 +87,8 @@ class Lidar(BaseSensor):
 
         self.fps = fps
         self.height = height
+        self.log.info("Initialized lidar {}: {}-beam @ {} fps".format(
+            self.addr, height, self.fps))
 
         config = client.SensorConfig()
         config.udp_port_lidar = port_lidar
@@ -113,7 +116,8 @@ class Lidar(BaseSensor):
     def capture(self, path: str) -> None:
         """Create capture (while `active` is set)."""
         out = LidarCapture(
-            path, fps=self.fps, height=self.height, compression=1)
+            os.path.join(path, self.name),
+            fps=self.fps, height=self.height, compression=1)
 
         stream = client.Scans.stream(
             hostname=self.addr, lidar_port=7502, complete=True, timeout=1.0)
@@ -134,9 +138,9 @@ class Lidar(BaseSensor):
             out.write(data)
             out.end()
 
-            i = (i + 1) % 120
+            i = (i + 1) % int(self.fps * self.report_interval)
             if i == 0:
-                out.reset_stats()
+                out.reset_stats(self.log)
 
             if not self.active:
                 break
@@ -146,6 +150,7 @@ class Lidar(BaseSensor):
 
 if __name__ == '__main__':
     try:
+        logging.basicConfig(level=logging.DEBUG)
         Lidar.from_config(*sys.argv[1:]).loop()
         exit(0)
     except SensorException:

@@ -13,8 +13,3 @@ camera:
     width: 1920
     height: 1080
     fps: 60.0
-radar:
-  script: "radar.py"
-  args:
-    samples: 256
-    fps: 2000.0
