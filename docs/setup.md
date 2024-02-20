@@ -23,7 +23,25 @@ Flash the radar using [TI UniFlash](https://www.ti.com/tool/UNIFLASH); note that
     - Uniflash should automatically discover the radar.
     - Select the `demo/xwr18xx/mmwave/xwr18xx_mmw_demo.bin` image to flash.
     - Choose the serial port corresponding to the radar; the serial port should have a name/description "XDS110 Class Application/User UART (COM3)".
-    - If flashing fails due to some error related to lacking permissions, the SOP switches are probably not in the correct position.
     - Flashing should take around 1 minute, and terminate with "Program Load completed successfully".
+    - If the SOP switches are not in the correct position, flashing will fail with
+        > Not able to connect to serial port. Recheck COM port selected and/or permissions
 3. Set the radar to functional mode.
-    - Set `SOP0:2=100`.
+    - Set `SOP0:2=001`.
+    - Note that mmWave studio expects the radar to be in *debug* mode (`SOP0:2=011`), so switching between Red Rover and mmWave Studio requires the position of the SOP switches to be changed. This is also why mmWave studio requires the MSS firmware to be "re-flashed" whenever the radar is rebooted.
+
+### Hardware Troubleshooting
+
+The [TI mmWave Demo Visualizer](https://dev.ti.com/gallery/view/mmwave/mmWave_Demo_Visualizer/ver/3.6.0/) is a good way to validate hardware functionality.
+- The demo visualizer uses the same firmware that Red Rover uses.
+- If an error occurs, it may be due to a hardware fault. If a specific error occurs, it should be raised with a line number in `mss_main.c`; the error case (e.g. `RL_RF_AE_CPUFAULT_SB`) should reveal what general type of fault it is.
+
+
+## Camera
+
+Plug a HDMI cable into a monitor in order to change the settings. Select the following using the buttons on the front:
+- Focus: set to "optimum focus" - move the focus lever into the detent at the bottom.
+- Gain: 18db (change based on lighting conditions).
+- Output: clean output, 60Hz.
+
+After closing the menu, the HDMI output should be "clean," and not show any menu items.
