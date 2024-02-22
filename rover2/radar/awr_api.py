@@ -57,15 +57,32 @@ class AWR1843:
         """Stop radar."""
         self.send("sensorStop")
 
+    def flushCfg(self) -> None:
+        self.send("flushCfg")
+
+
+
+
 # guiMonitor
         
-    '''
-    -1 1 1 0 0 0 1
-    A B C D E F G
+    #all parameters are flags
+    #1 is enable and 0 is disable
 
-    ???? idk where this is
-    
-    '''
+    def guiMonitor(
+            self, 
+            subFrameIdx: int = -1, 
+            detectedObjects: int = 1, 
+            logMagRange: int = 1,
+            noiseProfile: int = 1,
+            rangeAzimuthHeatMap: int = 1,
+            rangeDopplerHeatMap: int = 1, 
+            statsInfo: int = 1) -> None:
+        
+
+        cmd = "guiMonitor {} {} {} {} {} {} {}".format(
+            subFrameIdx, detectedObjects, logMagRange, noiseProfile, rangeAzimuthHeatMap,
+            rangeDopplerHeatMap, statsInfo)
+        self.send(cmd)
 
 # cfarCfg
     '''
@@ -112,42 +129,211 @@ class AWR1843:
     
     '''
 
-    #can we just tweak this directly?
+
+    def cfarCfg(
+            self, 
+            subFrameIdx: int = -1, 
+            procDirection: int = 1, 
+            averageMode: int = 0,
+            winLen: int = 4,
+            guardLen: int = 2,
+            noiseDivShift: int = 3, 
+            cyclicMode: int = 1,
+            threshold: float = 15,
+            peakGroupingEn: int = 1) -> None:
+        
+
+        cmd = "cfarCfg {} {} {} {} {} {} {} {} {}".format(
+            subFrameIdx, procDirection, averageMode, winLen, guardLen,
+            noiseDivShift, cyclicMode, threshold, peakGroupingEn)
+        self.send(cmd)
 
 
 
 # multiObjBeamForming
     
-    '''
-    A B C
+    def multiObjBeamForming(
+            self, 
+            subFrameIdx: int = -1, 
+            enabled: int = 0, 
+            threshold: float = 0.5) -> None:
+        
 
-
-    
-    '''
+        cmd = "multiObjBeamForming {} {} {}".format(
+            subFrameIdx, enabled, threshold)
+        self.send(cmd)
 
 # calibDcRangeSig
+        
+    def calibDcRangeSig(
+            self, 
+            subFrameIdx: int = -1, 
+            enabled: int = 0, 
+            negativeBinIdx: int = -5,
+            positiveBinIdx: int = 8,
+            numAvgFrames: int = 256) -> None:
+        
+
+        cmd = "calibDcRangeSig {} {} {} {} {}".format(
+            subFrameIdx, enabled, negativeBinIdx, positiveBinIdx, numAvgFrames)
+        self.send(cmd)    
 
 # clutterRemoval
+        
+    def clutterRemoval(
+            self, 
+            subFrameIdx: int = -1, 
+            enabled: int = 0) -> None:
+        
+
+        cmd = "clutterRemoval {} {}".format(
+            subFrameIdx, enabled)
+        self.send(cmd)
+
 
 # adcbufCfg
+        
+    def adcbufCfg(
+            self, 
+            subFrameIdx: int = -1, 
+            adcOutputFmt: int = 0, 
+            SampleSwap: int = 1,
+            ChanInterleave: int = 1,
+            ChirpThreshold: int = 1) -> None:
+        
+        cmd = "adcbufCfg {} {} {} {} {}".format(
+            subFrameIdx, adcOutputFmt, SampleSwap, 
+            ChanInterleave, ChirpThreshold)
+        self.send(cmd)
+
+        
 
 # compRangeBiasAndRxChanPhase
+        
+    #"<rangeBias> <Re00> <Im00> <Re01> <Im01> <Re02> <Im02> <Re03> <Im03> <Re10> <Im10> <Re11> <Im11> <Re12> <Im12> <Re13> <Im13> ";
+    
+    def compRangeBiasAndRxChanPhase(
+            self, 
+            rangeBias: float = 0.0, 
+            Re00: int = 1, 
+            Im00: int = 0,
+            Re01: int = 1, 
+            Im01: int = 0,
+            Re02: int = 1, 
+            Im02: int = 0,
+            Re03: int = 1, 
+            Im03: int = 0,
+            Re10: int = 1, 
+            Im10: int = 0,
+            Re11: int = 1, 
+            Im11: int = 0,
+            Re12: int = 1, 
+            Im12: int = 0,
+            Re13: int = 1, 
+            Im13: int = 0) -> None:
+        
+        cmd = "compRangeBiasAndRxChanPhase {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {}".format(
+            Re00, Im00, Re01, Im01, Re02, Im02, Re03, Im03, 
+            Re10, Im10, Re11, Im11,  Re12, Im12, Re13, Im13)
+        self.send(cmd)
+    
+        
+
 
 # measureRangeBiasAndRxChanPhase
+        
+    def measureRangeBiasAndRxChanPhase(
+            self, 
+            enabled: int = 0, 
+            targetDistance: int = 0, 
+            searchWin: int = 0) -> None:
+        
+
+        cmd = "measureRangeBiasAndRxChanPhase {} {} {}".format(
+            enabled, targetDistance, searchWin)
+        self.send(cmd)
+    
 
 # aoaFovCfg
 
+    def aoaFovCfg(
+            self, 
+            subFrameIdx: int = -1, 
+            minAzimuthDeg: int = -90, 
+            maxAzimuthDeg: int = 90,
+            minElevationDeg: int = -90,
+            maxElevationDeg: int = 90) -> None:
+        
+        cmd = "aoaFovCfg {} {} {} {} {}".format(
+            subFrameIdx, minAzimuthDeg, maxAzimuthDeg, 
+            minElevationDeg, maxElevationDeg)
+        self.send(cmd)    
+    
+
 # cfarFovCfg
     
+    def cfarFovCfg(
+            self, 
+            subFrameIdx: int = -1, 
+            procDirection: int = 0, 
+            min_meters_or_mps: float = 0,
+            max_meters_or_mps: float = 0) -> None:
+        
+        cmd = "cfarFovCfg {} {} {} {}".format(
+            subFrameIdx, procDirection, min_meters_or_mps, max_meters_or_mps)
+        self.send(cmd)    
 
 
 # extendedMaxVelocity
+        
+    def extendedMaxVelocity(
+            self, 
+            subFrameIdx: int = -1, 
+            enabled: int = 0) -> None:
+        
 
-# CQRxSatMonitor
+        cmd = "extendedMaxVelocity {} {}".format(subFrameIdx, enabled)
+        self.send(cmd)
 
+# CQRxSatMonitor 
+
+    def CQRxSatMonitor( #this one is actually enabled
+            self, 
+            profile: int = 0, 
+            satMonSel: int = 3, 
+            priSliceDuration: int = 5,
+            numSlices: int = 128, 
+            rxChanMask: int = 0) -> None:
+        
+        cmd = "CQRxSatMonitor {} {} {} {} {}".format(
+            profile, satMonSel, priSliceDuration, numSlices, rxChanMask)
+        self.send(cmd)    
+        
+    
 # CQSigImgMonitor
+        
+    def CQSigImgMonitor( #this one is actually enabled
+            self, 
+            profile: int = 0, 
+            numSlices: int = 128, 
+            numSamplePerSlice: int = 1) -> None:
+        
+        cmd = "CQSigImgMonitor {} {} {}".format(
+            profile, numSlices, numSamplePerSlice)
+        self.send(cmd) 
+    
 
 # analogMonitor
+        
+    def analogMonitor(
+            self, 
+            rxSaturation: int = 0,  #0 is disable
+            sigImgBand: int = 0) -> None:
+        
+
+        cmd = "analogMonitor {} {}".format(rxSaturation, sigImgBand)
+        self.send(cmd)
+
 
     def config_lvds(
         self, subframe: int = -1, enable_header: bool = True,
@@ -175,11 +361,29 @@ class AWR1843:
             1 if sw_enabled else 0)
         self.send(cmd)
 
-# configDataPort
+# configDataPort 
+    #optional command to change the buadrate
+    
+    def configDataPort(
+            self, 
+            baudrate: int = 921600, 
+            ackPing: int = 0) -> None: #0 means send no bytes on this data pot
+        
+
+        cmd = "configDataPort {} {}".format(baudrate, ackPing)
+        self.send(cmd)
+
+        
+
 
 # queryDemoStatus
+    #optional command to get sensor state
+    def queryDemoStatus(self) -> None:
+        """Sensor State"""
+        self.send("queryDemoStatus")
 
 # calibData
+    #mandatory
     
     '''
     A B C
@@ -188,17 +392,17 @@ class AWR1843:
     #control/mmwavelink/test/common/link_test.c line 3418
     
     '''
+    def calibData(
+            self, 
+            save_enable: int = 0, 
+            restore_enable: int = 0, 
+            Flash_offset: int = 0) -> None:
+        
+        cmd = "calibData {} {} {}".format(
+            save_enable, restore_enable, Flash_offset)
+        self.send(cmd) 
 
 
-# sensorStop
-    '''
-    call at end, no args
-
-    cliCfg.tableEntry[cnt].cmd            = "sensorStop";
-    cliCfg.tableEntry[cnt].helpString     = "No arguments";
-    cliCfg.tableEntry[cnt].cmdHandlerFxn  = MmwDemo_CLISensorStop;
-    
-    '''
         
 
 # frameCfg
@@ -226,7 +430,7 @@ class AWR1843:
     ptrCtrlCfg->u.frameCfg.frameCfg.chirpStartIdx      = 0;
     ptrCtrlCfg->u.frameCfg.frameCfg.chirpEndIdx        = 0;
     ptrCtrlCfg->u.frameCfg.frameCfg.numLoops           = 128;
-    ptrCtrlCfg->u.frameCfg.frameCfg.numFrames          = 1;
+    ptrCtrlCfg->u.frameCfg.frameCfg.numFrames          = 1; //0 means infinite
     ptrCtrlCfg->u.frameCfg.frameCfg.numAdcSamples      = 256;
     ptrCtrlCfg->u.frameCfg.frameCfg.framePeriodicity   = 20 * 1000000 / 5;
     ptrCtrlCfg->u.frameCfg.frameCfg.triggerSelect      = 1;
@@ -234,14 +438,32 @@ class AWR1843:
     
     '''
 
+    def frameCfg(
+            self, 
+            chirpStartIdx: int = 0, 
+            chirpEndIdx: int = 2, 
+            numLoops: int = 16,
+            numFrames: int = 0,
+            framePeriodicity: float = 100,
+            triggerSelect: int = 1, 
+            frameTriggerDelay: float = 0) -> None:
+        
+
+        cmd = "frameCfg {} {} {} {} {} {} {}".format(
+            chirpStartIdx, chirpEndIdx, numLoops, numFrames, framePeriodicity,
+            triggerSelect, frameTriggerDelay)
+        self.send(cmd)
+
 # cfarFovCfg
 
     '''
     A B C D
 
+
+    <subFrameIdx> <procDirection> <min (meters or m/s)> <max (meters or m/s)>
+
     C is negative maximum radial velocity
     D is positive maximum radial velocity
-
 
 
     I have no idea where this is ingested 
@@ -249,9 +471,13 @@ class AWR1843:
     '''
 
 
+    
+
+
 # chirpCfg
     
     '''
+    #file:///run/user/1000/gvfs/smb-share:server=shiraz.arena.andrew.cmu.edu,share=shiraz/scratch/ti/control/mmwavelink/docs/doxygen/html/structrl_chirp_cfg__t.html
     0 0 0 0 0 0 0 1
     A B C D E F G H
 
@@ -279,6 +505,22 @@ class AWR1843:
     
     '''
 
+    def chirpCfg(
+            self, 
+            chirpStartIdx: int = 0, 
+            chirpEndIdx: int = 0, 
+            profileId: int = 0,
+            startFreqVar: float = 0,
+            freqSlopeVar: float = 0,
+            idleTimeVar: float = 0, 
+            adcStartTimeVar: float = 0,
+            txEnable: int = 1) -> None:
+        
+
+        cmd = "chirpCfg {} {} {} {} {} {} {} {}".format(
+            chirpStartIdx, chirpEndIdx, profileId, startFreqVar, freqSlopeVar,
+            idleTimeVar, adcStartTimeVar, txEnable)
+        self.send(cmd)
 
 
 
@@ -337,6 +579,12 @@ cfarFovCfg -1 0 0 8.92
 cfarFovCfg -1 1 -1 1.00
 calibData 0 0 0
 sensorStart
+
+
+'''
+
+'''
+
 
 
 '''
