@@ -68,6 +68,18 @@ class AWR1843:
         self.send("flushCfg")
 
 
+    #dfeDataOutputMode
+    
+    def dfeDataOutputMode(
+            self, 
+            modeType: int = 1) -> None: #0 means send no bytes on this data pot
+        
+
+        cmd = "dfeDataOutputMode {}".format(modeType)
+        self.send(cmd)
+
+
+
 
 
 # guiMonitor
@@ -153,6 +165,31 @@ class AWR1843:
         cmd = "cfarCfg {} {} {} {} {} {} {} {} {}".format(
             subFrameIdx, procDirection, averageMode, winLen, guardLen,
             noiseDivShift, cyclicMode, threshold, peakGroupingEn)
+        self.send(cmd)
+
+
+
+    def channelCfg(
+            self, 
+            rxChannelEn: int = 15, #bitmasking
+            txChannelEn: int = 7, #bitmasking
+            cascading: int = 0 #SoC cascading, should be 0 for now
+            ) -> None:
+        
+
+        cmd = "channelCfg {} {} {}".format(
+            rxChannelEn, txChannelEn, cascading)
+        self.send(cmd)
+
+
+    def acdCfg(
+            self, 
+            numADCBits: int = 2, 
+            adcOutputFmt: int = 1) -> None:
+        
+
+        cmd = "acdCfg {} {}".format(
+            numADCBits, adcOutputFmt)
         self.send(cmd)
 
 
@@ -342,7 +379,7 @@ class AWR1843:
         self.send(cmd)
 
 
-    def config_lvds(
+    def lvdsStreamCfg(
         self, subframe: int = -1, enable_header: bool = True,
         data_format: LVDSFormat = LVDSFormat.ADC, sw_enabled: bool = False
     ) -> None:
@@ -379,6 +416,17 @@ class AWR1843:
 
         cmd = "configDataPort {} {}".format(baudrate, ackPing)
         self.send(cmd)
+
+
+    def lowPower(
+            self, 
+            dontCare: int = 0, 
+            adcMode: int = 0) -> None: 
+        
+
+        cmd = "lowPower {} {}".format(dontCare, adcMode)
+        self.send(cmd)
+
 
         
 
@@ -511,6 +559,31 @@ class AWR1843:
         cmd = "chirpCfg {} {} {} {} {} {} {} {}".format(
             chirpStartIdx, chirpEndIdx, profileId, startFreqVar, freqSlopeVar,
             idleTimeVar, adcStartTimeVar, txEnable)
+        self.send(cmd)
+
+    #fix this
+    def profileCfg(
+            self, 
+            profileId: int = 0, 
+            startFreq: float = 77, 
+            idleTime: float = 267,
+            adcStartTime: float = 7,
+            rampEndTime: float = 57.14,
+            txOutPower: int = 0, #demo only supports 0
+            txPhaseShifter: int = 0, #demo only supports 0
+            freqSlopeConst: float = 70,
+            txStartTime: float = 1,
+            numAdcSamples: int = 256,
+            digOutSampleRate: int = 5209,
+            hpfCornerFreq1: int = 0,
+            hpfCornerFreq2: int = 0,
+            rxGain: int = 30) -> None:
+        
+
+        cmd = "profileCfg {} {} {} {} {} {} {} {} {} {} {} {} {} {}".format(
+            profileId, startFreq, idleTime, adcStartTime, rampEndTime,
+            txOutPower, txPhaseShifter, freqSlopeConst, txStartTime, numAdcSamples,
+            digOutSampleRate, hpfCornerFreq1, hpfCornerFreq2, rxGain)
         self.send(cmd)
 
 
