@@ -1,7 +1,6 @@
 """Lidar data collection."""
 
-import logging
-import os, sys
+import os
 import subprocess
 import lzma
 from multiprocessing.pool import ThreadPool
@@ -10,25 +9,15 @@ from beartype.typing import Optional
 import numpy as np
 from ouster import client
 
-from common import BaseCapture, BaseSensor, SensorException
+from common import BaseCapture, BaseSensor, SensorException, SensorMetadata
 
 
 class LidarCapture(BaseCapture):
-    """Lidar capture data.
-    
-    Parameters
-    ----------
-    path: directory path to save to.
-    fps: target framerate.
-    height: number of radar beams, e.g. 32, 64, 128.
-    compression: compression level; may need to be lowered until utilization
-        is reliably <1. Set `compression=1` for the i7-1360p.
-    """
+    """Lidar capture data."""
 
-    def __init__(
-        self, path: str, fps: float = 10.0, height: int = 64,
-        compression: int = 1
-    ) -> None:
+    def _init(
+        self, path: str, height: int = 64, compression: int = 1
+    ) -> SensorMetadata:
         _meta = {
             "rfl": {
                 "format": "lzma", "type": "u8", "shape": (height, 2048),
@@ -40,11 +29,12 @@ class LidarCapture(BaseCapture):
                 "format": "lzma", "type": "u16", "shape": (height, 2048),
                 "description": "Range, in millimeters"}
         }
-        super().__init__(path, meta=_meta, fps=fps)
 
         self.outputs = {
             k: lzma.open(os.path.join(path, k), mode='wb', preset=compression)
             for k in _meta}
+
+        return _meta
 
     def write(self, data: dict[str, np.ndarray]) -> None:
         """Write compressed lzma streams."""
@@ -55,9 +45,9 @@ class LidarCapture(BaseCapture):
 
     def close(self) -> None:
         """Close files and clean up."""
-        super().close()
         for v in self.outputs.values():
             v.close()
+        super().close()
 
 
 class Lidar(BaseSensor):
@@ -68,8 +58,9 @@ class Lidar(BaseSensor):
     addr: lidar IP address; found automatically via
         `avahi-browse -lrt _roger._tcp` if not manually specified.
     port_lidar: lidar port; default 7502.
-    port_im: integrated imu port; default 7503.
+    port_imu: integrated imu port; default 7503.
     fps: lidar framerate.
+    height: number of lidar beams.
     name: sensor name, i.e. "lidar".
     """
 
@@ -116,14 +107,13 @@ class Lidar(BaseSensor):
     def capture(self, path: str) -> None:
         """Create capture (while `active` is set)."""
         out = LidarCapture(
-            os.path.join(path, self.name),
+            os.path.join(path, self.name), log=self.log,
             fps=self.fps, height=self.height, compression=1)
 
         stream = client.Scans.stream(
             hostname=self.addr, lidar_port=7502, complete=True, timeout=1.0)
-        i = 0
         for scan in stream:
-            out.start()
+            out.start(scan.timestamp[0] / 1e9)
             data = {
                 "rfl": client.destagger(
                     stream.metadata, scan.field(client.ChanField.REFLECTIVITY)
@@ -138,10 +128,6 @@ class Lidar(BaseSensor):
             out.write(data)
             out.end()
 
-            i = (i + 1) % int(self.fps * self.report_interval)
-            if i == 0:
-                out.reset_stats(self.log)
-
             if not self.active:
                 break
 
@@ -149,9 +135,4 @@ class Lidar(BaseSensor):
 
 
 if __name__ == '__main__':
-    try:
-        logging.basicConfig(level=logging.DEBUG)
-        Lidar.from_config(*sys.argv[1:]).loop()
-        exit(0)
-    except SensorException:
-        exit(-1)
+    Lidar.main()

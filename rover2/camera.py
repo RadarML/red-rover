@@ -1,30 +1,26 @@
 """Camera data collection."""
 
-import logging
-import os, sys
+import os
 import cv2
 import numpy as np
 
-from common import BaseCapture, BaseSensor, SensorException
+from common import BaseCapture, BaseSensor, SensorException, SensorMetadata
 
 
 class CameraCapture(BaseCapture):
     """Camera capture data."""
 
-    def __init__(
-        self, path: str, width: int = 1920, height: int = 1080,
-        fps: float = 60.0
-    ) -> None:
-        _meta = {
+    def _init(
+        self, path: str, width: int = 1920, height: int = 1080
+    ) -> SensorMetadata:
+        fourcc = cv2.VideoWriter_fourcc(*'MJPG')
+        self.video = cv2.VideoWriter(
+            os.path.join(path, "video.avi"), fourcc, self.fps, (width, height))
+        return {
             "video.avi": {
                 "format": "mjpg", "type": "u8", "shape": (height, width, 3),
                 "description": "Ordinary camera video"}
         }
-        super().__init__(path, _meta, fps=fps)
-
-        fourcc = cv2.VideoWriter_fourcc(*'MJPG')
-        self.video = cv2.VideoWriter(
-            os.path.join(path, "video.avi"), fourcc, fps, (width, height))
 
     def write(self, frame: np.ndarray) -> None:
         """Write MJPG stream."""
@@ -32,8 +28,8 @@ class CameraCapture(BaseCapture):
 
     def close(self) -> None:
         """Close files and clean up."""
-        super().close()
         self.video.release()
+        super().close()
 
 
 class Camera(BaseSensor):
@@ -42,8 +38,7 @@ class Camera(BaseSensor):
     Parameters
     ----------
     idx: camera index in `/dev`, i.e. `/dev/video0`.
-    width: frame width, in pixels.
-    height: frame height, in pixels.
+    width, height: frame size, in pixels.
     fps: camera framerate. Make sure the camera/capture card supports this
         exact framerate!
     name: sensor name, i.e. "camera".
@@ -74,10 +69,8 @@ class Camera(BaseSensor):
     def capture(self, path: str) -> None:
         """Create capture (while `active` is set)."""
         out = CameraCapture(
-            os.path.join(path, self.name),
+            os.path.join(path, self.name), log=self.log,
             width=self.width, height=self.height, fps=self.fps)
-        out.start()
-        i = 0
         while self.active:
             ret = self.cap.grab()
             out.start()
@@ -90,10 +83,6 @@ class Camera(BaseSensor):
             out.write(frame)
             out.end()
 
-            i = (i + 1) % int(self.fps * self.report_interval)
-            if i == 0:
-                out.reset_stats(self.log)
-
         out.close()
 
     def close(self):
@@ -101,9 +90,4 @@ class Camera(BaseSensor):
 
 
 if __name__ == '__main__':
-    try:
-        logging.basicConfig(level=logging.DEBUG)
-        Camera.from_config(*sys.argv[1:]).loop()
-        exit(0)
-    except SensorException:
-        exit(-1)
+    Camera.main()

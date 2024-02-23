@@ -49,7 +49,7 @@ def report(path: str) -> dict:
                     "size": actual_size, "raw_size": raw_size,
                     "ratio": raw_size / actual_size, "rate": actual_rate}
             else:
-                _channels[channel] = {"size": actual_size}
+                _channels[channel] = {"size": actual_size, "rate": actual_rate}
 
             report["size"] += actual_size
             report["rate"] += actual_rate
@@ -74,4 +74,8 @@ def _main(args):
                 print("    {:6}: {} (raw={}, ratio={:5.2f}, rate={})".format(
                     channel.split('.')[0], _size(ch_info["size"]),
                     _size(ch_info["raw_size"]), ch_info["ratio"],
+                    _size(ch_info["rate"], suffix='/s')))
+            else:
+                print("    {:6}: {} (rate={})".format(
+                    channel.split('.')[0], _size(ch_info["size"]),
                     _size(ch_info["rate"], suffix='/s')))

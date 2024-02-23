@@ -7,13 +7,15 @@ import struct
 import socket
 import logging
 import threading
-
+import traceback
 from time import perf_counter, time
-from functools import partial
 
 import numpy as np
 
-from beartype.typing import Callable, Optional
+from beartype.typing import Callable, Optional, Any
+
+
+SensorMetadata = dict[str, dict[str, Any]]
 
 
 class SensorException(Exception):
@@ -22,7 +24,16 @@ class SensorException(Exception):
 
 
 class BaseCapture:
-    """Capture data for a generic sensor stream."""
+    """Capture data for a generic sensor stream.
+    
+    Parameters
+    ----------
+    path: directory path to write data to.
+    fps: target framerate
+    report_interval: interval for reporting sensor statistics, in seconds
+    log: parent logger to use
+    kwargs: passthrough to sensor-specific initialization    
+    """
 
     _STATS: dict[str, Callable[[np.ndarray], float]] = {
         "mean": np.mean,
@@ -30,29 +41,57 @@ class BaseCapture:
         "p99": lambda x: np.percentile(x, 99)
     }
 
+    def _init(self, path: str, **kwargs) -> SensorMetadata:
+        """Run sensor-specific initialization.
+
+        Returns
+        -------
+        Data channel metadata information.
+        """
+        raise NotImplementedError()
+
     def __init__(
-        self, path: str, meta: dict[dict[str, any]], fps: float = 1.0
+        self, path: str, fps: float = 1.0, report_interval: float = 10.0,
+        log: Optional[logging.Logger] = None, **kwargs
     ) -> None:
         os.makedirs(path)
-        self.len = 0
-
-        with open(os.path.join(path, "meta.json"), 'w') as f:
-            json.dump(meta, f, indent=4)
-
         self.ts = open(os.path.join(path, "ts"), 'wb')
         self.util = open(os.path.join(path, "util"), 'wb')
+
+        self.len = 0
         self.period: list[float] = []
         self.runtime: list[float] = []
         self.prev_time = self.start_time = self.trace_time = perf_counter()
-        self.fps = fps
+        self._ref_time: Optional[tuple[float, float]] = None
 
-    def start(self):
+        self.fps = fps
+        self.report_interval = report_interval
+        self.log = log if log else logging.Logger("placeholder")
+
+        meta = self._init(path, **kwargs)
+        with open(os.path.join(path, "meta.json"), 'w') as f:
+            json.dump(meta, f, indent=4)
+
+
+    def start(self, timestamp: Optional[float] = None) -> None:
         """Mark start of current frame processing.
 
         (1) Records the current time as the timestamp for this frame, and
         (2) Marks the start of time utilization calculation for this frame.
+
+        Parameters
+        ----------
+        timestamp: if not `None`, use an external timestamp (i.e. from a low
+            level sensor API) instead of the current system time. This
+            timestamp is converted into the system time using the first time
+            `.start()` is called with a timestamp.
         """
-        t = time()
+        if timestamp is None:
+            t = time()
+        else:
+            if self._ref_time is None:
+                self._ref_time = (timestamp, time())
+            t = (timestamp - self._ref_time[0]) + self._ref_time[1]
 
         self.start_time = perf_counter()
         self.ts.write(struct.pack('d', t))
@@ -68,6 +107,9 @@ class BaseCapture:
         self.prev_time = end
         self.util.write(struct.pack('f', end - self.start_time))
 
+        if self.len % int(self.fps * self.report_interval) == 0:
+            self.reset_stats()
+
     def write(self, *args, **kwargs) -> None:
         """Write a single frame."""
         raise NotImplementedError()
@@ -77,11 +119,11 @@ class BaseCapture:
         self.ts.close()
         self.util.close()
 
-    def reset_stats(self, logger) -> None:
+    def reset_stats(self) -> None:
         """Reset tracked statistics."""
         period = np.array(self.period)
         runtime = np.array(self.runtime)
-        logger.info("freq: {}  util: {}".format(
+        self.log.info("freq: {}  util: {}".format(
             " ".join("{}={:5.2f}".format(
                 k, 1 / v(period)) for k, v in self._STATS.items()),
             " ".join("{}={:5.2f}".format(
@@ -107,11 +149,12 @@ class BaseSensor:
 
     def __init__(
         self, name: str, addr: str = "/tmp/rover",
-        report_interval: float = 10.0,
+        report_interval: float = 10.0, fps: float = 1.0
     ) -> None:
         self.name = name
         self.log = logging.getLogger(name=name)
         self.report_interval = report_interval
+        self.fps = fps
 
         sock = os.path.join(addr, name)
         if os.path.exists(sock):
@@ -125,6 +168,7 @@ class BaseSensor:
 
         self.active = False
         self._thread = None
+        self.frame_count = 0
 
     @classmethod
     def from_config(cls, name: str, path: str) -> None:
@@ -143,6 +187,16 @@ class BaseSensor:
 
     def _start_capture(self, path: Optional[str]) -> None:
         """Start capture."""
+        def _capture_wrapped():
+            self.frame_count = 0
+            try:
+                self.capture(path)
+            except Exception as e:
+                self.log.critical(repr(e))
+                self.log.debug(''.join(traceback.format_exception(e)))
+            finally:
+                self.active = False
+
         if self.active:
             self.log.error("Tried to start capture when another is active.")
         elif path is None:
@@ -150,7 +204,7 @@ class BaseSensor:
         else:
             self.log.info("Starting capture: {}".format(path))
             self.active = True
-            self._thread = threading.Thread(target=partial(self.capture, path))
+            self._thread = threading.Thread(target=_capture_wrapped)
             self._thread.start()
 
     def _stop_capture(self) -> None:
@@ -192,3 +246,13 @@ class BaseSensor:
             else:
                 self.log.error("Invalid command type: {}".format(cmd_type))
         self.close()
+
+    @classmethod
+    def main(cls) -> None:
+        """Run as a independent script."""
+        try:
+            logging.basicConfig(level=logging.DEBUG)
+            cls.from_config(*sys.argv[1:]).loop()
+            exit(0)
+        except SensorException:
+            exit(-1)

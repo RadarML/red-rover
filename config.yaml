@@ -6,6 +6,11 @@ lidar:
     port_imu: 7503
     fps: 10.0
     height: 64
+imu:
+  script: "imu.py"
+  args:
+    port: /dev/ttyUSB0
+    baudrate: 115200
 camera:
   script: "camera.py"
   args:

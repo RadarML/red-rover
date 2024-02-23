@@ -8,6 +8,9 @@ layout {
                 args "rover.py" "run" "-s" "lidar"
             }
             pane command="python3.11" {
+                args "rover.py" "run" "-s" "imu"
+            }
+            pane command="python3.11" {
                 args "rover.py" "run" "-s" "radar"
             }
         }
