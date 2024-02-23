@@ -45,3 +45,9 @@ Plug a HDMI cable into a monitor in order to change the settings. Select the fol
 - Output: clean output, 60Hz.
 
 After closing the menu, the HDMI output should be "clean," and not show any menu items.
+
+## IMU
+
+Install [MT Manager](https://www.movella.com/support/software-documentation), and connect the Xsens MTi-3 IMU via the development board. Select the following:
+- Orientation: Euler Angles; Floating Point 32-bit; 100Hz
+- Inertial data: Rate of Turn, Acceleration; Floating Point 32-bit; 100Hz

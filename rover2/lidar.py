@@ -16,7 +16,7 @@ class LidarCapture(BaseCapture):
     """Lidar capture data."""
 
     def _init(
-        self, path: str, height: int = 64, compression: int = 1
+        self, path: str, height: int = 64, compression: int = 1, **_
     ) -> SensorMetadata:
         _meta = {
             "rfl": {
@@ -71,10 +71,11 @@ class Lidar(BaseSensor):
     ) -> None:
         super().__init__(name=name)
 
-        self.addr = self.get_ip() if addr is None else addr
-        if self.addr is None:
+        addr = self.get_ip() if addr is None else addr
+        if addr is None:
             self.log.critical("No Ouster lidar found; is it connected?")
             raise SensorException
+        self.addr = addr
 
         self.fps = fps
         self.height = height
@@ -88,7 +89,7 @@ class Lidar(BaseSensor):
         client.set_config(self.addr, config, persist=True, udp_dest_auto=True)
 
     @staticmethod
-    def get_ip() -> str:
+    def get_ip() -> Optional[str]:
         """Get IP address of ouster sensor."""
         avahi = subprocess.run(
             ["avahi-browse", "-lrpt", "_roger._tcp"], capture_output=True)
@@ -125,7 +126,7 @@ class Lidar(BaseSensor):
                     stream.metadata, scan.field(client.ChanField.RANGE))
                 ).astype(np.uint16)
             }
-            out.write(data)
+            out.write(data)  # type: ignore
             out.end()
 
             if not self.active:

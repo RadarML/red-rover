@@ -13,13 +13,12 @@ class RadarCapture(BaseCapture):
 
     def _init(
         self, path, chirps: int = 1, tx: int = 3, rx: int = 4,
-        samples: int = 256
+        samples: int = 256, **_
     ) -> SensorMetadata:        
         self.iq = lzma.open(os.path.join(path, "iq"), mode='wb', preset=1)
         return {"iq": {
             "format": "lzma", "type": "u16", "shape": (
-                (chirps, tx, rx, samples, 2))
-        }}
+                (chirps, tx, rx, samples, 2))}}
 
     def write(self, data: np.ndarray) -> None:
         """Write a single frame."""

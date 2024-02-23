@@ -48,6 +48,7 @@ class XsensIMU:
     ) -> None:
         self.log = logging.getLogger(name=name)
         self.port = serial.Serial(port, baudrate, timeout=1)
+        self.port.set_low_latency_mode(True)
     
     def read(self) -> Optional[IMUData]:
         """Read a single data packet.
@@ -85,10 +86,10 @@ class XsensIMU:
             payload = payload[data_len:]
 
             if data_id & 0xfff0 == 0x2030:
-                rot = np.frombuffer(data, dtype='>f4')
+                rot = np.frombuffer(data, dtype='>f4').byteswap()
             elif data_id & 0xfff0 == 0x4020:
-                acc = np.frombuffer(data, dtype='>f4')
+                acc = np.frombuffer(data, dtype='>f4').byteswap()
             elif data_id & 0xfff0 == 0x8020:
-                avel = np.frombuffer(data, dtype='>f4')
+                avel = np.frombuffer(data, dtype='>f4').byteswap()
 
-        return IMUData(rot=rot, acc=acc, avel=avel)
+        return IMUData(rot=rot, acc=acc, avel=avel)  # type: ignore

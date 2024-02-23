@@ -41,6 +41,15 @@ class BaseCapture:
         "p99": lambda x: np.percentile(x, 99)
     }
 
+    _COMMON: SensorMetadata = {
+        "ts": {
+            "format": "raw", "type": "f64", "shape": (),
+            "description": "Timestamp, in seconds."},
+        "util": {
+            "format": "raw", "type": "f32", "shape": (),
+            "description": "System utilization fraction for data processing."}
+    }
+
     def _init(self, path: str, **kwargs) -> SensorMetadata:
         """Run sensor-specific initialization.
 
@@ -70,7 +79,7 @@ class BaseCapture:
 
         meta = self._init(path, **kwargs)
         with open(os.path.join(path, "meta.json"), 'w') as f:
-            json.dump(meta, f, indent=4)
+            json.dump({**meta, **self._COMMON}, f, indent=4)
 
 
     def start(self, timestamp: Optional[float] = None) -> None:
@@ -167,11 +176,11 @@ class BaseSensor:
         self._socket.listen(1)
 
         self.active = False
-        self._thread = None
+        self._thread: Optional[threading.Thread] = None
         self.frame_count = 0
 
     @classmethod
-    def from_config(cls, name: str, path: str) -> None:
+    def from_config(cls, name: str, path: str) -> "BaseSensor":
         """Initalize from a entry in a config file."""
         with open(path) as f:
             cfg = yaml.load(f, Loader=yaml.FullLoader)[name]["args"]
@@ -214,11 +223,12 @@ class BaseSensor:
 
         self.log.debug("Stopping capture...")
         self.active = False
-        self._thread.join()
-        self._thread = None
+        if self._thread is not None:
+            self._thread.join()
+            self._thread = None
         self.log.info("Stopped capture.")
 
-    def _recv(self) -> None:
+    def _recv(self) -> dict:
         """Receive message (spins until a valid message is received)."""
         while True:
             connection, _ = self._socket.accept()

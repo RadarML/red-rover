@@ -8,16 +8,16 @@ from common import BaseCapture, BaseSensor, SensorException, SensorMetadata
 class IMUCapture(BaseCapture):
     """IMU capture data."""
 
-    def _init(self, path: str) -> SensorMetadata:
+    def _init(self, path: str, **_) -> SensorMetadata:
         _meta = {
             "rot": {
-                "format": "raw", "type": "f4", "shape": (3,),
+                "format": "raw", "type": "f32", "shape": (3,),
                 "description": "Orientation (Euler Angles)"},
             "acc": {
-                "format": "raw", "type": "f4", "shape": (3,),
+                "format": "raw", "type": "f32", "shape": (3,),
                 "description": "Linear acceleration (xyz)"},
             "avel": {
-                "format": "raw", "type": "f4", "shape": (3,),
+                "format": "raw", "type": "f32", "shape": (3,),
                 "description": "Angular velocity"}
         }
         self.outputs = {
@@ -59,9 +59,14 @@ class IMU(BaseSensor):
         self.log.info("Initialized IMU {}.".format(port))
     
     def capture(self, path: str) -> None:
-        """Create capture (while `active` is set)."""
+        """Create capture (while `active` is set).
+        
+        NOTE: we discard the first 100 samples due to rate instability, likely
+        due to serial port read latency/batching.
+        """
         out = IMUCapture(
             os.path.join(path, self.name), log=self.log, fps=self.fps)
+        self.imu.port.reset_input_buffer()
         while self.active:
             try:
                 data = None
