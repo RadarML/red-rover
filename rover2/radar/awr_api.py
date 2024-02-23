@@ -40,7 +40,12 @@ class AWR1843:
     def send(self, cmd: str) -> None:
         self.log.info("Send: {}".format(cmd))
         self.port.write((cmd + '\n').encode('ascii'))
-        print("Response:", self.port.readline())
+        while(True):
+            line=self.port.readline()
+            print("Response:", line)
+
+            if not line.strip():
+                break
         
 
     def start(self, reconfigure: bool = True) -> None:
