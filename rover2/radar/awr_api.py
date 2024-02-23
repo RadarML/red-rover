@@ -40,6 +40,8 @@ class AWR1843:
     def send(self, cmd: str) -> None:
         self.log.info("Send: {}".format(cmd))
         self.port.write((cmd + '\n').encode('ascii'))
+        print("Response:", self.port.readline())
+        
 
     def start(self, reconfigure: bool = True) -> None:
         """Start radar.
@@ -453,22 +455,6 @@ class AWR1843:
             chirpStartIdx, chirpEndIdx, numLoops, numFrames, framePeriodicity,
             triggerSelect, frameTriggerDelay)
         self.send(cmd)
-
-# cfarFovCfg
-
-    '''
-    A B C D
-
-
-    <subFrameIdx> <procDirection> <min (meters or m/s)> <max (meters or m/s)>
-
-    C is negative maximum radial velocity
-    D is positive maximum radial velocity
-
-
-    I have no idea where this is ingested 
-    all info so far comes from the JS on the demo website -T
-    '''
 
 
     
