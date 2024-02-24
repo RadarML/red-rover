@@ -18,7 +18,8 @@ class RadarCapture(BaseCapture):
         self.iq = lzma.open(os.path.join(path, "iq"), mode='wb', preset=1)
         return {"iq": {
             "format": "lzma", "type": "u16", "shape": (
-                (chirps, tx, rx, samples, 2))}}
+                (chirps, tx, rx, samples, 2)),
+            "desc": "Raw I/Q stream."}}
 
     def write(self, data: np.ndarray) -> None:
         """Write a single frame."""

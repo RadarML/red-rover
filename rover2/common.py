@@ -82,26 +82,13 @@ class BaseCapture:
             json.dump({**meta, **self._COMMON}, f, indent=4)
 
 
-    def start(self, timestamp: Optional[float] = None) -> None:
+    def start(self) -> None:
         """Mark start of current frame processing.
 
         (1) Records the current time as the timestamp for this frame, and
         (2) Marks the start of time utilization calculation for this frame.
-
-        Parameters
-        ----------
-        timestamp: if not `None`, use an external timestamp (i.e. from a low
-            level sensor API) instead of the current system time. This
-            timestamp is converted into the system time using the first time
-            `.start()` is called with a timestamp.
         """
-        if timestamp is None:
-            t = time()
-        else:
-            if self._ref_time is None:
-                self._ref_time = (timestamp, time())
-            t = (timestamp - self._ref_time[0]) + self._ref_time[1]
-
+        t = time()
         self.start_time = perf_counter()
         self.ts.write(struct.pack('d', t))
         self.len += 1

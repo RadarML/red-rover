@@ -11,15 +11,15 @@ class CameraCapture(BaseCapture):
     """Camera capture data."""
 
     def _init(
-        self, path: str, width: int = 1920, height: int = 1080
+        self, path: str, width: int = 1920, height: int = 1080, **_
     ) -> SensorMetadata:
-        fourcc = cv2.VideoWriter_fourcc(*'MJPG')
+        fourcc = cv2.VideoWriter_fourcc(*'MJPG')  # type: ignore
         self.video = cv2.VideoWriter(
             os.path.join(path, "video.avi"), fourcc, self.fps, (width, height))
         return {
             "video.avi": {
                 "format": "mjpg", "type": "u8", "shape": (height, width, 3),
-                "description": "Ordinary camera video"}
+                "desc": "Ordinary camera video"}
         }
 
     def write(self, frame: np.ndarray) -> None:

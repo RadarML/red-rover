@@ -21,13 +21,16 @@ class LidarCapture(BaseCapture):
         _meta = {
             "rfl": {
                 "format": "lzma", "type": "u8", "shape": (height, 2048),
-                "description": "Object NIR reflectivity"},
+                "desc": "Object NIR reflectivity"},
             "nir": {
                 "format": "lzma", "type": "u16", "shape": (height, 2048),
-                "description": "Near infrared ambient photons"},
+                "desc": "Near infrared ambient photons"},
             "rng": {
                 "format": "lzma", "type": "u16", "shape": (height, 2048),
-                "description": "Range, in millimeters"}
+                "desc": "Range, in millimeters"},
+            "time": {
+                "format": "lzma", "type": "f64", "shape": (2048,),
+                "desc": "Lidar internal timestamp of each column in the scan"}
         }
 
         self.outputs = {
@@ -114,7 +117,7 @@ class Lidar(BaseSensor):
         stream = client.Scans.stream(
             hostname=self.addr, lidar_port=7502, complete=True, timeout=1.0)
         for scan in stream:
-            out.start(scan.timestamp[0] / 1e9)
+            out.start()
             data = {
                 "rfl": client.destagger(
                     stream.metadata, scan.field(client.ChanField.REFLECTIVITY)
@@ -124,9 +127,10 @@ class Lidar(BaseSensor):
                 ).astype(np.uint16),
                 "rng": np.minimum(65535, client.destagger(
                     stream.metadata, scan.field(client.ChanField.RANGE))
-                ).astype(np.uint16)
+                ).astype(np.uint16),
+                "time": scan.timestamp.astype(np.float64)
             }
-            out.write(data)  # type: ignore
+            out.write(data, scan.timestamp)  # type: ignore
             out.end()
 
             if not self.active:

@@ -12,13 +12,13 @@ class IMUCapture(BaseCapture):
         _meta = {
             "rot": {
                 "format": "raw", "type": "f32", "shape": (3,),
-                "description": "Orientation (Euler Angles)"},
+                "desc": "Orientation (Euler Angles)"},
             "acc": {
                 "format": "raw", "type": "f32", "shape": (3,),
-                "description": "Linear acceleration (xyz)"},
+                "desc": "Linear acceleration"},
             "avel": {
                 "format": "raw", "type": "f32", "shape": (3,),
-                "description": "Angular velocity"}
+                "desc": "Angular velocity"}
         }
         self.outputs = {
             k: open(os.path.join(path, k), mode='wb') for k in _meta}
