@@ -32,3 +32,6 @@ awr.cfarFovCfg(subFrameIdx=-1, procDirection=1, min_meters_or_mps=-1, max_meters
 awr.calibData()
 awr.start()
 
+
+print("done!")
+

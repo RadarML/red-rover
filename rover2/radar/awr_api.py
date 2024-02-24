@@ -182,13 +182,13 @@ class AWR1843:
         self.send(cmd)
 
 
-    def acdCfg(
+    def adcCfg(
             self, 
             numADCBits: int = 2, 
             adcOutputFmt: int = 1) -> None:
         
 
-        cmd = "acdCfg {} {}".format(
+        cmd = "adcCfg {} {}".format(
             numADCBits, adcOutputFmt)
         self.send(cmd)
 
@@ -255,6 +255,7 @@ class AWR1843:
 # compRangeBiasAndRxChanPhase
         
     #"<rangeBias> <Re00> <Im00> <Re01> <Im01> <Re02> <Im02> <Re03> <Im03> <Re10> <Im10> <Re11> <Im11> <Re12> <Im12> <Re13> <Im13> ";
+    #this one is complicated
     
     def compRangeBiasAndRxChanPhase(
             self, 
@@ -277,7 +278,7 @@ class AWR1843:
             Im13: int = 0) -> None:
         
         cmd = "compRangeBiasAndRxChanPhase {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {}".format(
-            Re00, Im00, Re01, Im01, Re02, Im02, Re03, Im03, 
+            rangeBias, Re00, Im00, Re01, Im01, Re02, Im02, Re03, Im03, 
             Re10, Im10, Re11, Im11,  Re12, Im12, Re13, Im13)
         self.send(cmd)
     
