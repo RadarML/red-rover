@@ -1,8 +1,8 @@
 """IMU data collection."""
 
 import os
-from xsens_api import XsensIMU, IMUData
-from common import BaseCapture, BaseSensor, SensorException, SensorMetadata
+from imu_api import XsensIMU, IMUData
+from common import BaseCapture, BaseSensor, SensorMetadata
 
 
 class IMUCapture(BaseCapture):

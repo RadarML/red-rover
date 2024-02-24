@@ -19,6 +19,5 @@ def _main(args):
         print("Sensor '{}' not defined.".format(args.sensor))
         exit(-1)
 
-    os.chdir("./rover2")
     python = "./env/bin/python"
     subprocess.call([python, cfg[args.sensor]["script"], args.sensor, path])

@@ -1,5 +1,5 @@
-import radar
-awr = radar.AWR1843()
+from radar_api import AWR1843
+awr = AWR1843()
 
 awr.stop()
 awr.flushCfg()

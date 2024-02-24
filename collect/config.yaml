@@ -1,5 +1,5 @@
 lidar:
-  script: "lidar.py"
+  script: "sensors/lidar.py"
   args:
     addr: null
     port_lidar: 7502
@@ -7,12 +7,12 @@ lidar:
     fps: 10.0
     height: 64
 imu:
-  script: "imu.py"
+  script: "sensors/imu.py"
   args:
     port: /dev/ttyUSB0
     baudrate: 115200
 camera:
-  script: "camera.py"
+  script: "sensors/camera.py"
   args:
     idx: 0
     width: 1920

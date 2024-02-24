@@ -33,6 +33,7 @@ class AWR1843:
     ) -> None:
         self.log = logging.getLogger(name=name)
         self.port = serial.Serial(port, baudrate, timeout=1)
+        self.port.set_low_latency_mode(True)
 
     def setup(self) -> None:
         self.config_lvds()
@@ -250,40 +251,16 @@ class AWR1843:
             ChanInterleave, ChirpThreshold)
         self.send(cmd)
 
-        
-
-# compRangeBiasAndRxChanPhase
-        
-    #"<rangeBias> <Re00> <Im00> <Re01> <Im01> <Re02> <Im02> <Re03> <Im03> <Re10> <Im10> <Re11> <Im11> <Re12> <Im12> <Re13> <Im13> ";
-    #this one is complicated
     
     def compRangeBiasAndRxChanPhase(
-            self, 
-            rangeBias: float = 0.0, 
-            Re00: int = 1, 
-            Im00: int = 0,
-            Re01: int = 1, 
-            Im01: int = 0,
-            Re02: int = 1, 
-            Im02: int = 0,
-            Re03: int = 1, 
-            Im03: int = 0,
-            Re10: int = 1, 
-            Im10: int = 0,
-            Re11: int = 1, 
-            Im11: int = 0,
-            Re12: int = 1, 
-            Im12: int = 0,
-            Re13: int = 1, 
-            Im13: int = 0) -> None:
-        
-        cmd = "compRangeBiasAndRxChanPhase {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {}".format(
-            rangeBias, Re00, Im00, Re01, Im01, Re02, Im02, Re03, Im03, 
-            Re10, Im10, Re11, Im11,  Re12, Im12, Re13, Im13)
-        self.send(cmd)
-    
-        
+        self, rangeBias: float = 0.0,
+        rx_phase: list[tuple[int, int]] = [(0, 1)] * 12
+    ) -> None:
+        """Set range bias, channel phase compensation."""
 
+        args = ' '.join("{} {}".format(re, im) for re, im in rx_phase)
+        cmd = "compRangeBiasAndRxChanPhase {} {}".format(rangeBias, args)
+        self.send(cmd)
 
 # measureRangeBiasAndRxChanPhase
         
@@ -298,7 +275,6 @@ class AWR1843:
             enabled, targetDistance, searchWin)
         self.send(cmd)
     
-
 # aoaFovCfg
 
     def aoaFovCfg(
