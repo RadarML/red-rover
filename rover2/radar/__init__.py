@@ -15,9 +15,10 @@ References
 """
 
 from . import dca_types
+from .awr_api import AWR1843
 from .dca_api import DCA1000EVM
 from .dca_writer import RadarDataWriter
 
 __all__ = [
-    "dca_types", "DCA1000EVM", "RadarDataWriter"
+    "dca_types", "AWR1843", "DCA1000EVM", "RadarDataWriter"
 ]
