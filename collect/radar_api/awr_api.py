@@ -57,7 +57,7 @@ class AWR1843(AWR1843_Mixins):
         self.chirpCfg(2)
         self.frameCfg()
         self.compRangeBiasAndRxChanPhase()
-        self.lvdsStreamCfg(enableHeader=False)
+        self.lvdsStreamCfg(enableHeader=False, enableSW=False)
 
         self.boilerplate_setup()
 
@@ -172,7 +172,6 @@ class AWR1843(AWR1843_Mixins):
         chanInterleave: only non-interleaved (1) is supported.
         chirpThreshold: some kind of "ping-pong" demo parameter.
         """
-
         cmd = "adcbufCfg {} {} {} {} {}".format(
             subFrameIdx, 1 if adcOutputFmt == types.ADCFormat.REAL else 0,
             sampleSwap.value, chanInterleave, chirpThreshold)

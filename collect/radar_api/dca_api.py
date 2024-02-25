@@ -163,7 +163,7 @@ class DCA1000EVM:
         self.log.info("Configuring FPGA: {}, {}, {}, {}, {}".format(
             log, lvds, transfer, capture, format))
         cfg = struct.pack(
-            "HHHHHH", log.value, lvds.value, transfer.value,
+            "BBBBBB", log.value, lvds.value, transfer.value,
             capture.value, format.value, types.FPGA_CONFIG_DEFAULT_TIMER)
         cmd = types.Request(types.Command.CONFIG_FPGA, cfg)
         self._config_request(cmd, desc="Configure FPGA")

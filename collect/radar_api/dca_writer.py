@@ -47,7 +47,7 @@ class RadarDataWriter:
         path = os.path.join(self.path, path)
         # if os.path.exists(path):
         #     raise ValueError("File already exists: {}".format(path))
-        return open(path, 'a', buf)
+        return open(path, 'ab', buf)
 
     def _write_time(self) -> None:
         self.radar_ts.write(struct.pack("d", time.time()))
