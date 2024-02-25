@@ -90,5 +90,5 @@ class RadarDataWriter:
 
     def close(self):
         """Safely clean up."""
-        self.radar_data.close()
-        self.radar_time.close()
+        self.radar_iq.close()
+        self.radar_ts.close()

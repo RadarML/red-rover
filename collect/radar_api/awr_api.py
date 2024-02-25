@@ -3,6 +3,7 @@
 import time
 import serial
 import logging
+import threading
 
 from . import awr_types as types
 from .awr_boilerplate import AWR1843_Mixins
@@ -36,6 +37,12 @@ class AWR1843(AWR1843_Mixins):
         self.port = serial.Serial(port, baudrate, timeout=None)
         self.port.set_low_latency_mode(True)
 
+    def setup_from_config(self, path: str) -> None:
+        with open(path) as f:
+            cmds = f.readlines()
+        for c in cmds:
+            self.send(c.rstrip('\n'))
+
     def setup(self) -> None:
         self.stop()
         self.flushCfg()
@@ -50,7 +57,7 @@ class AWR1843(AWR1843_Mixins):
         self.chirpCfg(2)
         self.frameCfg()
         self.compRangeBiasAndRxChanPhase()
-        self.lvdsStreamCfg()
+        self.lvdsStreamCfg(enableHeader=False)
 
         self.boilerplate_setup()
 
@@ -88,7 +95,7 @@ class AWR1843(AWR1843_Mixins):
         if resp != 'Done':
             if resp.startswith("Ignored"):
                 self.log.warn(resp)
-            elif resp.startswith("Debug"):
+            elif resp.startswith("Debug") or resp.startswith("Skipped"):
                 pass
             else:
                 self.log.error(resp)
@@ -269,7 +276,7 @@ class AWR1843(AWR1843_Mixins):
     def lvdsStreamCfg(
         self, subFrameIdx: int = -1, enableHeader: bool = True,
         dataFmt: types.LVDSFormat = types.LVDSFormat.ADC,
-        enableSW: bool = True
+        enableSW: bool = False
     ) -> None:
         """Configure LVDS stream (to the DCA1000EVM); `LvdsStreamCfg`.
 
