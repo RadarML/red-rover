@@ -45,8 +45,8 @@ class RadarDataWriter:
 
     def _open(self, path: str, buf: int):
         path = os.path.join(self.path, path)
-        if os.path.exists(path):
-            raise ValueError("File already exists: {}".format(path))
+        # if os.path.exists(path):
+        #     raise ValueError("File already exists: {}".format(path))
         return open(path, 'a', buf)
 
     def _write_time(self) -> None:
@@ -85,6 +85,8 @@ class RadarDataWriter:
 
         # Commit
         self.offset = offset_new
+
+        print("writing packet")
 
     def close(self):
         """Safely clean up."""

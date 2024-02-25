@@ -1,53 +1,98 @@
 """AWR1843 TI Demo API [3]."""
 
-from enum import Enum
+import time
 import serial
 import logging
 
-
-class LVDSFormat(Enum):
-    """LVDS data format.
-     
-    See `mmw_config.h:MmwDemo_LvdsStreamCfg` [3].
-    """
-
-    DISABLED = 0
-    ADC = 1
-    _RESERVED2 = 2
-    _RESERVED3 = 3
-    CP_ADC_CQ = 4
+from . import awr_types as types
+from .awr_boilerplate import AWR1843_Mixins
 
 
-class AWR1843:
+class AWR1843(AWR1843_Mixins):
     """AWR1843 Interface for the TI `demo/xwr18xx` MSS firmware.
  
-    Documented by [3]; based on a UART ASCII CLI.
+    Documented by [3-6]; based on a UART ASCII CLI.
+
+    NOTE: only a partial API is implemented. Non-mandatory calls which do not
+    affect the LVDS raw I/Q stream are not implemented.
+
+    Parameters
+    ----------
+    port: radar control serial port; typically the lower numbered one.
+    baudrate: baudrate of control port.
+    name: human-readable name.
 
     Usage
     -----
     """
 
+    _CMD_PROMPT = "\rmmwDemo:/>"
+
     def __init__(
-        self, port: str = "/dev/ttyACM0", name: str = "AWR1843",
-        baudrate: int = 115200
+        self, port: str = "/dev/ttyACM0", baudrate: int = 115200,
+        name: str = "AWR1843"       
     ) -> None:
         self.log = logging.getLogger(name=name)
-        self.port = serial.Serial(port, baudrate, timeout=1)
+        self.port = serial.Serial(port, baudrate, timeout=None)
         self.port.set_low_latency_mode(True)
 
     def setup(self) -> None:
-        self.config_lvds()
+        self.stop()
+        self.flushCfg()
+        self.channelCfg()
+        self.dfeDataOutputMode(types.DFEMode.LEGACY)
+        self.channelCfg(rxChannelEn=0b1111, txChannelEn=0b111)
+        self.adcCfg(adcOutputFmt=types.ADCFormat.COMPLEX_1X)
+        self.adcbufCfg()
+        self.profileCfg()
+        self.chirpCfg(0)
+        self.chirpCfg(1)
+        self.chirpCfg(2)
+        self.frameCfg()
+        self.compRangeBiasAndRxChanPhase()
+        self.lvdsStreamCfg()
 
-    def send(self, cmd: str) -> None:
+        self.boilerplate_setup()
+
+    def send(self, cmd: str, timeout: float = 10.0) -> None:
+        """Send message, and wait for a response.
+        
+        Parameters
+        ----------
+        cmd: command to send.
+        timeout: raises `TimeoutError` if the expected response is not
+            received by this time.
+        """
         self.log.info("Send: {}".format(cmd))
         self.port.write((cmd + '\n').encode('ascii'))
-        while(True):
-            line=self.port.readline()
-            print("Response:", line)
 
-            if not line.strip():
-                break
-        
+        # Read until we get "...\rmmwDemo:/>"
+        rx_buf = bytearray()
+        prompt = self._CMD_PROMPT.encode('utf-8')
+        start = time.time()
+        while not rx_buf.endswith(prompt):
+            rx_buf.extend(self.port.read(self.port.in_waiting))
+            if time.time() - start > timeout:
+                self.log.error("Timed out while waiting for response.")
+                raise TimeoutError()
+
+        # Remove all the cruft
+        resp = (
+            rx_buf.decode('utf-8', errors='replace')
+            .replace(self._CMD_PROMPT, '').replace(cmd, '')
+            .rstrip(' \n\t').lstrip(' \n\t')
+            .replace('\n', '; ').replace('\r', ''))
+        self.log.debug("Response: {}".format(resp))
+
+        # Check for non-normal response
+        if resp != 'Done':
+            if resp.startswith("Ignored"):
+                self.log.warn(resp)
+            elif resp.startswith("Debug"):
+                pass
+            else:
+                self.log.error(resp)
+                raise 
 
     def start(self, reconfigure: bool = True) -> None:
         """Start radar.
@@ -66,310 +111,176 @@ class AWR1843:
         self.send("sensorStop")
 
     def flushCfg(self) -> None:
+        """Clear existing (possibly partial) configuration."""
         self.send("flushCfg")
 
-
-    #dfeDataOutputMode
-    
     def dfeDataOutputMode(
-            self, 
-            modeType: int = 1) -> None: #0 means send no bytes on this data pot
-        
-
-        cmd = "dfeDataOutputMode {}".format(modeType)
+        self, modeType: types.DFEMode = types.DFEMode.LEGACY
+    ) -> None:
+        """Set frame data output mode."""
+        cmd = "dfeDataOutputMode {}".format(modeType.value)
         self.send(cmd)
-
-
-
-
-
-# guiMonitor
-        
-    #all parameters are flags
-    #1 is enable and 0 is disable
-
-    def guiMonitor(
-            self, 
-            subFrameIdx: int = -1, 
-            detectedObjects: int = 1, 
-            logMagRange: int = 1,
-            noiseProfile: int = 1,
-            rangeAzimuthHeatMap: int = 1,
-            rangeDopplerHeatMap: int = 1, 
-            statsInfo: int = 1) -> None:
-        
-
-        cmd = "guiMonitor {} {} {} {} {} {} {}".format(
-            subFrameIdx, detectedObjects, logMagRange, noiseProfile, rangeAzimuthHeatMap,
-            rangeDopplerHeatMap, statsInfo)
-        self.send(cmd)
-
-# cfarCfg
-    '''
-
-
-    mmw_cli.c line 1356
-
-    cliCfg.tableEntry[cnt].cmd            = "cfarCfg";
-    cliCfg.tableEntry[cnt].helpString     = "<subFrameIdx> <procDirection> <averageMode> <winLen> <guardLen> <noiseDiv> <cyclicMode> <thresholdScale> <peakGroupingEn>";
-    cliCfg.tableEntry[cnt].cmdHandlerFxn  = MmwDemo_CLICfarCfg;
-
-    
-
-    mmw_cli.c line 467
-    cfarCfg -1 0 2 8 4 3 0 15 1
-    cfarCfg -1 1 0 4 2 3 1 15 1
-    A B C D E F G H I
-
-    A is proc direction (either 0 for Range or -1 Doppler)
-    B is 
-    C is window length
-
-
-
-    /* Initialize configuration: */
-    memset ((void *)&cfarCfg, 0, sizeof(cfarCfg));
-
-    /* Populate configuration: */
-    procDirection             = (uint32_t) atoi (argv[2]);
-    cfarCfg.averageMode       = (uint8_t) atoi (argv[3]);
-    cfarCfg.winLen            = (uint8_t) atoi (argv[4]);
-    cfarCfg.guardLen          = (uint8_t) atoi (argv[5]);
-    cfarCfg.noiseDivShift     = (uint8_t) atoi (argv[6]);
-    cfarCfg.cyclicMode        = (uint8_t) atoi (argv[7]);
-    threshold                 = (float) atof (argv[8]);
-    cfarCfg.peakGroupingEn    = (uint8_t) atoi (argv[9]);
-
-    if (threshold > 100.0)
-    {
-        CLI_write("Error: Maximum value for CFAR thresholdScale is 100.0 dB.\n");
-        return -1;
-    }  
-
-    
-    '''
-
-
-    def cfarCfg(
-            self, 
-            subFrameIdx: int = -1, 
-            procDirection: int = 1, 
-            averageMode: int = 0,
-            winLen: int = 4,
-            guardLen: int = 2,
-            noiseDivShift: int = 3, 
-            cyclicMode: int = 1,
-            threshold: float = 15,
-            peakGroupingEn: int = 1) -> None:
-        
-
-        cmd = "cfarCfg {} {} {} {} {} {} {} {} {}".format(
-            subFrameIdx, procDirection, averageMode, winLen, guardLen,
-            noiseDivShift, cyclicMode, threshold, peakGroupingEn)
-        self.send(cmd)
-
-
 
     def channelCfg(
-            self, 
-            rxChannelEn: int = 15, #bitmasking
-            txChannelEn: int = 7, #bitmasking
-            cascading: int = 0 #SoC cascading, should be 0 for now
-            ) -> None:
+        self, rxChannelEn: int = 0b1111, txChannelEn: int = 0b111,
+        cascading: int = 0
+    ) -> None:
+        """Channel configuration for the radar subsystem.
         
-
-        cmd = "channelCfg {} {} {}".format(
-            rxChannelEn, txChannelEn, cascading)
+        Parameters
+        ----------
+        rxChannelEn, txChannelEn: bit-masked rx/tx channels to enable.
+        cascading: must always be set to 0.
+        """
+        cmd = "channelCfg {} {} {}".format(rxChannelEn, txChannelEn, cascading)
         self.send(cmd)
-
 
     def adcCfg(
-            self, 
-            numADCBits: int = 2, 
-            adcOutputFmt: int = 1) -> None:
+        self, numADCBits: types.ADCDepth = types.ADCDepth.BIT16,
+        adcOutputFmt: types.ADCFormat = types.ADCFormat.COMPLEX_1X
+    ) -> None:
+        """Configure radar subsystem ADC.
         
-
-        cmd = "adcCfg {} {}".format(
-            numADCBits, adcOutputFmt)
+        Parameters
+        ----------
+        numADCBits: ADC bit depth
+        adcOutputFmt: real, complex, and whether to filter the image band.
+        """
+        cmd = "adcCfg {} {}".format(numADCBits.value, adcOutputFmt.value)
         self.send(cmd)
 
-
-
-# multiObjBeamForming
-    
-    def multiObjBeamForming(
-            self, 
-            subFrameIdx: int = -1, 
-            enabled: int = 0, 
-            threshold: float = 0.5) -> None:
-        
-
-        cmd = "multiObjBeamForming {} {} {}".format(
-            subFrameIdx, enabled, threshold)
-        self.send(cmd)
-
-# calibDcRangeSig
-        
-    def calibDcRangeSig(
-            self, 
-            subFrameIdx: int = -1, 
-            enabled: int = 0, 
-            negativeBinIdx: int = -5,
-            positiveBinIdx: int = 8,
-            numAvgFrames: int = 256) -> None:
-        
-
-        cmd = "calibDcRangeSig {} {} {} {} {}".format(
-            subFrameIdx, enabled, negativeBinIdx, positiveBinIdx, numAvgFrames)
-        self.send(cmd)    
-
-# clutterRemoval
-        
-    def clutterRemoval(
-            self, 
-            subFrameIdx: int = -1, 
-            enabled: int = 0) -> None:
-        
-
-        cmd = "clutterRemoval {} {}".format(
-            subFrameIdx, enabled)
-        self.send(cmd)
-
-
-# adcbufCfg
-        
     def adcbufCfg(
-            self, 
-            subFrameIdx: int = -1, 
-            adcOutputFmt: int = 0, 
-            SampleSwap: int = 1,
-            ChanInterleave: int = 1,
-            ChirpThreshold: int = 1) -> None:
+        self, subFrameIdx: int = -1,
+        adcOutputFmt: types.ADCFormat = types.ADCFormat.COMPLEX_1X,
+        sampleSwap: types.SampleSwap = types.SampleSwap.MSB_LSB_IQ,
+        chanInterleave: int = 1, chirpThreshold: int = 1
+    ) -> None:
+        """ADC Buffer hardware configuration.
         
+        Parameters
+        ----------
+        subFrameIdx: subframe to apply to. If `-1`, applies to all subframes.
+        adcOutputFmt: real/complex ADC format.
+        sampleSwap: write samples in IQ or QI order.
+        chanInterleave: only non-interleaved (1) is supported.
+        chirpThreshold: some kind of "ping-pong" demo parameter.
+        """
+
         cmd = "adcbufCfg {} {} {} {} {}".format(
-            subFrameIdx, adcOutputFmt, SampleSwap, 
-            ChanInterleave, ChirpThreshold)
+            subFrameIdx, 1 if adcOutputFmt == types.ADCFormat.REAL else 0,
+            sampleSwap.value, chanInterleave, chirpThreshold)
         self.send(cmd)
 
+    def profileCfg(
+        self, profileId: int = 0, startFreq: float = 77.0,
+        idleTime: float = 267.0, adcStartTime: float = 7,
+        rampEndTime: float = 57.14, txStartTime: float = 1,
+        txOutPower: int = 0, txPhaseShifter: int = 0,
+        freqSlopeConst: float = 70.0,
+        numAdcSamples: int = 256, digOutSampleRate: int = 5209,
+        hpfCornerFreq1: types.HPFCornerFreq1 = types.HPFCornerFreq1.KHZ175,
+        hpfCornerFreq2: types.HPFCornerFreq2 = types.HPFCornerFreq2.KHZ350,
+        rxGain: int = 30
+    ) -> None:
+        """Configure chirp profile(s).
+        
+        Parameters
+        ----------
+        profileId: profile to configure. Can only have one in `DFEMode.LEGACY`.
+        startFreq: chirp start frequency, in GHz. Can be 76 or 77 [6].
+        idleTime, adcStartTime, rampEndTime, txStartTime: chirp timing; see the
+            "RampTimingCalculator" [5].
+        txOutPower, txPhaseShifter: not entirely clear what this does. The
+            demo claims that only '0' is tested / should be used.
+        freqSlopeConst: frequency slope ("ramp rate") in MHz/us; <100MHz/us.
+        numAdcSamples: Number of ADC samples per chirp.
+        digOutSampleRate: ADC sample rate in ksps (<12500); see Table 8-4 [6].
+        hpfCornerFreq1, hpfCornerFreq2: high pass filter corner frequencies.
+        rxGain: RX gain in dB. The meaning of this value is not clear.
+        """
+        assert startFreq in {76.0, 77.0}
+        assert freqSlopeConst < 100.0
+        assert digOutSampleRate < 12500
+
+        cmd = "profileCfg {} {} {} {} {} {} {} {} {} {} {} {} {} {}".format(
+            profileId, startFreq, idleTime, adcStartTime, rampEndTime,
+            txOutPower, txPhaseShifter, freqSlopeConst, txStartTime,
+            numAdcSamples, digOutSampleRate, hpfCornerFreq1.value,
+            hpfCornerFreq2.value, rxGain)
+        self.send(cmd)
+    
+    def chirpCfg(
+        self, chirpIdx: int = 0, profileId: int = 0,
+        startFreqVar: float = 0.0, freqSlopeVar: float = 0.0,
+        idleTimeVar: float = 0.0, adcStartTimeVar: float = 0.0,
+    ) -> None:
+        """Radar chirp configuration.
+        
+        Parameters
+        ----------
+        chirpIdx: Antenna index. Sets `chirpStartIdx`, `chirpEndIdx` [4] to
+            `chirpIdx`, and `txEnable` (antenna bitmask) to `1 << chirpIdx`.
+        profileId: chirp profile to use.
+        startFreqVar, freqSlopeVar, idleTimeVar, adcStartTimeVar: allowed
+            freq/slope/time tolerances; documentation states only 0 is tested.
+        txEnable: bit-mask of TX antenna to enable for this chirp.
+        """
+        cmd = "chirpCfg {} {} {} {} {} {} {} {}".format(
+            chirpIdx, chirpIdx, profileId, startFreqVar, freqSlopeVar,
+            idleTimeVar, adcStartTimeVar, 1 << chirpIdx)
+        self.send(cmd)
+
+    def frameCfg(
+        self, chirpStartIdx: int = 0, chirpEndIdx: int = 2, numLoops: int = 16,
+        numFrames: int = 0, framePeriodicity: float = 100.0,
+        triggerSelect: int = 1, frameTriggerDelay: float = 0.0
+    ) -> None:
+        """Radar frame configuration.
+        
+        NOTE: the frame should not have more than a 50% duty cycle according to
+        the mmWave SDK documentation [4].
+
+        Parameters
+        ----------
+        chirpStartIdx, chirpEndIdx: chirps to use in the frame.
+        numLoops: number of chirps per frame; must be >= 16 based on trial/error.
+        numFrames: how many frames to run before stopping; infinite if 0.
+        framePeriodicity: period between frames, in ms.
+        triggerSelect: only software trigger (1) is supported.
+        frameTriggerDelay: does not appear to be documented.
+        """
+        cmd = "frameCfg {} {} {} {} {} {} {}".format(
+            chirpStartIdx, chirpEndIdx, numLoops, numFrames, framePeriodicity,
+            triggerSelect, frameTriggerDelay)
+        self.send(cmd)
     
     def compRangeBiasAndRxChanPhase(
         self, rangeBias: float = 0.0,
         rx_phase: list[tuple[int, int]] = [(0, 1)] * 12
     ) -> None:
-        """Set range bias, channel phase compensation."""
-
+        """Set range bias, channel phase compensation.
+        
+        NOTE: rx_phase must have one term per TX-RX pair.
+        """
         args = ' '.join("{} {}".format(re, im) for re, im in rx_phase)
         cmd = "compRangeBiasAndRxChanPhase {} {}".format(rangeBias, args)
         self.send(cmd)
 
-# measureRangeBiasAndRxChanPhase
-        
-    def measureRangeBiasAndRxChanPhase(
-            self, 
-            enabled: int = 0, 
-            targetDistance: int = 0, 
-            searchWin: int = 0) -> None:
-        
-
-        cmd = "measureRangeBiasAndRxChanPhase {} {} {}".format(
-            enabled, targetDistance, searchWin)
-        self.send(cmd)
-    
-# aoaFovCfg
-
-    def aoaFovCfg(
-            self, 
-            subFrameIdx: int = -1, 
-            minAzimuthDeg: int = -90, 
-            maxAzimuthDeg: int = 90,
-            minElevationDeg: int = -90,
-            maxElevationDeg: int = 90) -> None:
-        
-        cmd = "aoaFovCfg {} {} {} {} {}".format(
-            subFrameIdx, minAzimuthDeg, maxAzimuthDeg, 
-            minElevationDeg, maxElevationDeg)
-        self.send(cmd)    
-    
-
-# cfarFovCfg
-    
-    def cfarFovCfg(
-            self, 
-            subFrameIdx: int = -1, 
-            procDirection: int = 0, 
-            min_meters_or_mps: float = 0,
-            max_meters_or_mps: float = 0) -> None:
-        
-        cmd = "cfarFovCfg {} {} {} {}".format(
-            subFrameIdx, procDirection, min_meters_or_mps, max_meters_or_mps)
-        self.send(cmd)    
-
-
-# extendedMaxVelocity
-        
-    def extendedMaxVelocity(
-            self, 
-            subFrameIdx: int = -1, 
-            enabled: int = 0) -> None:
-        
-
-        cmd = "extendedMaxVelocity {} {}".format(subFrameIdx, enabled)
-        self.send(cmd)
-
-# CQRxSatMonitor 
-
-    def CQRxSatMonitor( #this one is actually enabled
-            self, 
-            profile: int = 0, 
-            satMonSel: int = 3, 
-            priSliceDuration: int = 5,
-            numSlices: int = 128, 
-            rxChanMask: int = 0) -> None:
-        
-        cmd = "CQRxSatMonitor {} {} {} {} {}".format(
-            profile, satMonSel, priSliceDuration, numSlices, rxChanMask)
-        self.send(cmd)    
-        
-    
-# CQSigImgMonitor
-        
-    def CQSigImgMonitor( #this one is actually enabled
-            self, 
-            profile: int = 0, 
-            numSlices: int = 128, 
-            numSamplePerSlice: int = 1) -> None:
-        
-        cmd = "CQSigImgMonitor {} {} {}".format(
-            profile, numSlices, numSamplePerSlice)
-        self.send(cmd) 
-    
-
-# analogMonitor
-        
-    def analogMonitor(
-            self, 
-            rxSaturation: int = 0,  #0 is disable
-            sigImgBand: int = 0) -> None:
-        
-
-        cmd = "analogMonitor {} {}".format(rxSaturation, sigImgBand)
-        self.send(cmd)
-
-
     def lvdsStreamCfg(
-        self, subframe: int = -1, enable_header: bool = True,
-        data_format: LVDSFormat = LVDSFormat.ADC, sw_enabled: bool = False
+        self, subFrameIdx: int = -1, enableHeader: bool = True,
+        dataFmt: types.LVDSFormat = types.LVDSFormat.ADC,
+        enableSW: bool = True
     ) -> None:
         """Configure LVDS stream (to the DCA1000EVM); `LvdsStreamCfg`.
 
         Parameters
         ----------
         subframe: subframe to apply to. If `-1`, applies to all subframes.
-        enable_header: HSI (High speed interface; refers to LVDS) Header
+        enableHeader: HSI (High speed interface; refers to LVDS) Header
             enabled/disabled flag; only applies to HW streaming. Must be
             enabled for the DCA1000EVM [4].
-        data_format: LVDS format; we assume `LVDSFormat.ADC`.
-        sw_enabled: Use software (SW) instead of hardware streaming; causes
+        dataFmt: LVDS format; we assume `LVDSFormat.ADC`.
+        enableSW: Use software (SW) instead of hardware streaming; causes
             chirps to be streamed during the inter-frame time after processing.
             We assume HW streaming.
 
@@ -378,254 +289,6 @@ class AWR1843:
         [4] TI forums: https://e2e.ti.com/support/sensors-group/sensors/f/sensors-forum/845372/dca1000evm-how-to-relate-data-sent-from-dca1000-through-ethernet-to-the-data-sent-from-awr1843-through-uart
         """
         cmd = "lvdsStreamCfg {} {} {} {}".format(
-            subframe, 1 if enable_header else 0, data_format.value,
-            1 if sw_enabled else 0)
+            subFrameIdx, 1 if enableHeader else 0, dataFmt.value,
+            1 if enableSW else 0)
         self.send(cmd)
-
-# configDataPort 
-    #optional command to change the buadrate
-    
-    def configDataPort(
-            self, 
-            baudrate: int = 921600, 
-            ackPing: int = 0) -> None: #0 means send no bytes on this data pot
-        
-
-        cmd = "configDataPort {} {}".format(baudrate, ackPing)
-        self.send(cmd)
-
-
-    def lowPower(
-            self, 
-            dontCare: int = 0, 
-            adcMode: int = 0) -> None: 
-        
-
-        cmd = "lowPower {} {}".format(dontCare, adcMode)
-        self.send(cmd)
-
-
-        
-
-
-# queryDemoStatus
-    #optional command to get sensor state
-    def queryDemoStatus(self) -> None:
-        """Sensor State"""
-        self.send("queryDemoStatus")
-
-# calibData
-    #mandatory
-    
-    '''
-    A B C
-
-    "<save enable> <restore enable> <Flash offset>";
-    #control/mmwavelink/test/common/link_test.c line 3418
-    
-    '''
-    def calibData(
-            self, 
-            save_enable: int = 0, 
-            restore_enable: int = 0, 
-            Flash_offset: int = 0) -> None:
-        
-        cmd = "calibData {} {} {}".format(
-            save_enable, restore_enable, Flash_offset)
-        self.send(cmd) 
-
-
-        
-
-# frameCfg
-        
-    '''
-    cli_mmwave.c line 826
-
-    this takes the form 
-    0 2 16 0 200 1 0
-    A B C  D E   F G where each letter is an integer
-
-    E is from the frame rate
-
-    A is chirp start index as int 
-    B is chirp end index as int
-    C is number of loops
-    D is number of frames
-    E is frame periodicity
-    F is trigger select 
-    G is frame trigger delay 
-
-    defaults!
-    control/mmwave/test/xwr18xx/full/common_full.c line 631
-
-    ptrCtrlCfg->u.frameCfg.frameCfg.chirpStartIdx      = 0;
-    ptrCtrlCfg->u.frameCfg.frameCfg.chirpEndIdx        = 0;
-    ptrCtrlCfg->u.frameCfg.frameCfg.numLoops           = 128;
-    ptrCtrlCfg->u.frameCfg.frameCfg.numFrames          = 1; //0 means infinite
-    ptrCtrlCfg->u.frameCfg.frameCfg.numAdcSamples      = 256;
-    ptrCtrlCfg->u.frameCfg.frameCfg.framePeriodicity   = 20 * 1000000 / 5;
-    ptrCtrlCfg->u.frameCfg.frameCfg.triggerSelect      = 1;
-    ptrCtrlCfg->u.frameCfg.frameCfg.frameTriggerDelay  = 0;
-    
-    '''
-
-    def frameCfg(
-            self, 
-            chirpStartIdx: int = 0, 
-            chirpEndIdx: int = 2, 
-            numLoops: int = 16,
-            numFrames: int = 0,
-            framePeriodicity: float = 100,
-            triggerSelect: int = 1, 
-            frameTriggerDelay: float = 0) -> None:
-        
-
-        cmd = "frameCfg {} {} {} {} {} {} {}".format(
-            chirpStartIdx, chirpEndIdx, numLoops, numFrames, framePeriodicity,
-            triggerSelect, frameTriggerDelay)
-        self.send(cmd)
-
-
-    
-
-
-# chirpCfg
-    
-    '''
-    #file:///run/user/1000/gvfs/smb-share:server=shiraz.arena.andrew.cmu.edu,share=shiraz/scratch/ti/control/mmwavelink/docs/doxygen/html/structrl_chirp_cfg__t.html
-    0 0 0 0 0 0 0 1
-    A B C D E F G H
-
-    #from utils/cli/src/cli_mmwave.c  
-
-    # A is chirp start index
-    # B is chirp end index
-
-    # A and B should be the same????
-
-    # C is profile ID? 
-
-    # I'm 90% sure it should be 0, 
-    # it keeps being indexed when constructing profileCfg
-
-    # D is start frequency in Hz (should probably be 0)
-    # E is frequency slope in KHz/us (should probably be 0)
-
-    # F is Idle Time in us (default is 0)
-    # G is ADC Start Time in us (default 0)
-
-    # H is TX Enable in binary 
-    # (1/2/4) are bitmasked to TX 0/1/2
-    # chirpCfg should be called three times, with each arg
-    
-    '''
-
-    def chirpCfg(
-            self, 
-            chirpStartIdx: int = 0, 
-            chirpEndIdx: int = 0, 
-            profileId: int = 0,
-            startFreqVar: float = 0,
-            freqSlopeVar: float = 0,
-            idleTimeVar: float = 0, 
-            adcStartTimeVar: float = 0,
-            txEnable: int = 1) -> None:
-        
-
-        cmd = "chirpCfg {} {} {} {} {} {} {} {}".format(
-            chirpStartIdx, chirpEndIdx, profileId, startFreqVar, freqSlopeVar,
-            idleTimeVar, adcStartTimeVar, txEnable)
-        self.send(cmd)
-
-    #fix this
-    def profileCfg(
-            self, 
-            profileId: int = 0, 
-            startFreq: float = 77, 
-            idleTime: float = 267,
-            adcStartTime: float = 7,
-            rampEndTime: float = 57.14,
-            txOutPower: int = 0, #demo only supports 0
-            txPhaseShifter: int = 0, #demo only supports 0
-            freqSlopeConst: float = 70,
-            txStartTime: float = 1,
-            numAdcSamples: int = 256,
-            digOutSampleRate: int = 5209,
-            hpfCornerFreq1: int = 0,
-            hpfCornerFreq2: int = 0,
-            rxGain: int = 30) -> None:
-        
-
-        cmd = "profileCfg {} {} {} {} {} {} {} {} {} {} {} {} {} {}".format(
-            profileId, startFreq, idleTime, adcStartTime, rampEndTime,
-            txOutPower, txPhaseShifter, freqSlopeConst, txStartTime, numAdcSamples,
-            digOutSampleRate, hpfCornerFreq1, hpfCornerFreq2, rxGain)
-        self.send(cmd)
-
-
-
-
-
-
-
-'''
-
-% Frequency:77
-% Platform:xWR18xx_AOP
-% Scene Classifier:best_range_res
-% Azimuth Resolution(deg):30 + 38
-% Range Resolution(m):0.044
-% Maximum unambiguous Range(m):9.02
-% Maximum Radial Velocity(m/s):1
-% Radial velocity resolution(m/s):0.13
-% Frame Duration(msec):100
-% RF calibration data:None
-% Range Detection Threshold (dB):15
-% Doppler Detection Threshold (dB):15
-% Range Peak Grouping:enabled
-% Doppler Peak Grouping:enabled
-% Static clutter removal:disabled
-% Angle of Arrival FoV: Full FoV
-% Range FoV: Full FoV
-% Doppler FoV: Full FoV
-% ***************************************************************
-sensorStop
-flushCfg
-dfeDataOutputMode 1
-channelCfg 15 7 0
-adcCfg 2 1
-adcbufCfg -1 0 1 1 1
-profileCfg 0 77 267 7 57.14 0 0 70 1 256 5209 0 0 30
-chirpCfg 0 0 0 0 0 0 0 1
-chirpCfg 1 1 0 0 0 0 0 2
-chirpCfg 2 2 0 0 0 0 0 4
-frameCfg 0 2 16 0 100 1 0
-lowPower 0 0
-guiMonitor -1 1 1 0 0 0 1
-cfarCfg -1 0 2 8 4 3 0 15 1
-cfarCfg -1 1 0 4 2 3 1 15 1
-multiObjBeamForming -1 1 0.5
-clutterRemoval -1 0
-calibDcRangeSig -1 0 -5 8 256
-extendedMaxVelocity -1 0
-lvdsStreamCfg -1 0 0 0
-compRangeBiasAndRxChanPhase 0.0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
-measureRangeBiasAndRxChanPhase 0 1.5 0.2
-CQRxSatMonitor 0 3 5 121 0
-CQSigImgMonitor 0 127 4
-analogMonitor 0 0
-aoaFovCfg -1 -90 90 -90 90
-cfarFovCfg -1 0 0 8.92
-cfarFovCfg -1 1 -1 1.00
-calibData 0 0 0
-sensorStart
-
-
-'''
-
-'''
-
-
-
-'''

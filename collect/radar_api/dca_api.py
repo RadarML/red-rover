@@ -29,7 +29,7 @@ class DCA1000EVM:
     Raises
     ------
     TimeoutError: request timed out (is the device connected?).
-    DCA1000EVMException: exception raised by the FPGA.
+    DCAException: exception raised by the FPGA.
 
     Usage
     -----
@@ -106,7 +106,7 @@ class DCA1000EVM:
         self.thread = threading.Thread(target=self._loop, args=(writer,))
         self.thread.start()
 
-        self.reset_ar_device()
+        # self.reset_ar_device()
         self.start_record()
 
     def stop(self) -> None:
@@ -257,5 +257,5 @@ class DCA1000EVM:
             else:
                 msg = "Failure: {} (status={})".format(desc, response.status)
                 self.log.error(msg)
-                raise types.DCA100EVMException(msg)
+                raise types.DCAException(msg)
         return response
