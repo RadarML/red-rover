@@ -3,11 +3,12 @@
 import socket
 import logging
 import struct
+import time
 import threading
+import numpy as np
 
-from beartype.typing import Optional, cast
+from beartype.typing import Optional
 from . import dca_types as types
-from .dca_writer import RadarDataWriter
 
 
 class DCA1000EVM:
@@ -36,19 +37,15 @@ class DCA1000EVM:
     (1) Initialization parameters can be defaults.
     (2) Setup with `.setup(...)` with the appropriate `LVDS.TWO_LANE`
         (1843, 1642) or `LVDS.FOUR_LANE` (1243, 1443).
-    (3) Start recording with `.start(...)`; pass the desired `RadarDataWriter`.
-    (4) Stop recording with `.stop()`.
-
-    Example
-    -------
-    dca = DCA1000EVM(writer=RadarDataWriter("example_dir"))
-    dca.setup(delay=25, lvds=LVDS.TWO_LANE)
-    dca.start(RadarDataWriter("example_dir"))
-    time.sleep(10)
-    dca.stop()
+    (3) Start recording with `.start(...)`.
+    (4) Start the radar.
+        NOTE: the radar should be started afer `DCA1000EVM.start` to ensure
+        that the data are correctly aligned with respect to the byte count.
+    (5) Stop recording with `.stop()`.
+    (6) Stop the radar.
     """
 
-    _MAX_PACKET_SIZE = 4096
+    _MAX_PACKET_SIZE = 2048
 
     def _create_socket(
         self, addr: tuple[str, int], timeout: float
@@ -81,10 +78,10 @@ class DCA1000EVM:
             (sys_ip, data_port), timeout)
 
     def setup(
-        self, delay=25, lvds=types.LVDS.TWO_LANE
+        self, delay: float = 25.0, lvds=types.LVDS.TWO_LANE
     ) -> None:
         """Configure DCA1000EVM capture card.
-        
+
         Parameters
         ----------
         delay: packet delay in microseconds.
@@ -99,40 +96,51 @@ class DCA1000EVM:
             format=types.DataFormat.BIT16,
             capture=types.DataCapture.ETH_STREAM)
 
-    def start(self, writer: RadarDataWriter) -> None:
-        """Start data collection."""
-        assert self.recording is False
-        self.recording = True
-        self.thread = threading.Thread(target=self._loop, args=(writer,))
-        self.thread.start()
+    def stream(self, shape: list[int] = []):
+        """Get a python iterator corresponding to the data stream."""
+        size = int(np.prod(shape)) * np.dtype(np.uint16).itemsize
 
-        # self.reset_ar_device()
-        self.start_record()
+        offset = 0
+        timestamp = 0.0
+        buf = bytearray()
+        while True:
+            raw, _ = self.data_socket.recvfrom(self._MAX_PACKET_SIZE)
+            packet = types.DataPacket.from_bytes(raw)
 
-    def stop(self) -> None:
-        """Stop data collection."""
-        assert self.recording is True
-        self.recording = False
-        self.stop_record()
-        cast(threading.Thread, self.thread).join()
+            if offset == 0:
+                offset = packet.byte_count - (packet.byte_count % size)
+                timestamp = time.time()
 
-    def _loop(self, writer: RadarDataWriter) -> None:
-        """Main read loop."""
-        while self.recording:
-            try:
-                raw, _ = self.data_socket.recvfrom(self._MAX_PACKET_SIZE)
-                writer.write(types.DataPacket.from_bytes(raw))
-            except TimeoutError:
-                self.log.warn(
-                    "Data read timed out. Is the radar still running?")
-        writer.close()
+            complete = True
+            missing = packet.byte_count - offset
+            if missing < 0:
+                self.log.error("Out of order packet: -{} bytes".format(
+                    offset - packet.byte_count))
+            else:
+                if missing > 0:
+                    self.log.warn("Dropped packets: {} bytes".format(missing))
+                    buf.extend(b'\x00' * missing)
+                    offset = packet.byte_count
+                    complete = False
 
+                buf.extend(packet.data)
+                offset += len(packet.data)
+
+            # Write out if the buffer contains complete
+            while len(buf) >= size:
+                yield types.RadarFrame.from_bytes(
+                    timestamp, buf[:size], shape, complete)
+                buf[:size] = b''
+
+                # Update timestamp for remainder
+                if len(buf) < size:
+                    timestamp = time.time()
+ 
     def system_aliveness(self) -> None:
         """Simple ping to query system status."""
         cmd = types.Request(types.Command.SYSTEM_ALIVENESS, bytes())
         self._config_request(cmd, desc="Verify FPGA connectivity")
 
-    # untested
     def reset_ar_device(self) -> None:
         """Reset AR (Automotive Radar?) device.
 
@@ -201,14 +209,12 @@ class DCA1000EVM:
         cmd = types.Request(types.Command.CONFIG_EEPROM, cfg)
         self._config_request(cmd, desc="Configure EEPROM")
 
-    # untested
-    def start_record(self) -> None:
+    def start(self) -> None:
         """Start recording data."""
         cmd = types.Request(types.Command.START_RECORD, bytes())
         self._config_request(cmd, desc="Start recording")
 
-    # untested
-    def stop_record(self) -> None:
+    def stop(self) -> None:
         """Stop recording data."""
         cmd = types.Request(types.Command.STOP_RECORD, bytes())
         self._config_request(cmd, desc="Stop recording")

@@ -3,7 +3,6 @@
 import time
 import serial
 import logging
-import threading
 
 from . import awr_types as types
 from .awr_boilerplate import AWR1843_Mixins
@@ -25,6 +24,15 @@ class AWR1843(AWR1843_Mixins):
 
     Usage
     -----
+    (1) Initialization parameters can be defaults. The `port` may need to be
+        changed if multiple radars are being used, or another device uses the
+        `/dev/ttyACM0` default name. The baudrate should not be changed.
+    (2) Setup with `.setup(...)` with the desired radar configuration.
+    (3) Start the radar with `.start()`.
+        NOTE: if the configuration is invalid, `.start()` may return an error,
+        or cause the radar to freeze. This may require the radar to be rebooted
+        via manually disconnecting the power supply.
+    (4) Stop the radar with `.stop()`.
     """
 
     _CMD_PROMPT = "\rmmwDemo:/>"
@@ -38,27 +46,48 @@ class AWR1843(AWR1843_Mixins):
         self.port.set_low_latency_mode(True)
 
     def setup_from_config(self, path: str) -> None:
+        """Run raw setup from a config file."""
         with open(path) as f:
             cmds = f.readlines()
         for c in cmds:
             self.send(c.rstrip('\n'))
 
-    def setup(self) -> None:
+    def setup(
+        self, frequency: float = 77.0, idle_time: float = 110.0,
+        adc_start_time: float = 4.0, ramp_end_time: float = 56.0,
+        tx_start_time: float = 1.0, freq_slope: float = 70.006,
+        adc_samples: int = 256, sample_rate: int = 5000,
+        frame_length: int = 64, frame_period: float = 100.0
+    ) -> None:
+        """Configure radar.
+        
+        Parameters
+        ----------
+        frequency: frequency band, in GHz; 77.0 or 76.0.
+        idle_time, adc_start_time, ramp_end_time, tx_start_time: see TI chirp
+            timing documentation; in us.
+        freq_slope: chirp frequency slope; in MHz/us.
+        adc_samples: number of samples per chirp.
+        sample_rate: ADC sampling rate; in ksps.
+        frame_length: chirps per frame per TX antenna.
+        frame_period: time between the start of each frame; in ms.
+        """
         self.stop()
         self.flushCfg()
         self.channelCfg()
         self.dfeDataOutputMode(types.DFEMode.LEGACY)
         self.channelCfg(rxChannelEn=0b1111, txChannelEn=0b111)
         self.adcCfg(adcOutputFmt=types.ADCFormat.COMPLEX_1X)
-        self.adcbufCfg()
+        self.adcbufCfg(adcOutputFmt=types.ADCFormat.COMPLEX_1X)
         self.profileCfg(
-            startFreq=77.0, idleTime=110, adcStartTime=4.0,
-            rampEndTime=56.0, txStartTime=1, freqSlopeConst=70.006,
-            numAdcSamples=256, digOutSampleRate=5000)
+            startFreq=frequency, idleTime=idle_time,
+            adcStartTime=adc_start_time, rampEndTime=ramp_end_time,
+            txStartTime=tx_start_time, freqSlopeConst=freq_slope,
+            numAdcSamples=adc_samples, digOutSampleRate=sample_rate)
         self.chirpCfg(0)
         self.chirpCfg(1)
         self.chirpCfg(2)
-        self.frameCfg(numLoops=64, framePeriodicity=32)
+        self.frameCfg(numLoops=frame_length, framePeriodicity=frame_period)
         self.compRangeBiasAndRxChanPhase()
         self.lvdsStreamCfg()
 
@@ -100,9 +129,11 @@ class AWR1843(AWR1843_Mixins):
                 self.log.warn(resp)
             elif resp.startswith("Debug") or resp.startswith("Skipped"):
                 pass
+            elif '*****' in resp:
+                pass
             else:
                 self.log.error(resp)
-                raise 
+                raise types.AWRException(resp)
 
     def start(self, reconfigure: bool = True) -> None:
         """Start radar.

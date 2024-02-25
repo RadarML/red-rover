@@ -82,14 +82,14 @@ class Lidar(BaseSensor):
 
         self.fps = fps
         self.height = height
-        self.log.info("Initialized lidar {}: {}-beam @ {} fps".format(
-            self.addr, height, self.fps))
 
         config = client.SensorConfig()
         config.udp_port_lidar = port_lidar
         config.udp_port_imu = port_imu
         config.operating_mode = client.OperatingMode.OPERATING_NORMAL
         client.set_config(self.addr, config, persist=True, udp_dest_auto=True)
+        self.log.info("Initialized lidar {}: {}-beam @ {} fps".format(
+            self.addr, height, self.fps))
 
     @staticmethod
     def get_ip() -> Optional[str]:
@@ -130,7 +130,7 @@ class Lidar(BaseSensor):
                 ).astype(np.uint16),
                 "time": scan.timestamp.astype(np.float64)
             }
-            out.write(data, scan.timestamp)  # type: ignore
+            out.write(data)  # type: ignore
             out.end()
 
             if not self.active:

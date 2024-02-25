@@ -7,6 +7,7 @@ import struct
 import socket
 import logging
 import threading
+from queue import Queue, Empty
 import traceback
 from time import perf_counter, time
 
@@ -77,18 +78,34 @@ class BaseCapture:
         self.report_interval = report_interval
         self.log = log if log else logging.Logger("placeholder")
 
+        # If operating in "queued" write mode
+        if hasattr(self, "queued_write"):
+            self.done = False
+            self.queue: Queue = Queue()
+
+            def _worker() -> None:
+                while (not self.done) or (not self.queue.empty()):
+                    try:
+                        arg = self.queue.get(False)
+                        self.queued_write(arg)
+                    except Empty:
+                        pass
+
+            self.write_worker = threading.Thread(target=_worker)
+            self.write_worker.start()
+
         meta = self._init(path, **kwargs)
         with open(os.path.join(path, "meta.json"), 'w') as f:
             json.dump({**meta, **self._COMMON}, f, indent=4)
 
 
-    def start(self) -> None:
+    def start(self, timestamp: Optional[float] = None) -> None:
         """Mark start of current frame processing.
 
         (1) Records the current time as the timestamp for this frame, and
         (2) Marks the start of time utilization calculation for this frame.
         """
-        t = time()
+        t = time() if timestamp is None else timestamp
         self.start_time = perf_counter()
         self.ts.write(struct.pack('d', t))
         self.len += 1
@@ -106,20 +123,25 @@ class BaseCapture:
         if self.len % int(self.fps * self.report_interval) == 0:
             self.reset_stats()
 
-    def write(self, *args, **kwargs) -> None:
-        """Write a single frame."""
-        raise NotImplementedError()
+    def write(self, arg: Any) -> None:
+        """Put data in write queue."""
+        self.queue.put(arg)
 
     def close(self) -> None:
         """Close files and clean up."""
         self.ts.close()
         self.util.close()
 
+        if hasattr(self, "queued_write"):
+            self.done = False
+            self.write_worker.join()
+
     def reset_stats(self) -> None:
         """Reset tracked statistics."""
         period = np.array(self.period)
         runtime = np.array(self.runtime)
-        self.log.info("freq: {}  util: {}".format(
+        self.log.info("qlen: {}, freq: {}  util: {}".format(
+            self.queue.qsize() if hasattr(self, "queued_write") else -1,
             " ".join("{}={:5.2f}".format(
                 k, 1 / v(period)) for k, v in self._STATS.items()),
             " ".join("{}={:5.2f}".format(
@@ -248,7 +270,7 @@ class BaseSensor:
     def main(cls) -> None:
         """Run as a independent script."""
         try:
-            logging.basicConfig(level=logging.DEBUG)
+            logging.basicConfig(level=logging.INFO)
             cls.from_config(*sys.argv[1:]).loop()
             exit(0)
         except SensorException:

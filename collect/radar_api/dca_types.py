@@ -1,6 +1,7 @@
 """DCA1000EVM API Defines [2]."""
 
 import struct
+import numpy as np
 from enum import Enum
 from beartype.typing import cast, NamedTuple
 
@@ -159,3 +160,29 @@ class DataPacket(NamedTuple):
         """
         sn, bc = struct.unpack('<LQ', packet[:10] + b'\x00\x00')
         return cls(sequence_number=sn, byte_count=bc, data=packet[10:])
+
+
+class RadarFrame(NamedTuple):
+    """Radar frame.
+    
+    Attributes
+    ----------
+    timestamp: system timestamp of the first packet received for this frame.
+    data: radar frame data.
+    complete: whether the frame is "complete"; if `False`, this frame includes
+        zero-filled data.
+    """
+
+    timestamp: float
+    data: np.ndarray
+    complete: bool
+
+    @classmethod
+    def from_bytes(
+        cls, timestamp: float, data, shape: list[int], complete: bool
+    ) -> "RadarFrame":
+        """Generate from bytes."""
+        return cls(
+            timestamp=timestamp,
+            data=np.frombuffer(data, dtype=np.uint16).reshape(shape),
+            complete=complete)

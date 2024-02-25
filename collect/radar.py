@@ -1,0 +1,72 @@
+"""Radar data collection."""
+
+import lzma
+import os
+
+from common import BaseCapture, BaseSensor, SensorMetadata
+from radar_api import AWRSystem, dca_types
+
+
+class RadarCapture(BaseCapture):
+    """Radar capture data."""
+
+    def _init(
+        self, path, frame_length: int = 64, tx: int = 3, rx: int = 4,
+        samples: int = 256, **_
+    ) -> SensorMetadata:        
+        self.iq = open(os.path.join(path, "iq"), mode='wb')
+        self.valid = open(os.path.join(path, "valid"), mode='wb')
+        return {
+            "iq": {
+                "format": "raw", "type": "u16", "shape": (
+                    (frame_length, tx, rx, samples, 2)),
+                "desc": "Raw I/Q stream."},
+            "valid": {
+                "format": "raw", "type": "u8", "shape": [],
+                "desc": "True if this frame is complete (no zero-fill)."}}
+
+    def write(self, scan: dca_types.RadarFrame) -> None:
+        """Write a single frame."""
+        self.iq.write(scan.data.tobytes())
+        self.valid.write(b'\x01' if scan.complete else b'\x00')
+
+    def close(self) -> None:
+        """Close files and clean up."""
+        super().close()
+        self.iq.close()
+
+
+class Radar(BaseSensor):
+    """TI AWR1843Boost Radar Sensor & DCA1000EVM capture card.
+    
+    See `AWRSystem` for arguments.
+    """
+
+    def __init__(
+        self, name: str = "radar", **kwargs
+    ) -> None:
+        super().__init__(name=name)
+        self.radar = AWRSystem(**kwargs)
+
+    def capture(self, path: str) -> None:
+        """Create capture (while `active` is set)."""
+        out = RadarCapture(
+            os.path.join(path, self.name), log=self.log, 
+            rame_length=self.radar.frame_length, tx=3, rx=4,
+            samples=self.radar.adc_samples, fps=self.radar.fps)
+
+        stream = self.radar.stream()
+        for scan in stream:
+            out.start(scan.timestamp)
+            out.write(scan)
+            out.end()
+
+            if not self.active:
+                break
+
+        self.radar.stop()
+        out.close()
+
+
+if __name__ == '__main__':
+    Radar.main()

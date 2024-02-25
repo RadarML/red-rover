@@ -8,7 +8,7 @@ class AWR1843_Mixins:
     error, but are not actually relevant to the output.
     """
 
-    def send(self) -> None:
+    def send(self, cmd: str, timeout: float = 10.0) -> None:
         raise NotImplementedError()
 
     def boilerplate_setup(self) -> None:

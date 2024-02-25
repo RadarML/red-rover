@@ -20,11 +20,9 @@ References
     https://www.ti.com/lit/ds/symlink/awr1843.pdf?ts=1708800208074
 """
 
-from . import dca_types
+from . import dca_types, awr_types
 from .awr_api import AWR1843
 from .dca_api import DCA1000EVM
-from .dca_writer import RadarDataWriter
+from .system import AWRSystem
 
-__all__ = [
-    "dca_types", "AWR1843", "DCA1000EVM", "RadarDataWriter"
-]
+__all__ = ["AWRSystem", "awr_types", "dca_types", "AWR1843", "DCA1000EVM"]
