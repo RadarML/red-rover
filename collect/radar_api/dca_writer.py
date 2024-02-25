@@ -33,6 +33,7 @@ class RadarDataWriter:
         self.path = path
 
         self.offset = -1
+        self._missing = 0
         self.radar_iq = self._open("radar_iq", buffer * chirp_len)
         self.radar_ts = self._open("radar_ts", buffer)
 
@@ -71,9 +72,12 @@ class RadarDataWriter:
         # Fill in blank packets
         if packet.byte_count > self.offset:
             size = packet.byte_count - self.offset
-            self.log.warn("Missing I/Q data: {} bytes".format(size))
+            self._missing += size
+            self.log.warn("Missing I/Q data: {} bytes ({} packets) (total={:.1f}%)".format(
+                size, size / 1456, self._missing / self.offset * 100))
             self.radar_iq.write(b'\xff' * size)
- 
+            self.offset += size
+
         # Write data
         self.radar_iq.write(packet.data)
         offset_new = self.offset + len(packet.data)
@@ -85,8 +89,6 @@ class RadarDataWriter:
 
         # Commit
         self.offset = offset_new
-
-        print("writing packet")
 
     def close(self):
         """Safely clean up."""

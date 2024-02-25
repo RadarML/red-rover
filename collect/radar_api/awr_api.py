@@ -51,13 +51,16 @@ class AWR1843(AWR1843_Mixins):
         self.channelCfg(rxChannelEn=0b1111, txChannelEn=0b111)
         self.adcCfg(adcOutputFmt=types.ADCFormat.COMPLEX_1X)
         self.adcbufCfg()
-        self.profileCfg()
+        self.profileCfg(
+            startFreq=77.0, idleTime=110, adcStartTime=4.0,
+            rampEndTime=56.0, txStartTime=1, freqSlopeConst=70.006,
+            numAdcSamples=256, digOutSampleRate=5000)
         self.chirpCfg(0)
         self.chirpCfg(1)
         self.chirpCfg(2)
-        self.frameCfg()
+        self.frameCfg(numLoops=64, framePeriodicity=32)
         self.compRangeBiasAndRxChanPhase()
-        self.lvdsStreamCfg(enableHeader=False, enableSW=False)
+        self.lvdsStreamCfg()
 
         self.boilerplate_setup()
 
@@ -179,8 +182,8 @@ class AWR1843(AWR1843_Mixins):
 
     def profileCfg(
         self, profileId: int = 0, startFreq: float = 77.0,
-        idleTime: float = 267.0, adcStartTime: float = 7,
-        rampEndTime: float = 57.14, txStartTime: float = 1,
+        idleTime: float = 267.0, adcStartTime: float = 7.0,
+        rampEndTime: float = 57.14, txStartTime: float = 1.0,
         txOutPower: int = 0, txPhaseShifter: int = 0,
         freqSlopeConst: float = 70.0,
         numAdcSamples: int = 256, digOutSampleRate: int = 5209,
@@ -273,7 +276,7 @@ class AWR1843(AWR1843_Mixins):
         self.send(cmd)
 
     def lvdsStreamCfg(
-        self, subFrameIdx: int = -1, enableHeader: bool = True,
+        self, subFrameIdx: int = -1, enableHeader: bool = False,
         dataFmt: types.LVDSFormat = types.LVDSFormat.ADC,
         enableSW: bool = False
     ) -> None:
@@ -283,16 +286,11 @@ class AWR1843(AWR1843_Mixins):
         ----------
         subframe: subframe to apply to. If `-1`, applies to all subframes.
         enableHeader: HSI (High speed interface; refers to LVDS) Header
-            enabled/disabled flag; only applies to HW streaming. Must be
-            enabled for the DCA1000EVM [4].
+            enabled/disabled flag; disabled for raw mode.
         dataFmt: LVDS format; we assume `LVDSFormat.ADC`.
         enableSW: Use software (SW) instead of hardware streaming; causes
             chirps to be streamed during the inter-frame time after processing.
             We assume HW streaming.
-
-        References
-        ----------
-        [4] TI forums: https://e2e.ti.com/support/sensors-group/sensors/f/sensors-forum/845372/dca1000evm-how-to-relate-data-sent-from-dca1000-through-ethernet-to-the-data-sent-from-awr1843-through-uart
         """
         cmd = "lvdsStreamCfg {} {} {} {}".format(
             subFrameIdx, 1 if enableHeader else 0, dataFmt.value,
