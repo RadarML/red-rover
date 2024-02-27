@@ -17,10 +17,13 @@ class Controller:
 
     def _sendall(self, msg: dict) -> None:
         for sensor in self.sensors:
-            tx = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-            tx.connect(os.path.join(self.addr, sensor))
-            tx.send(json.dumps(msg).encode())
-            tx.close()
+            try:
+                tx = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+                tx.connect(os.path.join(self.addr, sensor))
+                tx.send(json.dumps(msg).encode())
+                tx.close()
+            except Exception as e:
+                print(e)
 
     def start(self, path: str) -> None:
         self._sendall({"type": "start", "path": path})

@@ -24,5 +24,8 @@ from . import dca_types, awr_types
 from .awr_api import AWR1843
 from .dca_api import DCA1000EVM
 from .system import AWRSystem
+from .config import RadarConfig, CaptureConfig
 
-__all__ = ["AWRSystem", "awr_types", "dca_types", "AWR1843", "DCA1000EVM"]
+__all__ = [
+    "AWRSystem", "RadarConfig", "CaptureConfig",
+    "awr_types", "dca_types", "AWR1843", "DCA1000EVM"]

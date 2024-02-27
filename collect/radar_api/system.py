@@ -1,49 +1,63 @@
 """Full radar capture system API."""
 
+import logging
+
 from .awr_api import AWR1843
 from .dca_api import DCA1000EVM
+from .config import RadarConfig, CaptureConfig
 
 
 class AWRSystem:
     """Radar capture system with a AWR1843Boost and DCA1000EVM."""
 
     def __init__(
-        self, port: str = "/dev/ttyACM0", sys_ip: str = "192.168.33.30",
-        fpga_ip: str = "192.168.33.180", packet_delay: float = 5.0,
-        config: dict = {}
+        self, *, radar: RadarConfig, capture: CaptureConfig,
+        name: str = "RadarCapture"
     ) -> None:
+        self.log = logging.getLogger(name)
+        self._statistics(radar, capture)
 
-        self.dca = DCA1000EVM(sys_ip=sys_ip, fpga_ip=fpga_ip)
-        self.dca.setup(delay=packet_delay)
-        self.awr = AWR1843(port=port)
+        self.dca = DCA1000EVM(
+            sys_ip=capture.sys_ip, fpga_ip=capture.fpga_ip,
+            data_port=capture.data_port, config_port=capture.config_port,
+            timeout=capture.timeout, socket_buffer=capture.socket_buffer)
+        self.dca.setup(delay=capture.delay)
+        self.awr = AWR1843(port=radar.port)
 
-        self.config = config
-        self.fps = config.get('fps', 10.0)
-        self.shape = [
-            config.get('frame_length', 16), 3, 4,
-            config.get('adc_samples', 256), 2]
+        self.config = radar
+        self.fps = 1000.0 / radar.frame_period * radar.frame_length
+
+    def _statistics(self, radar: RadarConfig, capture: CaptureConfig) -> None:
+        """Compute statistics, and warn if potentially invalid."""
+
+        util = radar.throughput / capture.throughput
+        self.log.info("Radar/Capture card: {} Mbps / {} Mbps ({:.1f}%)".format(
+            int(radar.throughput / 1e6), int(capture.throughput / 1e6),
+            util * 100))
+        if radar.throughput > capture.throughput * 0.8:
+            self.log.warn("High data utilization: {:.1f}%".format(util * 100))
+
+        duty_cycle = radar.frame_time / radar.frame_period
+        self.log.info("Radar duty cycle: {:.1f}%".format(duty_cycle * 100))
+        if duty_cycle > 0.95:
+            self.log.warn(
+                "High radar duty cycle: {:.1f}%".format(duty_cycle * 100))
+
+        excess = (
+            radar.ramp_end_time - radar.adc_start_time - radar.sample_time)
+        self.log.info("Excess ramp time: {:.1f}us".format(excess))
+        if excess < 0:
+            self.log.warn("Insufficient ramp time: {:.1f}us".format(excess))
 
     def stream(self):
         """Get frame iterator."""
         # Reboot radar in case it is stuck
         self.dca.reset_ar_device()
         self.dca.start()
-        # self.awr.setup(
-        #     frequency=77.0, idle_time=107.9,
-        #     adc_start_time=5.99, ramp_end_time=58.22,
-        #     tx_start_time=2.0, freq_slope=63.005, 
-        #     adc_samples=256, sample_rate=5000,
-        #     frame_length=64, frame_period=34.0)
-        self.awr.setup(
-            frequency=77.0, idle_time=106.0,
-            adc_start_time=5.99, ramp_end_time=58.22,
-            tx_start_time=2.0, freq_slope=63.005, 
-            adc_samples=256, sample_rate=5000,
-            frame_length=16, frame_period=8.0)
-
+        self.awr.setup(**self.config.as_dict())
         self.awr.start()
 
-        return self.dca.stream(self.shape)
+        return self.dca.stream(self.config.shape[1:])
 
     def stop(self):
         """Stop data collection."""

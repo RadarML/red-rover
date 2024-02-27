@@ -7,11 +7,11 @@ SPEED_OF_LIGHT = 299792458
 """Speed of light, in m/s."""
 
 
-CONFIG_PROPERTIES = [
+RADAR_PROPERTIES = [
     "frequency", "idle_time", "adc_start_time", "ramp_end_time",
     "tx_start_time", "freq_slope", "adc_samples", "sample_rate",
     "frame_length", "frame_period"]
-"""Properties which are required to define a radar configuration."""
+"""Properties which define a radar configuration."""
 
 
 class RadarConfig(NamedTuple):
@@ -19,6 +19,7 @@ class RadarConfig(NamedTuple):
     
     Parameters
     ----------
+    port: Control serial port (usually `/dev/ttyACM0`).
     frequency: base frequency, in GHz.
     idle_time, adc_start_time, ramp_end_time, tx_start_time: radar timing
         parameters, in us.
@@ -41,6 +42,7 @@ class RadarConfig(NamedTuple):
     sample_rate: int
     frame_length: int
     frame_period: float
+    port: str = "/dev/ttyACM0"
     num_tx: int = 3
     num_rx: int = 4
 
@@ -98,9 +100,16 @@ class RadarConfig(NamedTuple):
         """Maximum doppler velocity, in m/s."""
         return self.wavelength / (4 * self.chirp_time * 1e-6)
 
+    @property
+    def throughput(self):
+        """Throughput, in bits/sec."""
+        return (
+            self.frame_length * self.num_tx * self.num_rx * self.adc_samples
+            * 2 * 8 / self.frame_time * 1e3)
+
     def as_dict(self) -> dict:
         """Export as dictionary."""
-        return {k: getattr(self, k) for k in CONFIG_PROPERTIES}
+        return {k: getattr(self, k) for k in RADAR_PROPERTIES}
 
     def check(self):
         """Check validity."""
@@ -109,3 +118,40 @@ class RadarConfig(NamedTuple):
 
         excess = self.ramp_end_time - self.adc_start_time - self.sample_time
         print("Excess ramping time (>0):", excess)
+
+
+DCA_PACKET_SIZE = 1466
+"""Typical radar packet size, hard-coded in the FPGA."""
+
+
+DCA_BITRATE = 1e9
+"""Gigabit ethernet speed."""
+
+
+class CaptureConfig(NamedTuple):
+    """Capture card configuration.
+    
+    Attributes
+    ----------
+    sys_ip: system IP; should be manually configured with a subnet mask of
+        `255.255.255.0`.
+    fpga_ip: FPGA IP address; either hard-coded or configured.
+    data_port, config_port: data, configuration network ports.
+    timeout: Socket read timeout, in seconds.
+    socket_buffer: Network read buffer size; should be less than `rmem_max`.
+    delay: Packet delay for the capture card, in microseconds.
+    """
+
+    sys_ip: str = "192.168.33.30"
+    fpga_ip: str = "192.168.33.180"
+    data_port: int = 4098
+    config_port: int = 4096
+    timeout: float = 1.0
+    socket_buffer: int = 2048000
+    delay: float = 5.0
+
+    @property
+    def throughput(self):
+        """Theoretical maximum data rate, in bits/sec."""
+        packet_time = DCA_PACKET_SIZE * 8 / DCA_BITRATE + self.delay / 1e6
+        return 1 / packet_time * DCA_PACKET_SIZE * 8

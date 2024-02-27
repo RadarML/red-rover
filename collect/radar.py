@@ -3,7 +3,7 @@
 import os
 
 from common import BaseCapture, BaseSensor, SensorMetadata
-from radar_api import AWRSystem, dca_types
+from radar_api import AWRSystem, dca_types, RadarConfig, CaptureConfig
 
 
 class RadarCapture(BaseCapture):
@@ -40,16 +40,17 @@ class Radar(BaseSensor):
     """
 
     def __init__(
-        self, name: str = "radar", **kwargs
+        self, name: str = "radar", radar: dict = {}, capture: dict = {}
     ) -> None:
         super().__init__(name=name)
-        self.radar = AWRSystem(**kwargs)
+        self.radar = AWRSystem(
+            radar=RadarConfig(**radar), capture=CaptureConfig(**capture))
 
     def capture(self, path: str) -> None:
         """Create capture (while `active` is set)."""
         out = RadarCapture(
             os.path.join(path, self.name), log=self.log,
-            shape=self.radar.shape, fps=self.radar.fps)
+            shape=self.radar.config.shape, fps=self.radar.fps)
 
         stream = self.radar.stream()
         for scan in stream:

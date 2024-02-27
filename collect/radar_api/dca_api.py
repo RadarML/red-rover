@@ -25,6 +25,8 @@ class DCA1000EVM:
     data_port: Port used for recording data.
     config_port: Port used for configuration.
     timeout: Config socket read timeout.
+    socket_buffer: Receive socket buffer size. Ensure that `socket_buffer` is
+        less than `/proc/sys/net/core/rmem_max`.
     name: Human-readable name.
 
     Raises
@@ -72,7 +74,7 @@ class DCA1000EVM:
     def __init__(
         self, sys_ip: str = "192.168.33.30", fpga_ip: str = "192.168.33.180",
         data_port: int = 4098, config_port: int = 4096, timeout: float = 1.0,
-        name: str = "DCA1000EVM"
+        socket_buffer: int = 2048000, name: str = "DCA1000EVM"
     ) -> None:
         self.log = logging.getLogger(name=name)
 
@@ -86,12 +88,15 @@ class DCA1000EVM:
         self.config_socket = self._create_socket(
             (sys_ip, config_port), timeout)
         self.data_socket = self._create_socket((sys_ip, data_port), 0.0)
+        self.data_socket.setsockopt(
+            socket.SOL_SOCKET, socket.SO_SNDBUF, socket_buffer)
+
         self.timeout = timeout
 
         self._warn_ooo_counter = 0
 
     def setup(
-        self, delay: float = 25.0, lvds=types.LVDS.TWO_LANE
+        self, delay: float = 5.0, lvds=types.LVDS.TWO_LANE
     ) -> None:
         """Configure DCA1000EVM capture card.
 

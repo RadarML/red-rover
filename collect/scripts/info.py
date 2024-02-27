@@ -7,7 +7,7 @@ import math
 
 
 def _size(
-    x: int, units: list = ['B', 'KB', 'MB', 'GB', 'TB'], suffix: str = ''
+    x: float, units: list = ['B', 'KB', 'MB', 'GB', 'TB'], suffix: str = ''
 ) -> str:
     if x < 1000:
         return "{:4.3g} {}".format(x, units[0]) + suffix
