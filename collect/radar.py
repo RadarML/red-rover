@@ -1,6 +1,5 @@
 """Radar data collection."""
 
-import lzma
 import os
 
 from common import BaseCapture, BaseSensor, SensorMetadata
@@ -11,15 +10,13 @@ class RadarCapture(BaseCapture):
     """Radar capture data."""
 
     def _init(
-        self, path, frame_length: int = 64, tx: int = 3, rx: int = 4,
-        samples: int = 256, **_
+        self, path, shape: list[int] = [], **_
     ) -> SensorMetadata:        
         self.iq = open(os.path.join(path, "iq"), mode='wb')
         self.valid = open(os.path.join(path, "valid"), mode='wb')
         return {
             "iq": {
-                "format": "raw", "type": "u16", "shape": (
-                    (frame_length, tx, rx, samples, 2)),
+                "format": "raw", "type": "u16", "shape": shape,
                 "desc": "Raw I/Q stream."},
             "valid": {
                 "format": "raw", "type": "u8", "shape": [],
@@ -51,9 +48,8 @@ class Radar(BaseSensor):
     def capture(self, path: str) -> None:
         """Create capture (while `active` is set)."""
         out = RadarCapture(
-            os.path.join(path, self.name), log=self.log, 
-            rame_length=self.radar.frame_length, tx=3, rx=4,
-            samples=self.radar.adc_samples, fps=self.radar.fps)
+            os.path.join(path, self.name), log=self.log,
+            shape=self.radar.shape, fps=self.radar.fps)
 
         stream = self.radar.stream()
         for scan in stream:

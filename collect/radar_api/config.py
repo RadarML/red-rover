@@ -1,0 +1,111 @@
+"""Radar configuration."""
+
+from beartype.typing import NamedTuple
+
+
+SPEED_OF_LIGHT = 299792458
+"""Speed of light, in m/s."""
+
+
+CONFIG_PROPERTIES = [
+    "frequency", "idle_time", "adc_start_time", "ramp_end_time",
+    "tx_start_time", "freq_slope", "adc_samples", "sample_rate",
+    "frame_length", "frame_period"]
+"""Properties which are required to define a radar configuration."""
+
+
+class RadarConfig(NamedTuple):
+    """Radar configuration.
+    
+    Parameters
+    ----------
+    frequency: base frequency, in GHz.
+    idle_time, adc_start_time, ramp_end_time, tx_start_time: radar timing
+        parameters, in us.
+    freq_slope: chirp slope, in MHz/us.
+    adc_samples: number of samples per chirp.
+    sample_rate: ADC sampling rate, in KHz.
+    frame_length: number of chirps per TX antenna per frame.
+    frame_period: periodicity of frames, in ms.
+    num_tx: number of TX antenna; 3 for the AWR1843.
+    num_rx: number of RX antenna; 4 for the AWR1843.
+    """
+
+    frequency: float
+    idle_time: float
+    adc_start_time: float
+    ramp_end_time: float
+    tx_start_time: float
+    freq_slope: float
+    adc_samples: int
+    sample_rate: int
+    frame_length: int
+    frame_period: float
+    num_tx: int = 3
+    num_rx: int = 4
+
+    @property
+    def shape(self):
+        """Radar data cube shape."""
+        return [
+            self.frame_length, self.num_tx, self.num_rx, self.adc_samples, 2]
+
+    @property
+    def chirp_time(self):
+        """Per-TX antenna inter-chirp time T_c, in us."""
+        return (self.idle_time + self.ramp_end_time) * self.num_tx
+
+    @property
+    def frame_time(self):
+        """Total radar frame time, in ms."""
+        return self.chirp_time * self.frame_length / 1e3
+
+    @property
+    def sample_time(self):
+        """Total sampling time T_s, in us."""
+        return self.adc_samples / self.sample_rate * 1e3
+
+    @property
+    def bandwidth(self):
+        """Effective bandwidth, in MHz."""
+        return self.freq_slope * self.sample_time
+
+    @property
+    def range_resolution(self):
+        """Range resolution, in m."""
+        return SPEED_OF_LIGHT / (2 * self.bandwidth * 1e6)
+
+    @property
+    def max_range(self):
+        """Maximum range, in m."""
+        return self.range_resolution * self.adc_samples
+
+    @property
+    def wavelength(self):
+        """Center wavelength, in m."""
+        offset_time = self.adc_start_time + self.sample_time / 2
+        return SPEED_OF_LIGHT / (
+            self.frequency * 1e9 + self.freq_slope * (offset_time) * 1e6)
+
+    @property
+    def doppler_resolution(self):
+        """Doppler resolution, in m/s."""    
+        return (
+            self.wavelength / (2 * self.frame_length * self.chirp_time * 1e-6))
+
+    @property
+    def max_doppler(self):
+        """Maximum doppler velocity, in m/s."""
+        return self.wavelength / (4 * self.chirp_time * 1e-6)
+
+    def as_dict(self) -> dict:
+        """Export as dictionary."""
+        return {k: getattr(self, k) for k in CONFIG_PROPERTIES}
+
+    def check(self):
+        """Check validity."""
+        duty_cycle = self.frame_time / self.frame_period
+        print("Duty cycle (<1):", duty_cycle)
+
+        excess = self.ramp_end_time - self.adc_start_time - self.sample_time
+        print("Excess ramping time (>0):", excess)

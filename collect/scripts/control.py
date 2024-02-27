@@ -4,6 +4,7 @@ import os
 import socket
 import json
 import yaml
+from datetime import datetime
 
 
 class Controller:
@@ -46,7 +47,8 @@ def _main(args):
 
     ctrl = Controller(sensors=list(cfg.keys()))
     if args.action == 'start':
-        ctrl.start(os.path.abspath(args.path))
+        dt = datetime.now().strftime("%Y.%m.%d-%H.%M.%S")
+        ctrl.start("{}.{}".format(os.path.abspath(args.path), dt))
     elif args.action == 'stop':
         ctrl.stop()
     elif args.action == 'exit':

@@ -6,6 +6,10 @@ RADAR_NETMASK=255.255.255.0
 VENV=./env/bin
 
 
+.PHONY: run
+run:
+	zellij --layout rover.kdl
+
 env:
 	$(PYTHON) -m venv env
 	$(VENV)/pip install -r requirements.txt

@@ -69,9 +69,11 @@ class AWR1843(AWR1843_Mixins):
         freq_slope: chirp frequency slope; in MHz/us.
         adc_samples: number of samples per chirp.
         sample_rate: ADC sampling rate; in ksps.
-        frame_length: chirps per frame per TX antenna.
+        frame_length: chirps per frame per TX antenna. Must be a power of 2.
         frame_period: time between the start of each frame; in ms.
         """
+        assert frame_length & (frame_length - 1) == 0
+
         self.stop()
         self.flushCfg()
         self.channelCfg()
@@ -128,9 +130,9 @@ class AWR1843(AWR1843_Mixins):
             if resp.startswith("Ignored"):
                 self.log.warn(resp)
             elif resp.startswith("Debug") or resp.startswith("Skipped"):
-                pass
+                pass  # debug, skipped
             elif '*****' in resp:
-                pass
+                pass  # header
             else:
                 self.log.error(resp)
                 raise types.AWRException(resp)

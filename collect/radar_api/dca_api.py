@@ -54,6 +54,16 @@ class DCA1000EVM:
         sock = socket.socket(
             socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
         sock.bind(addr)
+
+        sock.settimeout(0.0)
+        try:
+            while True:
+                data = sock.recv(self._MAX_PACKET_SIZE)
+                if not data:
+                    break
+        except BlockingIOError:
+            pass
+
         sock.settimeout(timeout)
         self.log.info("Connected to {}:{}".format(*addr))
         return sock
@@ -75,7 +85,7 @@ class DCA1000EVM:
         self.config_socket = self._create_socket(
             (sys_ip, config_port), timeout)
         self.data_socket = self._create_socket(
-            (sys_ip, data_port), timeout)
+            (sys_ip, data_port), timeout)        
 
     def setup(
         self, delay: float = 25.0, lvds=types.LVDS.TWO_LANE
@@ -88,6 +98,12 @@ class DCA1000EVM:
         lvds: `FOUR_LANE` or `TWO_LANE`; select based on radar.
         """
         self.system_aliveness()
+
+        # reset the radar to make sure invalid LVDS data isn't coming in
+        self.reset_ar_device()
+        # send a "stop" command in case the capture card is still running
+        self.stop()
+
         self.read_fpga_version()
         self.configure_record(delay=delay)
         self.configure_fpga(
@@ -102,6 +118,7 @@ class DCA1000EVM:
 
         offset = 0
         timestamp = 0.0
+        warn_ooo = 0
         buf = bytearray()
         while True:
             raw, _ = self.data_socket.recvfrom(self._MAX_PACKET_SIZE)
@@ -114,8 +131,13 @@ class DCA1000EVM:
             complete = True
             missing = packet.byte_count - offset
             if missing < 0:
-                self.log.error("Out of order packet: -{} bytes".format(
-                    offset - packet.byte_count))
+                warn_ooo += 1
+                if warn_ooo < 10:
+                    self.log.error("Out of order packet: -{} bytes".format(
+                        offset - packet.byte_count))
+                if warn_ooo == 10:
+                    self.log.error(
+                        "Suppressing 'out of order' on the 10th trigger.")
             else:
                 if missing > 0:
                     self.log.warn("Dropped packets: {} bytes".format(missing))
@@ -142,10 +164,7 @@ class DCA1000EVM:
         self._config_request(cmd, desc="Verify FPGA connectivity")
 
     def reset_ar_device(self) -> None:
-        """Reset AR (Automotive Radar?) device.
-
-        Most likely resets the FPGA buffer.
-        """
+        """Reset (i.e. reboot) Radar (AR - Automotive Radar) device."""
         cmd = types.Request(types.Command.RESET_AR_DEV, bytes())
         self._config_request(cmd, "Reset AR Device")
 
@@ -237,7 +256,14 @@ class DCA1000EVM:
             return (major, minor, playback != 0)
 
     def configure_record(self, delay: float = 25.0) -> None:
-        """Configure data packets (with a packet delay in us)."""
+        """Configure data packets (with a packet delay in us).
+        
+        The packet delay must be between 5 and 500 us (Table 19, [1]). This
+        sets the theoretical maximum throughput to between 193 and 706 Mbps.
+        """
+        assert 5.0 <= delay
+        assert delay <= 500.0
+
         converted = int(
             delay * types.FPGA_CLK_CONVERSION_FACTOR
             / types.FPGA_CLK_PERIOD_IN_NANO_SEC)

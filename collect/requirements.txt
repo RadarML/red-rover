@@ -1,6 +1,7 @@
 numpy
 beartype
 pyyaml
+types-PyYAML
 jaxtyping
 pyserial                # Radar, IMU
 opencv-python-headless  # Camera

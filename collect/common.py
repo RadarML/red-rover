@@ -46,9 +46,6 @@ class BaseCapture:
         "ts": {
             "format": "raw", "type": "f64", "shape": (),
             "description": "Timestamp, in seconds."},
-        "util": {
-            "format": "raw", "type": "f32", "shape": (),
-            "description": "System utilization fraction for data processing."}
     }
 
     def _init(self, path: str, **kwargs) -> SensorMetadata:
@@ -61,12 +58,11 @@ class BaseCapture:
         raise NotImplementedError()
 
     def __init__(
-        self, path: str, fps: float = 1.0, report_interval: float = 10.0,
+        self, path: str, fps: float = 1.0, report_interval: float = 5.0,
         log: Optional[logging.Logger] = None, **kwargs
     ) -> None:
         os.makedirs(path)
         self.ts = open(os.path.join(path, "ts"), 'wb')
-        self.util = open(os.path.join(path, "util"), 'wb')
 
         self.len = 0
         self.period: list[float] = []
@@ -77,22 +73,6 @@ class BaseCapture:
         self.fps = fps
         self.report_interval = report_interval
         self.log = log if log else logging.Logger("placeholder")
-
-        # If operating in "queued" write mode
-        if hasattr(self, "queued_write"):
-            self.done = False
-            self.queue: Queue = Queue()
-
-            def _worker() -> None:
-                while (not self.done) or (not self.queue.empty()):
-                    try:
-                        arg = self.queue.get(False)
-                        self.queued_write(arg)
-                    except Empty:
-                        pass
-
-            self.write_worker = threading.Thread(target=_worker)
-            self.write_worker.start()
 
         meta = self._init(path, **kwargs)
         with open(os.path.join(path, "meta.json"), 'w') as f:
@@ -118,34 +98,27 @@ class BaseCapture:
         self.period.append(end - self.prev_time)
         self.runtime.append(end - self.start_time)
         self.prev_time = end
-        self.util.write(struct.pack('f', end - self.start_time))
 
         if self.len % int(self.fps * self.report_interval) == 0:
             self.reset_stats()
 
     def write(self, arg: Any) -> None:
-        """Put data in write queue."""
-        self.queue.put(arg)
+        """Write data."""
+        raise NotImplementedError()
 
     def close(self) -> None:
         """Close files and clean up."""
         self.ts.close()
-        self.util.close()
-
-        if hasattr(self, "queued_write"):
-            self.done = False
-            self.write_worker.join()
 
     def reset_stats(self) -> None:
         """Reset tracked statistics."""
         period = np.array(self.period)
         runtime = np.array(self.runtime)
-        self.log.info("qlen: {}, freq: {}  util: {}".format(
-            self.queue.qsize() if hasattr(self, "queued_write") else -1,
-            " ".join("{}={:5.2f}".format(
-                k, 1 / v(period)) for k, v in self._STATS.items()),
-            " ".join("{}={:5.2f}".format(
-                k, self.fps * v(runtime)) for k, v in self._STATS.items())))
+        self.log.info(
+            "freq: {:.3f} (p99={:.3f})  util: {:.3f} (p99={:.3f})".format(
+                1 / np.mean(period), 1 / np.percentile(period, 99),
+                np.mean(runtime) * self.fps,
+                np.percentile(runtime, 1) * self.fps))
         self.period = []
         self.runtime = []
 

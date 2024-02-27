@@ -21,6 +21,4 @@ camera:
 radar:
   script: "radar.py"
   args:
-    adc_samples: 256
-    frame_length: 64
-    fps: 10.0
+    packet_delay: 5.0
