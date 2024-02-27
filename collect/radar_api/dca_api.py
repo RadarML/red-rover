@@ -24,7 +24,7 @@ class DCA1000EVM:
     fpga_ip: Static IP of the DCA1000EVM FPGA.
     data_port: Port used for recording data.
     config_port: Port used for configuration.
-    timeout: Socket read timeout.
+    timeout: Config socket read timeout.
     name: Human-readable name.
 
     Raises
@@ -55,6 +55,7 @@ class DCA1000EVM:
             socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
         sock.bind(addr)
 
+        # Flush data
         sock.settimeout(0.0)
         try:
             while True:
@@ -84,8 +85,10 @@ class DCA1000EVM:
 
         self.config_socket = self._create_socket(
             (sys_ip, config_port), timeout)
-        self.data_socket = self._create_socket(
-            (sys_ip, data_port), timeout)        
+        self.data_socket = self._create_socket((sys_ip, data_port), 0.0)
+        self.timeout = timeout
+
+        self._warn_ooo_counter = 0
 
     def setup(
         self, delay: float = 25.0, lvds=types.LVDS.TWO_LANE
@@ -112,17 +115,40 @@ class DCA1000EVM:
             format=types.DataFormat.BIT16,
             capture=types.DataCapture.ETH_STREAM)
 
+    def _recv(self) -> Optional[types.DataPacket]:
+        """Receive data.
+        
+        NOTE: due to high packet rates (up to 200KHz), we only busy-wait, and
+        manually track the timeout using `perf_counter`.
+        """
+        timeout = time.perf_counter() + self.timeout
+        while True:
+            try:
+                raw, _ = self.data_socket.recvfrom(self._MAX_PACKET_SIZE)
+                return types.DataPacket.from_bytes(raw)
+            except BlockingIOError:
+                if time.perf_counter() > timeout:
+                    return None
+
+    def _warn_ooo(self, missing: int) -> None:
+        """Out of order packet warning."""
+        self._warn_ooo_counter += 1
+        if self._warn_ooo_counter < 10:
+            self.log.error("Out of order packet: {} bytes".format(missing))
+        if self._warn_ooo_counter == 10:
+            self.log.error("Suppressing 'out of order' on the 10th trigger.")
+
     def stream(self, shape: list[int] = []):
         """Get a python iterator corresponding to the data stream."""
         size = int(np.prod(shape)) * np.dtype(np.uint16).itemsize
 
         offset = 0
         timestamp = 0.0
-        warn_ooo = 0
         buf = bytearray()
         while True:
-            raw, _ = self.data_socket.recvfrom(self._MAX_PACKET_SIZE)
-            packet = types.DataPacket.from_bytes(raw)
+            packet = self._recv()
+            if packet is None:
+                raise StopIteration
 
             if offset == 0:
                 offset = packet.byte_count - (packet.byte_count % size)
@@ -131,13 +157,7 @@ class DCA1000EVM:
             complete = True
             missing = packet.byte_count - offset
             if missing < 0:
-                warn_ooo += 1
-                if warn_ooo < 10:
-                    self.log.error("Out of order packet: -{} bytes".format(
-                        offset - packet.byte_count))
-                if warn_ooo == 10:
-                    self.log.error(
-                        "Suppressing 'out of order' on the 10th trigger.")
+                self._warn_ooo(missing)
             else:
                 if missing > 0:
                     self.log.warn("Dropped packets: {} bytes".format(missing))
