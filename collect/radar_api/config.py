@@ -53,6 +53,12 @@ class RadarConfig(NamedTuple):
             self.frame_length, self.num_tx, self.num_rx, self.adc_samples, 2]
 
     @property
+    def frame_size(self):
+        """Radar data cube size, in bytes."""
+        return (self.frame_length * self.num_tx * self.num_rx *
+                self.adc_samples * 2 * 2)
+
+    @property
     def chirp_time(self):
         """Per-TX antenna inter-chirp time T_c, in us."""
         return (self.idle_time + self.ramp_end_time) * self.num_tx
@@ -103,9 +109,7 @@ class RadarConfig(NamedTuple):
     @property
     def throughput(self):
         """Throughput, in bits/sec."""
-        return (
-            self.frame_length * self.num_tx * self.num_rx * self.adc_samples
-            * 2 * 8 / self.frame_time * 1e3)
+        return self.frame_size * 8 / self.frame_time * 1e3
 
     def as_dict(self) -> dict:
         """Export as dictionary."""

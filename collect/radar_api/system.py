@@ -30,24 +30,35 @@ class AWRSystem:
     def _statistics(self, radar: RadarConfig, capture: CaptureConfig) -> None:
         """Compute statistics, and warn if potentially invalid."""
 
+        # Network utilization
         util = radar.throughput / capture.throughput
         self.log.info("Radar/Capture card: {} Mbps / {} Mbps ({:.1f}%)".format(
             int(radar.throughput / 1e6), int(capture.throughput / 1e6),
             util * 100))
         if radar.throughput > capture.throughput * 0.8:
-            self.log.warn("High data utilization: {:.1f}%".format(util * 100))
+            self.log.warn(
+                "Network utilization > 80%: {:.1f}%".format(util * 100))
 
+        # Buffer size
+        ratio = capture.socket_buffer / radar.frame_size
+        self.log.info("Recv buffer size: {:.2f} frames".format(ratio))
+        if ratio < 2.0:
+            self.log.warn("Recv buffer < 2 frames: {} (1 frame = {})".format(
+                capture.socket_buffer, radar.frame_size))
+
+        # Radar duty cycle
         duty_cycle = radar.frame_time / radar.frame_period
         self.log.info("Radar duty cycle: {:.1f}%".format(duty_cycle * 100))
         if duty_cycle > 0.95:
             self.log.warn(
-                "High radar duty cycle: {:.1f}%".format(duty_cycle * 100))
+                "Radar duty cycle > 95%: {:.1f}%".format(duty_cycle * 100))
 
+        # Ramp timing
         excess = (
             radar.ramp_end_time - radar.adc_start_time - radar.sample_time)
         self.log.info("Excess ramp time: {:.1f}us".format(excess))
         if excess < 0:
-            self.log.warn("Insufficient ramp time: {:.1f}us".format(excess))
+            self.log.warn("Excess ramp time < 0: {:.1f}us".format(excess))
 
     def stream(self):
         """Get frame iterator."""
