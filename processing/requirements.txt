@@ -1,9 +1,5 @@
 numpy
-h5py
+rosbags
 beartype
-jaxtyping
 scipy
-pandas
-tqdm
-matplotlib
-plyfile
+ouster-sdk

@@ -116,17 +116,17 @@ class Lidar(BaseSensor):
 
         stream = client.Scans.stream(
             hostname=self.addr, lidar_port=7502, complete=True, timeout=1.0)
+        with open(os.path.join(path, self.name, "lidar.json"), 'w') as f:
+            f.write(stream.metadata.updated_metadata_string())
+
         for scan in stream:
             out.start()
             data = {
-                "rfl": client.destagger(
-                    stream.metadata, scan.field(client.ChanField.REFLECTIVITY)
-                ).astype(np.uint8),
-                "nir": client.destagger(
-                    stream.metadata, scan.field(client.ChanField.NEAR_IR)
-                ).astype(np.uint16),
-                "rng": np.minimum(65535, client.destagger(
-                    stream.metadata, scan.field(client.ChanField.RANGE))
+                "rfl": scan.field(
+                    client.ChanField.REFLECTIVITY).astype(np.uint8),
+                "nir": scan.field(client.ChanField.NEAR_IR).astype(np.uint16),
+                "rng": np.minimum(
+                    65535, scan.field(client.ChanField.RANGE)
                 ).astype(np.uint16),
                 "time": scan.timestamp.astype(np.float64)
             }
