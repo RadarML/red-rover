@@ -1,4 +1,4 @@
-"""Rover data collection platform.
+r"""Rover data collection platform.
 ::
      ______  _____  _    _ _______  ______
     |_____/ |     |  \  /  |______ |_____/
@@ -7,4 +7,4 @@
 .
 """
 
-_scripts = ["info", "control", "run"]
+_scripts = ["run", "start", "stop", "exit"]

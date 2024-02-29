@@ -2,9 +2,13 @@
 
 ## Radar
 
+A new radar needs to be configured with the following:
+1. Flash firmware to the Radar (AWR1843Boost - red board), and set the DIP switch to "functional" mode.
+2. Configure DIP switches on the Capture Card (DCA1000EVM - green board).
+
 ### System overview
 
-Red Rover is based on the TI AWR1843Boost mmWave radar and the DCA1000EVM capture card. The AWR1843Boost
+*Red Rover* is based on the TI AWR1843Boost mmWave radar and the DCA1000EVM capture card. The AWR1843Boost
 has a LVDS (Low Voltage Differential Signaling) "debug" port which outputs data being sent from the radar back-end to an onboard DSP processor, which can be sent to the capture card; the capture card contains a FPGA, which buffers this data and translates it into ethernet packets.
 
 The AWR1843Boost device firmware has three code sections:
@@ -30,12 +34,28 @@ Flash the radar using [TI UniFlash](https://www.ti.com/tool/UNIFLASH); note that
     - Set `SOP0:2=001`.
     - Note that mmWave studio expects the radar to be in *debug* mode (`SOP0:2=011`), so switching between Red Rover and mmWave Studio requires the position of the SOP switches to be changed. This is also why mmWave studio requires the MSS firmware to be "re-flashed" whenever the radar is rebooted.
 
+### Configure Capture Card
+
+Ensure that the following DIP switches are set:
+- SW2.5: `SW_CONFIG`
+- SW2.6: `USER_SW1` (the marked right side), unless the EEPROM is messed up from
+    a misconfigured `configure_eeprom(...)` call.
+
+The following are configured by the `configure_fpga(...)` call under normal operation, but can be manually set in case that isn't working:
+- SW1: 16-bit mode (`16BIT_ON`, `14BIT_OFF`, `12BIT_OFF`).
+- SW2.1: `LVDS_CAPTURE`
+- SW2.2: `ETH_STREAM`
+- SW2.3: `AR1642_MODE` (2-lane LVDS)
+- SW2.4: `RAW_MODE`
+- SW2.5: `HW_CONFIG`
+
 ### Hardware Troubleshooting
 
-The [TI mmWave Demo Visualizer](https://dev.ti.com/gallery/view/mmwave/mmWave_Demo_Visualizer/ver/3.6.0/) is a good way to validate hardware functionality.
-- The demo visualizer uses the same firmware that Red Rover uses.
-- If an error occurs, it may be due to a hardware fault. If a specific error occurs, it should be raised with a line number in `mss_main.c`; the error case (e.g. `RL_RF_AE_CPUFAULT_SB`) should reveal what general type of fault it is.
+The [TI mmWave Demo Visualizer](https://dev.ti.com/gallery/view/mmwave/mmWave_Demo_Visualizer/ver/3.6.0/) is a good way to validate hardware functionality, and uses the same firmware that Red Rover uses.
 
+Possible faults:
+- An error is returned on the console in the Demo Visualizer: there may be a hardware fault. It should be raised with a line number in `mss_main.c`; the error case (e.g. `RL_RF_AE_CPUFAULT_SB`) should reveal what general type of fault it is.
+- When powered on, the capture card error lights should all come on for ~1sec, then turn off again. If this does not occur, the FPGA may be dead.
 
 ## Camera
 
@@ -51,3 +71,7 @@ After closing the menu, the HDMI output should be "clean," and not show any menu
 Install [MT Manager](https://www.movella.com/support/software-documentation), and connect the Xsens MTi-3 IMU via the development board. Select the following:
 - Orientation: Euler Angles; Floating Point 32-bit; 100Hz
 - Inertial data: Rate of Turn, Acceleration; Floating Point 32-bit; 100Hz
+
+## Lidar
+
+Should work out-of-the-box.

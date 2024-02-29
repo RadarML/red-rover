@@ -3,9 +3,7 @@
 from rover import Dataset
 
 
-def _size(
-    x, units: list = ['B', 'KB', 'MB', 'GB', 'TB'], suffix: str = ''
-) -> str:
+def _size(x, units=[' B', 'KB', 'MB', 'GB', 'TB'], suffix=''):
     if x < 1000:
         return "{:4.3g} {}".format(x, units[0]) + suffix
     else:
@@ -19,11 +17,11 @@ def _parse(p):
 def _main(args):
     ds = Dataset(args.path)
 
-    print("total: {} ({})".format(
+    print("total    {} ({})".format(
         _size(ds.filesize),
         _size(ds.datarate, suffix='/s')))
     for sname, sensor in ds.sensors.items():
-        print("{}: {} ({}, n={}, t={:.1f}s)".format(
+        print("{:8} {} ({}, n={}, t={:.1f}s)".format(
             sname,
             _size(sensor.filesize),
             _size(sensor.datarate, suffix='/s'),
@@ -32,14 +30,14 @@ def _main(args):
         for cname, channel in sensor.channels.items():
             if sensor.config[cname]['format'] != 'raw':
                 raw = channel.size * len(sensor)
-                print("    {:6}: {} (raw={}, ratio={:5.2f}, rate={})".format(
+                print("    {:8} {} (raw={}, ratio={:5.2f}, rate={})".format(
                     cname.split('.')[0],
                     _size(channel.filesize),
                     _size(raw),
-                    channel.filesize / raw,
+                    raw / channel.filesize,
                     _size(channel.filesize / sensor.duration, suffix='/s')))
             else:
-                print("    {:6}: {} (rate={})".format(
+                print("    {:8} {} (rate={})".format(
                     cname.split('.')[0],
                     _size(channel.filesize),
                     _size(channel.filesize / sensor.duration, suffix='/s')))

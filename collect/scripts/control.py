@@ -4,16 +4,23 @@ import os
 import socket
 import json
 import yaml
-from datetime import datetime
 
 
 class Controller:
+    """Simple socket-based CLI orchestrator."""
 
     def __init__(
         self, sensors: list[str] = [], addr: str = '/tmp/rover'
     ) -> None:
         self.sensors = sensors
         self.addr = addr
+
+    @classmethod
+    def from_config(cls, path: str) -> "Controller":
+        """Create from `config.yaml` file."""
+        with open(path) as f:
+            cfg = yaml.load(f, Loader=yaml.FullLoader)
+        return cls(sensors=list(cfg.keys()))
 
     def _sendall(self, msg: dict) -> None:
         for sensor in self.sensors:
@@ -33,28 +40,3 @@ class Controller:
 
     def exit(self) -> None:
         self._sendall({"type": "exit"})
-
-
-def _parse(p):
-    p.add_argument(
-        "-c", "--config", default="config.yaml", help="Config file.")
-    p.add_argument("-a", "--action", help="Action to run.")
-    p.add_argument("-p", "--path", help="Target path (if applicable).")
-    p.add_argument(
-        "-s", "--sensors", nargs='+', help="Active sensors.", default=[])
-
-
-def _main(args):
-    with open(args.config) as f:
-        cfg = yaml.load(f, Loader=yaml.FullLoader)
-
-    ctrl = Controller(sensors=list(cfg.keys()))
-    if args.action == 'start':
-        dt = datetime.now().strftime("%Y.%m.%d-%H.%M.%S")
-        ctrl.start("{}.{}".format(os.path.abspath(args.path), dt))
-    elif args.action == 'stop':
-        ctrl.stop()
-    elif args.action == 'exit':
-        ctrl.exit()
-    else:
-        print("Invalid action: {}".format(args.action))
