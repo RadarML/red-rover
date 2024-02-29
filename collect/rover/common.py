@@ -161,13 +161,6 @@ class BaseSensor:
         self._thread: Optional[threading.Thread] = None
         self.frame_count = 0
 
-    @classmethod
-    def from_config(cls, name: str, path: str) -> "BaseSensor":
-        """Initalize from a entry in a config file."""
-        with open(path) as f:
-            cfg = yaml.load(f, Loader=yaml.FullLoader)[name]["args"]
-        return cls(name=name, **cfg)
-
     def capture(self, path: str) -> None:
         """Run capture; should check `self.active` on every loop."""
         raise NotImplementedError()
@@ -238,13 +231,3 @@ class BaseSensor:
             else:
                 self.log.error("Invalid command type: {}".format(cmd_type))
         self.close()
-
-    @classmethod
-    def main(cls) -> None:
-        """Run as a independent script."""
-        try:
-            logging.basicConfig(level=logging.INFO)
-            cls.from_config(*sys.argv[1:]).loop()
-            exit(0)
-        except SensorException:
-            exit(-1)

@@ -1,17 +1,17 @@
 layout {
     pane split_direction="vertical" {
         pane split_direction="horizontal" {
-            pane command="python3.11" {
-                args "rover.py" "run" "-s" "camera"
+            pane command="./env/bin/python" {
+                args "collect.py" "run" "-s" "camera"
             }
-            pane command="python3.11" {
-                args "rover.py" "run" "-s" "lidar"
+            pane command="./env/bin/python" {
+                args "collect.py" "run" "-s" "lidar"
             }
-            pane command="python3.11" {
-                args "rover.py" "run" "-s" "imu"
+            pane command="./env/bin/python" {
+                args "collect.py" "run" "-s" "imu"
             }
-            pane command="python3.11" {
-                args "rover.py" "run" "-s" "radar"
+            pane command="./env/bin/python" {
+                args "collect.py" "run" "-s" "radar"
             }
         }
         pane split_direction="horizontal" {

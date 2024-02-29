@@ -1,8 +1,9 @@
 """IMU data collection."""
 
 import os
-from imu_api import XsensIMU, IMUData
-from common import BaseCapture, BaseSensor, SensorMetadata
+
+from .imu_api import XsensIMU, IMUData
+from .common import BaseCapture, BaseSensor, SensorMetadata
 
 
 class IMUCapture(BaseCapture):
@@ -82,7 +83,3 @@ class IMU(BaseSensor):
 
     def close(self):
         pass
-
-
-if __name__ == '__main__':
-    IMU.main()

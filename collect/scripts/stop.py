@@ -9,4 +9,4 @@ def _parse(p):
 
 
 def _main(args):
-    Controller.from_config(args.path).stop()
+    Controller.from_config(args.config).stop()

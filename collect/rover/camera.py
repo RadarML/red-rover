@@ -4,7 +4,7 @@ import os
 import cv2
 import numpy as np
 
-from common import BaseCapture, BaseSensor, SensorException, SensorMetadata
+from .common import BaseCapture, BaseSensor, SensorException, SensorMetadata
 
 
 class CameraCapture(BaseCapture):
@@ -87,7 +87,3 @@ class Camera(BaseSensor):
 
     def close(self):
         self.cap.release()
-
-
-if __name__ == '__main__':
-    Camera.main()

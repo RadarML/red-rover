@@ -13,7 +13,7 @@ def _parse(p):
 
 
 def _main(args):
-    ctrl = Controller.from_config(args.path)
+    ctrl = Controller.from_config(args.config)
 
     dt = datetime.now().strftime("%Y.%m.%d-%H.%M.%S")
     ctrl.start(os.path.join(os.path.abspath(args.path), dt))

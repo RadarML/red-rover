@@ -7,4 +7,4 @@ jaxtyping
 scipy
 tqdm
 tqdm-stubs
-yaml
+pyyaml

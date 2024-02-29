@@ -2,8 +2,8 @@
 
 import os
 
-from common import BaseCapture, BaseSensor, SensorMetadata
-from radar_api import AWRSystem, dca_types, RadarConfig, CaptureConfig
+from .common import BaseCapture, BaseSensor, SensorMetadata
+from .radar_api import AWRSystem, dca_types, RadarConfig, CaptureConfig
 
 
 class RadarCapture(BaseCapture):
@@ -63,7 +63,3 @@ class Radar(BaseSensor):
 
         self.radar.stop()
         out.close()
-
-
-if __name__ == '__main__':
-    Radar.main()

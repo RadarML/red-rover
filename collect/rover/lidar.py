@@ -9,7 +9,7 @@ from beartype.typing import Optional
 import numpy as np
 from ouster import client
 
-from common import BaseCapture, BaseSensor, SensorException, SensorMetadata
+from .common import BaseCapture, BaseSensor, SensorException, SensorMetadata
 
 
 class LidarCapture(BaseCapture):
@@ -132,7 +132,3 @@ class Lidar(BaseSensor):
                 break
 
         out.close()
-
-
-if __name__ == '__main__':
-    Lidar.main()
