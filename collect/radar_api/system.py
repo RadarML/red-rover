@@ -25,7 +25,7 @@ class AWRSystem:
         self.awr = AWR1843(port=radar.port)
 
         self.config = radar
-        self.fps = 1000.0 / radar.frame_period * radar.frame_length
+        self.fps = 1000.0 / radar.frame_period
 
     def _statistics(self, radar: RadarConfig, capture: CaptureConfig) -> None:
         """Compute statistics, and warn if potentially invalid."""
@@ -68,7 +68,7 @@ class AWRSystem:
         self.awr.setup(**self.config.as_dict())
         self.awr.start()
 
-        return self.dca.stream(self.config.shape[1:])
+        return self.dca.stream(self.config.shape)
 
     def stop(self):
         """Stop data collection."""

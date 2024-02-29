@@ -153,7 +153,7 @@ class DCA1000EVM:
         while True:
             packet = self._recv()
             if packet is None:
-                raise StopIteration
+                return
 
             if offset == 0:
                 offset = packet.byte_count - (packet.byte_count % size)

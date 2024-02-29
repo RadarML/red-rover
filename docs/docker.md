@@ -55,3 +55,5 @@ A common error is a failure from the `nvidia-container-cli` noting that it was u
 ```sh
 docker pull ros
 ```
+
+cartographer_rosbag_validate -bag_filename

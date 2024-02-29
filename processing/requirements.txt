@@ -3,3 +3,7 @@ rosbags
 beartype
 scipy
 ouster-sdk
+jaxtyping
+scipy
+tqdm
+tqdm-stubs

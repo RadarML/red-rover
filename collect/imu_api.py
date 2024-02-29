@@ -49,6 +49,7 @@ class XsensIMU:
         self.log = logging.getLogger(name=name)
         self.port = serial.Serial(port, baudrate, timeout=1)
         self.port.set_low_latency_mode(True)
+        self.port.reset_input_buffer()
     
     def read(self) -> Optional[IMUData]:
         """Read a single data packet.

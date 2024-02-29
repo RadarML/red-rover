@@ -27,11 +27,7 @@ class LidarCapture(BaseCapture):
                 "desc": "Near infrared ambient photons"},
             "rng": {
                 "format": "lzma", "type": "u16", "shape": (height, 2048),
-                "desc": "Range, in millimeters"},
-            "time": {
-                "format": "lzma", "type": "f64", "shape": (2048,),
-                "desc": "Lidar internal timestamp of each column in the scan"}
-        }
+                "desc": "Range, in millimeters"}}
 
         self.outputs = {
             k: lzma.open(os.path.join(path, k), mode='wb', preset=compression)
@@ -127,8 +123,7 @@ class Lidar(BaseSensor):
                 "nir": scan.field(client.ChanField.NEAR_IR).astype(np.uint16),
                 "rng": np.minimum(
                     65535, scan.field(client.ChanField.RANGE)
-                ).astype(np.uint16),
-                "time": scan.timestamp.astype(np.float64)
+                ).astype(np.uint16)
             }
             out.write(data)  # type: ignore
             out.end()

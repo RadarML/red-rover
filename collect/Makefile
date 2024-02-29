@@ -28,4 +28,3 @@ imu-tty:
 
 radar-socket:
 	echo $(RECV_BUF_SIZE) | sudo tee /proc/sys/net/core/rmem_max
-#	echo $(RECV_BUF_SIZE) | sudo tee /proc/sys/net/core/rmem_default
