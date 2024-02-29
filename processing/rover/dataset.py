@@ -112,7 +112,11 @@ class LidarData(SensorData):
     def pointcloud_stream(self):
         """Get an iterator which returns point clouds."""
         lut = client.XYZLut(self.lidar_metadata())
-        return self.open("rng").stream_prefetch(transform=lut)
+
+        def tf(x):
+            return lut(x).astype(np.float32)
+
+        return self.open("rng").stream_prefetch(transform=tf)
 
 
 SENSOR_TYPES = {

@@ -31,7 +31,7 @@ def sensor_msgs_imu(rot, acc, avel, sec, nsec):
     ts = types.builtin_interfaces__msg__Time(sec=sec, nanosec=nsec)
     return types.sensor_msgs__msg__Imu(
         header=types.std_msgs__msg__Header(
-            frame_id="/local/imu", stamp=ts), 
+            frame_id="imu_link", stamp=ts), 
         orientation=types.geometry_msgs__msg__Quaternion(
             x=rot[0], y=rot[1], z=rot[2], w=rot[3]),
         orientation_covariance=NULL_COV, 
@@ -54,7 +54,7 @@ POINTCLOUD2_FIELDS = [
 def sensor_msgs_pointcloud2(points, sec, nsec):
     """Assembly sensor_msgs/PointCloud2 message."""
     ts = types.builtin_interfaces__msg__Time(sec=sec, nanosec=nsec)
-    header = types.std_msgs__msg__Header(frame_id="/local/lidar", stamp=ts)
+    header = types.std_msgs__msg__Header(frame_id="os_sensor", stamp=ts)
 
     points = points.reshape(-1, 3)
     data = np.frombuffer(points.tobytes(), dtype=np.uint8)
@@ -76,7 +76,7 @@ def _main(args):
 
     dataset = Dataset(args.path)
     if args.out is None:
-        args.out = os.path.join(args.path, "data.bag")    
+        args.out = os.path.join(args.path, "lidar.bag")    
 
     with Writer(args.out) as writer:
 

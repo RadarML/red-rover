@@ -57,3 +57,6 @@ docker pull ros
 ```
 
 cartographer_rosbag_validate -bag_filename
+
+source catkin_ws/devel/setup.bash
+roslaunch slam offline_cart_3d.launch bag_filenames:=/rover/example/lidar.bag

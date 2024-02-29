@@ -1,6 +1,11 @@
 # Data files
 collect/data/
 
+# Ros files
+processing/catkin_ws/devel/
+processing/catkin_ws/.catkin_workspace
+processing/catkin_ws/src/CMakeLists.txt
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

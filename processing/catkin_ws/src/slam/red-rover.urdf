@@ -1,0 +1,72 @@
+<robot name="red-rover">
+	<material name="orange"><color rgba="1.0 0.5 0.2 1"/></material>
+	<material name="gray"><color rgba="0.2 0.2 0.2 1"/></material>
+
+    <!-- Base: center of the bottom of the lidar mounting plate. -->
+	<link name="base_link"/>
+
+    <!-- Ouster internal IMU (unused) -->
+	<link name="os_imu">
+		<visual>
+			<origin xyz="0.0 0.0 0.0" />
+			<geometry>
+				<box size="0.06 0.04 0.02" />
+			</geometry>
+			<material name="orange" />
+		</visual>
+	</link>
+
+    <!-- Ouster Lidar -->
+	<link name="os_lidar">
+		<visual>
+			<origin xyz="0.0 0.0 0.0" />
+			<geometry>
+				<cylinder length="0.07" radius="0.05" />
+			</geometry>
+			<material name="gray" />
+		</visual>
+	</link>
+
+    <!-- External IMU -->
+	<link name="imu_link">
+		<visual>
+			<origin xyz="0.0 0.0 0.0" />
+			<geometry>
+				<box size="0.06 0.04 0.02" />
+			</geometry>
+			<material name="gray" />
+		</visual>
+	</link>
+
+    <!-- Ouster Sensor -->
+	<link name="os_sensor"/>
+
+    <!-- Ouster mounting plate: 22mm z-thickness. -->
+	<joint name="sensor_link_joint" type="fixed">
+		<parent link="base_link" />
+		<child link="os_sensor" />
+		<origin xyz="0.0 0 0.022" rpy="0 0 0" />
+	</joint>
+
+    <!-- imu_to_sensor_transform -->
+	<joint name="os_imu_link_joint" type="fixed">
+		<parent link="os_sensor" />
+		<child link="os_imu" />
+		<origin xyz="0.006253 -0.011775 0.007645" rpy="0 0 0" />
+	</joint>
+
+    <!-- lidar_to_sensor_transform -->
+	<joint name="os_link_joint" type="fixed">
+		<parent link="os_sensor" />
+		<child link="os_lidar" />
+		<origin xyz="0.0 0.0 0.03618" rpy="0 0 3.14159" />
+	</joint>
+
+    <!-- IMU is 7mm underneath the lidar mounting plate.-->
+	<joint name="imu_link_joint" type="fixed">
+		<parent link="base_link" />
+		<child link="imu_link" />
+		<origin xyz="0.0 0.0 -0.007" rpy="0 0 0" />
+	</joint>
+
+</robot>
