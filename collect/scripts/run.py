@@ -27,4 +27,4 @@ def _main(args):
             exit(-1)
 
     logging.basicConfig(level=args.log_level)
-    rover.SENSORS[cfg["type"]](**cfg["args"]).loop()
+    rover.SENSORS[cfg["type"]](name=args.sensor, **cfg["args"]).loop()

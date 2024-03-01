@@ -60,3 +60,5 @@ cartographer_rosbag_validate -bag_filename
 
 source catkin_ws/devel/setup.bash
 roslaunch slam offline_cart_3d.launch bag_filenames:=/rover/example/lidar.bag
+
+rosrun cartographer_ros cartographer_dev_pbstream_trajectories_to_rosbag --input /rover/example/lidar.bag.pbstream --output /rover/example/pose.bag

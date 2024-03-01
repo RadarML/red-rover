@@ -1,5 +1,5 @@
 numpy
-rosbags
+rosbags==0.9.19
 beartype
 scipy
 ouster-sdk
@@ -8,3 +8,4 @@ scipy
 tqdm
 tqdm-stubs
 pyyaml
+pandas

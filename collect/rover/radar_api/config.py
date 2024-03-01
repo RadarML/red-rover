@@ -14,6 +14,11 @@ RADAR_PROPERTIES = [
 """Properties which define a radar configuration."""
 
 
+RADAR_INTRINSICS = [
+    "shape", "range_resolution", "doppler_resolution"]
+"""Intrinsics needed for radar data processing."""
+
+
 class RadarConfig(NamedTuple):
     """Radar configuration.
     
@@ -114,6 +119,10 @@ class RadarConfig(NamedTuple):
     def as_dict(self) -> dict:
         """Export as dictionary."""
         return {k: getattr(self, k) for k in RADAR_PROPERTIES}
+
+    def as_intrinsics(self) -> dict:
+        """Export as intrinsics dictionary."""
+        return {k: getattr(self, k) for k in RADAR_INTRINSICS}
 
     def check(self):
         """Check validity."""

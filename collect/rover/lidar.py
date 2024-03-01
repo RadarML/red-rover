@@ -16,17 +16,18 @@ class LidarCapture(BaseCapture):
     """Lidar capture data."""
 
     def _init(
-        self, path: str, height: int = 64, compression: int = 1, **_
+        self, path: str, shape: tuple[int. int] = (64, 2048),
+        compression: int = 1, **_
     ) -> SensorMetadata:
         _meta = {
             "rfl": {
-                "format": "lzma", "type": "u8", "shape": (height, 2048),
+                "format": "lzma", "type": "u8", "shape": shape,
                 "desc": "Object NIR reflectivity"},
             "nir": {
-                "format": "lzma", "type": "u16", "shape": (height, 2048),
+                "format": "lzma", "type": "u16", "shape": shape,
                 "desc": "Near infrared ambient photons"},
             "rng": {
-                "format": "lzma", "type": "u16", "shape": (height, 2048),
+                "format": "lzma", "type": "u16", "shape": shape,
                 "desc": "Range, in millimeters"}}
 
         self.outputs = {
@@ -58,14 +59,14 @@ class Lidar(BaseSensor):
         `avahi-browse -lrt _roger._tcp` if not manually specified.
     port_lidar: lidar port; default 7502.
     port_imu: integrated imu port; default 7503.
-    fps: lidar framerate.
-    height: number of lidar beams.
+    mode: lidar mode `{columns}x{fps}`.
+    beams: number of lidar beams.
     name: sensor name, i.e. "lidar".
     """
 
     def __init__(
         self, addr: Optional[str] = None, port_lidar: int = 7502,
-        port_imu: int = 7503, fps: float = 10.0, height: int = 64,
+        port_imu: int = 7503, mode: str = "2048x10", beams: int = 64,
         name: str = "lidar"
     ) -> None:
         super().__init__(name=name)
@@ -76,16 +77,18 @@ class Lidar(BaseSensor):
             raise SensorException
         self.addr = addr
 
-        self.fps = fps
-        self.height = height
-
         config = client.SensorConfig()
         config.udp_port_lidar = port_lidar
         config.udp_port_imu = port_imu
         config.operating_mode = client.OperatingMode.OPERATING_NORMAL
+        config.lidar_mode = client.LidarMode.from_string(mode)
+
+        self.fps = float(config.lidar_mode.frequency)
+        self.shape = (beams, config.lidar_mode.cols)
+
         client.set_config(self.addr, config, persist=True, udp_dest_auto=True)
-        self.log.info("Initialized lidar {}: {}-beam @ {} fps".format(
-            self.addr, height, self.fps))
+        self.log.info("Initialized lidar {}: {}-beam x {} x {} fps".format(
+            self.addr, *self.shape, self.fps))
 
     @staticmethod
     def get_ip() -> Optional[str]:
@@ -108,7 +111,7 @@ class Lidar(BaseSensor):
         """Create capture (while `active` is set)."""
         out = LidarCapture(
             os.path.join(path, self.name), log=self.log,
-            fps=self.fps, height=self.height, compression=1)
+            fps=self.fps, shape=self.shape, compression=1)
 
         stream = client.Scans.stream(
             hostname=self.addr, lidar_port=7502, complete=True, timeout=1.0)

@@ -4,8 +4,8 @@ lidar:
     addr: null
     port_lidar: 7502
     port_imu: 7503
-    fps: 10.0
-    height: 64
+    mode: 1024x20
+    beams: 64
 imu:
   type: imu
   args:
@@ -22,7 +22,7 @@ radar:
   type: radar
   args:
     radar:
-      port: "/dev/ttyACM0"
+      port: /dev/ttyACM0
       frequency: 77.0
       idle_time: 106.0
       adc_start_time: 6.0
