@@ -16,7 +16,7 @@ class LidarCapture(BaseCapture):
     """Lidar capture data."""
 
     def _init(
-        self, path: str, shape: tuple[int. int] = (64, 2048),
+        self, path: str, shape: tuple[int, int] = (64, 2048),
         compression: int = 1, **_
     ) -> SensorMetadata:
         _meta = {
