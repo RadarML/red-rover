@@ -1,4 +1,5 @@
 PYTHON?=python3.11
+JAX_CUDA?=cuda11_pip
 ROVER_DIR=$(shell pwd)
 ROVER_MNT?=/rover
 DOCKER_IMAGE?=qoschatz/cartographer_ros
@@ -7,8 +8,8 @@ VENV=./env/bin
 
 env:
 	$(PYTHON) -m venv env
+	$(VENV)/pip install --upgrade "jax[$(JAX_CUDA)]" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
 	$(VENV)/pip install -r requirements.txt
-
 
 .PHONY: docker-run
 docker-run:
@@ -21,14 +22,16 @@ docker-run:
 		$(DOCKER_IMAGE) /bin/bash
 
 
-BAG?=lidar.bag
+DATASET?=example
 
-BAG_ABS=$(shell realpath $(BAG))
-BAG_DIR=$(shell dirname $(BAG_ABS))
-PBSTREAM=$(BAG_ABS).pbstream
-POINTS=$(BAG_ABS)_points.ply
+BAG_DIR=$(shell realpath $(DATASET))/_scratch
+BAG=$(BAG_DIR)/lidar.bag
+OUT_DIR=$(shell realpath $(DATASET))/_slam
+
+PBSTREAM=$(OUT_DIR)/lidar.pbstream
+POINTS=$(OUT_DIR)_points.ply
 POSE=$(BAG_DIR)/pose.bag
-TRAJ=$(BAG_DIR)/trajectory.csv
+TRAJ=$(OUT_DIR)/trajectory.csv
 
 
 .PRECIOUS: $(PBSTREAM)
@@ -38,14 +41,15 @@ lidar: $(POINTS) $(TRAJ)
 trajectory: $(TRAJ)
 
 validate:
-	cartographer_rosbag_validate -bag_filename $(BAG_ABS)
+	cartographer_rosbag_validate -bag_filename $(BAG)
 
 $(PBSTREAM):
-	-roslaunch slam offline_cart_3d.launch bag_filenames:=$(BAG_ABS)
+	-roslaunch slam offline_cart_3d.launch bag_filenames:=$(BAG)
+	mv $(BAG_DIR)/lidar.bag.pbstream $(PBSTREAM)
 
 $(POINTS): $(PBSTREAM)
 	roslaunch slam assets_writer_cart_3d.launch \
-		bag_filenames:=$(BAG_ABS) pose_graph_filename:=$(PBSTREAM)
+		bag_filenames:=$(BAG) pose_graph_filename:=$(PBSTREAM)
 
 $(POSE): $(PBSTREAM)
 	rosrun cartographer_ros cartographer_dev_pbstream_trajectories_to_rosbag \

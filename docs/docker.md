@@ -24,12 +24,16 @@
     sudo systemctl restart docker  
     ```
 
-3. Test the install (may require a reboot):
+3. Test the install (may require a reboot, especially if `nvidia-smi` returns an error):
     ```sh
     sudo docker run --rm --gpus all nvidia/cuda:11.6.2-base-ubuntu20.04 nvidia-smi
     ```
 
-### Running 
+### Running
+
+
+These steps are taken care of by `make docker-run` in `collect`. Follow these steps for manual troubleshooting:
+
 1. Ensure that X11 forwarding is correctly set (if this does not work, you may need to activate non-local X11 forwarding).
     ```
     xhost +local:docker
@@ -40,25 +44,12 @@
     sudo docker run -it --privileged --net=host --env=NVIDIA_VISIBLE_DEVICES=all --env=NVIDIA_DRIVER_CAPABILITIES=all --env=DISPLAY --env=QT_X11_NO_MITSHM=1 -v /tmp/.X11-unix:/tmp/.X11-unix qoschatz/cartographer_ros /bin/bash
     ```
 
-    Also, mount the catkin workspace that contains the `slam` folder from the DART project (this is only necessary if you want to use the data processing pipeline from that project).
-    ```bash
-    sudo docker run -it --privileged --net=host --env=NVIDIA_VISIBLE_DEVICES=all --env=NVIDIA_DRIVER_CAPABILITIES=all --env=DISPLAY --env=QT_X11_NO_MITSHM=1 -v /tmp/.X11-unix:/tmp/.X11-unix --gpus 2 -v [FULL_PATH_TO_CATKIN_WS]:/docker qoschatz/cartographer_ros /bin/bash
+    Mount any desired folders by adding
+    ```
+    -v /{full_path_to_folder}:/{full_path_in_container}
     ```
 
-It is recommended to pipe all processing results to a mounted directory to prevent outputs from being deleted when the docker container stops running. For this, either pipe everything into the catkin workspace, or link another folder by adding another `-v [FULL_PATH_TO_SYSTEM_FOLDER]:[PATH_TO_DESIRED_LOCATION_IN_CONTAINER]` to the command.
+    **NOTE**: Pipe all processing results to a mounted directory to prevent outputs from being deleted when the docker container stops running.
 
 ### Troubleshooting
 A common error is a failure from the `nvidia-container-cli` noting that it was unable to load `libnvidia-ml` because of `no such file or directory`. This is caused by NVIDIA hating you, and the best fix seems to be to reinstall `docker.io` (i.e. the docker engine). If that does not work, reinstall everything else as well, which will typically resolve this issue.
-
-## Plain ros
-
-```sh
-docker pull ros
-```
-
-cartographer_rosbag_validate -bag_filename
-
-source catkin_ws/devel/setup.bash
-roslaunch slam offline_cart_3d.launch bag_filenames:=/rover/example/lidar.bag
-
-rosrun cartographer_ros cartographer_dev_pbstream_trajectories_to_rosbag --input /rover/example/lidar.bag.pbstream --output /rover/example/pose.bag

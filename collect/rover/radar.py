@@ -1,6 +1,7 @@
 """Radar data collection."""
 
 import os
+import json
 
 from .common import BaseCapture, BaseSensor, SensorMetadata
 from .radar_api import AWRSystem, dca_types, RadarConfig, CaptureConfig
@@ -51,6 +52,9 @@ class Radar(BaseSensor):
         out = RadarCapture(
             os.path.join(path, self.name), log=self.log,
             shape=self.radar.config.shape, fps=self.radar.fps)
+
+        with open(os.path.join(path, self.name, "radar.json"), 'w') as f:
+            json.dump(self.radar.config.as_intrinsics(), f, indent=4)
 
         stream = self.radar.stream()
         for scan in stream:

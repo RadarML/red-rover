@@ -16,4 +16,12 @@ def _main(args):
     ctrl = Controller.from_config(args.config)
 
     dt = datetime.now().strftime("%Y.%m.%d-%H.%M.%S")
-    ctrl.start(os.path.join(os.path.abspath(args.path), dt))
+    path = os.path.join(os.path.abspath(args.path), dt)
+    os.makedirs(path, exist_ok=True)
+
+    with open(args.config) as f:
+        contents = f.read()
+    with open(os.path.join(path, 'config.yaml'), 'w') as f:
+        f.write(contents)
+
+    ctrl.start(path)

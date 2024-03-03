@@ -67,8 +67,8 @@ def sensor_msgs_pointcloud2(points, sec, nsec):
 def _parse(p):
     p.add_argument("-p", "--path", help="Dataset path.")
     p.add_argument(
-        "-o", "--out", default=None,
-        help="Output path; defaults to `data.bag` in the dataset folder.")
+        "-o", "--out", default=None, help="Output path; defaults to "
+        "`_scratch/lidar.bag` in the dataset folder.")
     return p
 
 
@@ -76,7 +76,7 @@ def _main(args):
 
     dataset = Dataset(args.path)
     if args.out is None:
-        args.out = os.path.join(args.path, "lidar.bag")    
+        args.out = os.path.join(args.path, "_scratch", "lidar.bag")    
 
     with Writer(args.out) as writer:
 

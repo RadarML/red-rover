@@ -7,4 +7,4 @@ r"""Rover data collection platform.
 .
 """
 
-_scripts = ["run", "start", "stop", "exit"]
+_scripts = ["run", "start", "stop", "exit", "get_config"]

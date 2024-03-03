@@ -4,7 +4,7 @@ import os
 import lzma
 import numpy as np
 
-from queue import Queue
+from queue import Queue, Empty
 from threading import Thread
 
 from jaxtyping import Shaped
@@ -47,7 +47,12 @@ class Prefetch:
         if self.done and self.queue.empty():
             raise StopIteration
         else:
-            return self.queue.get()
+            while True:
+                try:
+                    return self.queue.get(timeout=1.0)
+                except Empty:
+                    if self.done:
+                        raise StopIteration
 
 
 class BaseChannel:
@@ -73,13 +78,14 @@ class BaseChannel:
         """Read all data."""
         raise NotImplementedError()
 
-    def stream(self, transform=None):
+    def stream(self, transform=None, batch: int = 0):
         """Get iterable data stream."""
         raise NotImplementedError()
 
-    def stream_prefetch(self, transform=None, size: int = 64):
+    def stream_prefetch(self, transform=None, size: int = 64, batch: int = 0):
         """Stream with multi-threaded prefetching."""
-        return Prefetch(self.stream(transform=transform), size=size)
+        return Prefetch(
+            self.stream(transform=transform, batch=batch), size=size)
 
     def __repr__(self):
         """Get string representation."""
@@ -98,20 +104,32 @@ class RawChannel(BaseChannel):
             data = cast(bytes, f.read())
         return np.frombuffer(data, dtype=self.type).reshape(-1, *self.shape)
 
-    def stream(self, transform=None):
+    def stream(self, transform=None, batch: int = 0):
         """Get iterable data stream.
         
         Parameters
         ----------
         transform: callable to apply to the read data.
+        batch: batch size to read. If 0, load only a single sample and do not
+            append an empty axis.
         """
+        shape = self.shape if batch == 0 else [batch, *self.shape]
+        size = self.size if batch == 0 else batch * self.size
+
         with self._READ(self.path, 'rb') as fp:  # type: ignore
             while True:
-                data = cast(bytes, fp.read(self.size))  # type: ignore
-                if len(data) < self.size:
+                data = cast(bytes, fp.read(size))  # type: ignore
+                if len(data) < size:
                     fp.close()
-                    return
-                out = np.frombuffer(data, dtype=self.type).reshape(self.shape)
+                    partial_batch = len(data) // self.size
+                    if partial_batch == 0:
+                        return
+                    else:
+                        yield np.frombuffer(
+                            data[:partial_batch * size], dtype=self.type
+                        ).reshape([partial_batch, *self.shape])
+                        return
+                out = np.frombuffer(data, dtype=self.type).reshape(shape)
                 if transform is None:
                     yield out
                 else:

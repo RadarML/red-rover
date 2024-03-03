@@ -138,7 +138,8 @@ class Dataset:
         self.sensors = {
             s: SENSOR_TYPES.get(s, SensorData)(os.path.join(self.path, s))
             for s in _sensors
-            if os.path.exists(os.path.join(path, s, "meta.json"))}
+            if not s.startswith('_')
+            and os.path.exists(os.path.join(path, s, "meta.json"))}
 
     @cached_property
     def filesize(self):

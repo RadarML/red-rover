@@ -1,11 +1,12 @@
 PYTHON?=python3.11
-RADAR_IF?=enx207bd2bd84d3
-RADAR_SYS_IP?=192.168.33.30
-RECV_BUF_SIZE?=2048000
 
-RADAR_NETMASK=255.255.255.0
 VENV=./env/bin
+ROVERC=$(VENV)/python collect.py
 
+RADAR_SYS_IP=$(shell $(ROVERC) get_config -p radar/args/capture/sys_ip)
+RADAR_IF=$(shell $(ROVERC) get_config -p radar/interface)
+RECV_BUF_SIZE=$(shell $(ROVERC) get_config -p radar/args/capture/socket_buffer)
+RADAR_NETMASK=255.255.255.0
 
 .PHONY: run
 run:
@@ -28,3 +29,10 @@ imu-tty:
 
 radar-socket:
 	echo $(RECV_BUF_SIZE) | sudo tee /proc/sys/net/core/rmem_max
+
+.PHONY: start, stop
+start:
+	$(ROVERC) start
+
+stop:
+	$(ROVERC) stop

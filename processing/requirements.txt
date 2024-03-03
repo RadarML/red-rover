@@ -9,3 +9,4 @@ tqdm
 tqdm-stubs
 pyyaml
 pandas
+pandas-stubs

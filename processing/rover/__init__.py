@@ -10,8 +10,10 @@ r"""Rover data processing pipeline.
 from .channel import (
     Prefetch, BaseChannel, RawChannel, LzmaChannel, CHANNEL_TYPES)
 from .dataset import (SensorData, LidarData, Dataset)
+from .slam import Poses, Trajectory
 
 __all__ = [
     "Prefetch", "BaseChannel", "RawChannel", "LzmaChannel", "CHANNEL_TYPES",
-    "SensorData", "LidarData", "Dataset", 
+    "SensorData", "LidarData", "Dataset",
+    "Poses", "Trajectory"
 ]
