@@ -10,7 +10,7 @@ from .awr_boilerplate import AWR1843_Mixins
 
 class AWR1843(AWR1843_Mixins):
     """AWR1843 Interface for the TI `demo/xwr18xx` MSS firmware.
- 
+
     Documented by [3-6]; based on a UART ASCII CLI.
 
     NOTE: only a partial API is implemented. Non-mandatory calls which do not
@@ -39,7 +39,7 @@ class AWR1843(AWR1843_Mixins):
 
     def __init__(
         self, port: str = "/dev/ttyACM0", baudrate: int = 115200,
-        name: str = "AWR1843"       
+        name: str = "AWR1843"
     ) -> None:
         self.log = logging.getLogger(name=name)
         self.port = serial.Serial(port, baudrate, timeout=None)
@@ -60,7 +60,7 @@ class AWR1843(AWR1843_Mixins):
         frame_length: int = 64, frame_period: float = 100.0
     ) -> None:
         """Configure radar.
-        
+
         Parameters
         ----------
         frequency: frequency band, in GHz; 77.0 or 76.0.
@@ -76,9 +76,8 @@ class AWR1843(AWR1843_Mixins):
 
         self.stop()
         self.flushCfg()
-        self.channelCfg()
         self.dfeDataOutputMode(types.DFEMode.LEGACY)
-        self.channelCfg(rxChannelEn=0b1111, txChannelEn=0b111)
+        self.channelCfg(rxChannelEn=0b1111, txChannelEn=0b101)
         self.adcCfg(adcOutputFmt=types.ADCFormat.COMPLEX_1X)
         self.adcbufCfg(adcOutputFmt=types.ADCFormat.COMPLEX_1X)
         self.profileCfg(
@@ -88,7 +87,9 @@ class AWR1843(AWR1843_Mixins):
             numAdcSamples=adc_samples, digOutSampleRate=sample_rate)
         self.chirpCfg(chirpIdx=0, txEnable=0)
         self.chirpCfg(chirpIdx=1, txEnable=2)
-        self.frameCfg(numLoops=frame_length, framePeriodicity=frame_period)
+        self.frameCfg(
+            numLoops=frame_length, chirpEndIdx=1,
+            framePeriodicity=frame_period)
         self.compRangeBiasAndRxChanPhase()
         self.lvdsStreamCfg()
 
@@ -96,7 +97,7 @@ class AWR1843(AWR1843_Mixins):
 
     def send(self, cmd: str, timeout: float = 10.0) -> None:
         """Send message, and wait for a response.
-        
+
         Parameters
         ----------
         cmd: command to send.
@@ -129,7 +130,8 @@ class AWR1843(AWR1843_Mixins):
             if resp.startswith("Ignored"):
                 self.log.warn(resp)
             elif resp.startswith("Debug") or resp.startswith("Skipped"):
-                pass  # debug, skipped
+                if "Error" in resp:
+                    self.log.error(resp)
             elif '*****' in resp:
                 pass  # header
             else:
@@ -138,7 +140,7 @@ class AWR1843(AWR1843_Mixins):
 
     def start(self, reconfigure: bool = True) -> None:
         """Start radar.
-        
+
         Parameters
         ----------
         reconfigure: Whether the radar needs to be configured.
@@ -164,11 +166,11 @@ class AWR1843(AWR1843_Mixins):
         self.send(cmd)
 
     def channelCfg(
-        self, rxChannelEn: int = 0b1111, txChannelEn: int = 0b111,
+        self, rxChannelEn: int = 0b1111, txChannelEn: int = 0b101,
         cascading: int = 0
     ) -> None:
         """Channel configuration for the radar subsystem.
-        
+
         Parameters
         ----------
         rxChannelEn, txChannelEn: bit-masked rx/tx channels to enable.
@@ -182,7 +184,7 @@ class AWR1843(AWR1843_Mixins):
         adcOutputFmt: types.ADCFormat = types.ADCFormat.COMPLEX_1X
     ) -> None:
         """Configure radar subsystem ADC.
-        
+
         Parameters
         ----------
         numADCBits: ADC bit depth
@@ -198,7 +200,7 @@ class AWR1843(AWR1843_Mixins):
         chanInterleave: int = 1, chirpThreshold: int = 1
     ) -> None:
         """ADC Buffer hardware configuration.
-        
+
         Parameters
         ----------
         subFrameIdx: subframe to apply to. If `-1`, applies to all subframes.
@@ -224,7 +226,7 @@ class AWR1843(AWR1843_Mixins):
         rxGain: int = 30
     ) -> None:
         """Configure chirp profile(s).
-        
+
         Parameters
         ----------
         profileId: profile to configure. Can only have one in `DFEMode.LEGACY`.
@@ -249,7 +251,7 @@ class AWR1843(AWR1843_Mixins):
             numAdcSamples, digOutSampleRate, hpfCornerFreq1.value,
             hpfCornerFreq2.value, rxGain)
         self.send(cmd)
-    
+
     def chirpCfg(
         self, chirpIdx: int = 0, profileId: int = 0,
         startFreqVar: float = 0.0, freqSlopeVar: float = 0.0,
@@ -257,7 +259,7 @@ class AWR1843(AWR1843_Mixins):
         txEnable: int = 0
     ) -> None:
         """Radar chirp configuration.
-        
+
         Parameters
         ----------
         chirpIdx: Antenna index. Sets `chirpStartIdx`, `chirpEndIdx` [4] to
@@ -273,12 +275,12 @@ class AWR1843(AWR1843_Mixins):
         self.send(cmd)
 
     def frameCfg(
-        self, chirpStartIdx: int = 0, chirpEndIdx: int = 2, numLoops: int = 16,
+        self, chirpStartIdx: int = 0, chirpEndIdx: int = 1, numLoops: int = 16,
         numFrames: int = 0, framePeriodicity: float = 100.0,
         triggerSelect: int = 1, frameTriggerDelay: float = 0.0
     ) -> None:
         """Radar frame configuration.
-        
+
         NOTE: the frame should not have more than a 50% duty cycle according to
         the mmWave SDK documentation [4].
 
@@ -295,13 +297,13 @@ class AWR1843(AWR1843_Mixins):
             chirpStartIdx, chirpEndIdx, numLoops, numFrames, framePeriodicity,
             triggerSelect, frameTriggerDelay)
         self.send(cmd)
-    
+
     def compRangeBiasAndRxChanPhase(
         self, rangeBias: float = 0.0,
         rx_phase: list[tuple[int, int]] = [(0, 1)] * 12
     ) -> None:
         """Set range bias, channel phase compensation.
-        
+
         NOTE: rx_phase must have one term per TX-RX pair.
         """
         args = ' '.join("{} {}".format(re, im) for re, im in rx_phase)

@@ -48,7 +48,7 @@ class RadarConfig(NamedTuple):
     frame_length: int
     frame_period: float
     port: str = "/dev/ttyACM0"
-    num_tx: int = 3
+    num_tx: int = 2
     num_rx: int = 4
 
     @property
