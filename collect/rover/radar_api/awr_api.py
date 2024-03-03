@@ -86,9 +86,8 @@ class AWR1843(AWR1843_Mixins):
             adcStartTime=adc_start_time, rampEndTime=ramp_end_time,
             txStartTime=tx_start_time, freqSlopeConst=freq_slope,
             numAdcSamples=adc_samples, digOutSampleRate=sample_rate)
-        self.chirpCfg(0)
-        self.chirpCfg(1)
-        self.chirpCfg(2)
+        self.chirpCfg(chirpIdx=0, txEnable=0)
+        self.chirpCfg(chirpIdx=1, txEnable=2)
         self.frameCfg(numLoops=frame_length, framePeriodicity=frame_period)
         self.compRangeBiasAndRxChanPhase()
         self.lvdsStreamCfg()
@@ -255,6 +254,7 @@ class AWR1843(AWR1843_Mixins):
         self, chirpIdx: int = 0, profileId: int = 0,
         startFreqVar: float = 0.0, freqSlopeVar: float = 0.0,
         idleTimeVar: float = 0.0, adcStartTimeVar: float = 0.0,
+        txEnable: int = 0
     ) -> None:
         """Radar chirp configuration.
         
@@ -265,11 +265,11 @@ class AWR1843(AWR1843_Mixins):
         profileId: chirp profile to use.
         startFreqVar, freqSlopeVar, idleTimeVar, adcStartTimeVar: allowed
             freq/slope/time tolerances; documentation states only 0 is tested.
-        txEnable: bit-mask of TX antenna to enable for this chirp.
+        txEnable: antenna to enable; is converted to a bit mask.
         """
         cmd = "chirpCfg {} {} {} {} {} {} {} {}".format(
             chirpIdx, chirpIdx, profileId, startFreqVar, freqSlopeVar,
-            idleTimeVar, adcStartTimeVar, 1 << chirpIdx)
+            idleTimeVar, adcStartTimeVar, 1 << txEnable)
         self.send(cmd)
 
     def frameCfg(

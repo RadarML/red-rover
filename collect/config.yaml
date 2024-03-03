@@ -31,8 +31,8 @@ radar:
       ramp_end_time: 58.22
       tx_start_time: 2.0
       freq_slope: 63.005
-      adc_samples: 256
-      sample_rate: 5000
+      adc_samples: 128
+      sample_rate: 2500
       frame_length: 128
       frame_period: 64.0
     capture:
