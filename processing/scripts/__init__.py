@@ -7,4 +7,4 @@ r"""Rover data processing pipeline.
 .
 """
 
-_scripts = ["rosbag", "info", "radarpose"]
+_scripts = ["rosbag", "info", "radarpose", "fft", "as_rover1"]

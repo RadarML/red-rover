@@ -10,3 +10,4 @@ tqdm-stubs
 pyyaml
 pandas
 pandas-stubs
+h5py  # needed for legacy formats

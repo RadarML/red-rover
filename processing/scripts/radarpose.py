@@ -28,5 +28,5 @@ def _main(args):
     np.savez(
         os.path.join(args.path, "_slam", "radar.npz"),
         **poses._asdict(), mask=mask)
-    with open(os.path.join(args.path, "_slam", "meta.json"), 'w') as f:
+    with open(os.path.join(args.path, "_slam", "slam.json"), 'w') as f:
         json.dump(cfg, f)

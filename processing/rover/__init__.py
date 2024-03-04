@@ -11,11 +11,11 @@ from .channel import (
     Prefetch, BaseChannel, RawChannel, LzmaChannel, CHANNEL_TYPES)
 from .dataset import (SensorData, LidarData, RadarData, Dataset)
 from .slam import Poses, Trajectory
-from .radar import range_doppler_azimuth, RadarAxis, CFAR
+from .radar import range_doppler_azimuth, CFAR
 
 __all__ = [
     "Prefetch", "BaseChannel", "RawChannel", "LzmaChannel", "CHANNEL_TYPES",
     "SensorData", "LidarData", "RadarData", "Dataset",
     "Poses", "Trajectory",
-    "range_doppler_azimuth", "RadarAxis", "CFAR"
+    "range_doppler_azimuth", "CFAR"
 ]

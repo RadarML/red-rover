@@ -1,36 +1,28 @@
 """Radar FFT processing.
 
 NOTE: these routines are GPU-accelerated using JAX, which incurs significant
-call and initialization overhead.
+call and initialization overhead. As long as you are using jaxtyping > 0.2.26,
+jax will not be imported until a function which requires it is called.
 """
 
 import numpy as np
-from jax import numpy as jnp
 from jax.scipy.signal import convolve2d
+from jax import numpy as jnp
 
 from jaxtyping import Float32, Array, Complex64, Bool
-from enum import Enum
-
-
-class RadarAxis(Enum):
-    """Radar cube axes."""
-
-    DOPPLER = 0
-    AZIMUTH = 1
-    RANGE = 2
 
 
 def range_doppler_azimuth(
     iq: Complex64[Array, "doppler tx rx range"],
-    hanning: list[RadarAxis] = []
+    hanning: list[int] = [0, 2]
 ) -> Float32[Array, "range doppler antenna"]:
     """Compute range-doppler-azimuth FFTs.
 
     Parameters
     ----------
     iq: input IQ array, in doppler-tx-rx-range order.
-    hanning: list of indices to apply a Hanning window to; defaults to `[]`
-        (i.e. no axes). Must be closed on in order to jit-compile.
+    hanning: list of indices to apply a Hanning window to; defaults to `[0, 2]`
+        (i.e. range-doppler). Must be closed on in order to jit-compile.
 
     Notes
     -----
@@ -43,8 +35,8 @@ def range_doppler_azimuth(
 
     for axis in hanning:
         shape = [1, 1, 1]
-        shape[axis.value] = -1
-        window = jnp.hanning(iqa.shape[axis.value]).reshape(shape)
+        shape[axis] = -1
+        window = jnp.hanning(iqa.shape[axis]).reshape(shape)
         iqa = iqa * window
 
     rda = jnp.fft.fftn(iqa, axes=(0, 1, 2))

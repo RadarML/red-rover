@@ -14,8 +14,10 @@ from scipy.signal import medfilt
 class Poses(NamedTuple):
     """Discrete sampled poses."""
 
+    t: Float64[np.ndarray, "N"]
     pos: Float64[np.ndarray, "N 3"]
     vel: Float64[np.ndarray, "N 3"]
+    acc: Float64[np.ndarray, "N 3"]
     rot: Float64[np.ndarray, "N 3 3"]
 
 
@@ -89,6 +91,8 @@ class Trajectory:
 
         pos = np.array(splev(t_valid, self.tck)).T
         vel = np.array(splev(t_valid, self.tck, der=1)).T
+        acc = np.array(splev(t_valid, self.tck, der=2)).T
         rot = self.slerp(t_valid).as_matrix()
 
-        return Poses(pos=pos, vel=vel, rot=rot), mask
+        return Poses(
+            t=t_valid + self.base_time, pos=pos, vel=vel, rot=rot, acc=acc), mask

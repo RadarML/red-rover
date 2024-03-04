@@ -1,5 +1,19 @@
 # Setup Guide
 
+## Computer
+
+The data collection computer uses a linux installation; we use ubuntu 22.04, though other versions should work as well.
+
+TODO: try this procedure and write up the steps.
+- Python (deadsnakes 3.11)
+    ```sh
+    sudo add-apt-repository ppa:deadsnakes/ppa
+    sudo apt install python3.11
+    sudo apt install python3.11-venv
+    ```
+- Pip
+- Helpful: htop, zellij, openssh-server, git
+
 ## Radar
 
 A new radar needs to be configured with the following:
@@ -18,7 +32,7 @@ The AWR1843Boost device firmware has three code sections:
 
 ### Flashing the AWR1843Boost
 
-Flash the radar using [TI UniFlash](https://www.ti.com/tool/UNIFLASH); note that it seems to work most reliably on Windows.
+Flash the radar using [TI UniFlash](https://www.ti.com/tool/UNIFLASH); note that it seems to work most reliably on Windows. Also, obtain a copy of the `xwr18xx_mmw_demo.bin` firmware (e.g. through installing [mmWave SDK](https://www.ti.com/tool/MMWAVE-SDK)).
 
 1. Set the radar to flash mode.
     - Find `SOP0:2` (DIP switches on the front of the radar).

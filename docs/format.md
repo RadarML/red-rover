@@ -1,9 +1,21 @@
 # Dataset Format
 
+## Usage
+
+Dataset are created by `roverc`, and can be copied to a faster computer for processing. After processing, any created files should be stored in directories starting with `_`. These files do not need to be distributed, and can be excluded, e.g.
+```sh
+tar --exclude '*/_*' -cvf data.tar data
+```
+
+**NOTE**: the underlying data representations should already be compressed; further compressing the dataset as a whole is unlikely to yield a nontrivial compression ratio.
+
+## Specifications
+
 **Channel**: a channel (e.g. `iq`, `acc`, `rng`) is a single sequential homogenous data stream from a sensor.
 - Each channel is stored as a file, and may be stored in a raw binary format, compressed, or any other format (e.g. `raw`, `lzma`, `mjpeg`).
 - Channel names may have file extensions (e.g. `.avi`) if the file format can be interpreted by other programs.
 - The "shape" of each channel is described by the constant axes of the data, i.e. the overall array for a channel with `N` observations has shape `(N, *shape)`.
+- Channel names must not start with an underscore (`_`).
 - Channel names cannot be `meta.json` or `ts`, except for the special "timestamp" channel.
 
 **Sensor**: a sensor (e.g. `imu`, `lidar`, `radar`, `camera`) is a collection of channels, where sequential entries in each channel correspond to a single series of timestamps.
@@ -32,6 +44,8 @@
 **Dataset**: a directory containing a collection of sensors.
 - A copy of the active `config.yaml` is placed in the root dataset folder.
 - Data processing output files should be placed in directories starting with an underscore (e.g. `_scratch`, `_out`).
+- Processed output files placed in a directory along with a valid `meta.json` may be interpreted as "virtual" sensors, e.g. a processed range-doppler-azimuth radar sensor.
+- **NOTE**: processed directories must not contain a `meta.json` file unless they are intended to be interpreted as virtual sensors.
 - Example structure:
     ```
     example/

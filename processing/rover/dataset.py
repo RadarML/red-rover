@@ -173,11 +173,16 @@ class Dataset:
         with open(os.path.join(self.path, "config.yaml")) as f:
             self.cfg = yaml.load(f, Loader=yaml.FullLoader)
 
+        sensor_names = [
+            p for p in os.listdir(self.path)
+            if os.path.isdir(os.path.join(self.path, p))
+            and os.path.exists(os.path.join(self.path, p, "meta.json"))]
+
         self.sensors = {
             k: SENSOR_TYPES.get(
-                v["type"], SensorData)(os.path.join(self.path, k))
-            for k, v in self.cfg.items()
-        }
+                self.cfg.get(k, {}).get("type", ""), SensorData
+            )(os.path.join(self.path, k))
+            for k in sensor_names}
 
     @cached_property
     def filesize(self):
@@ -197,3 +202,16 @@ class Dataset:
         """Get string representation."""
         return "{}({}: [{}])".format(
             self.__class__.__name__, self.path, ", ".join(self.sensors))
+
+    def get_metadata(self, path: str) -> dict:
+        """Get metadata for a given sensor (or `{}` if it does not exist)."""
+        try:
+            with open(os.path.join(self.path, path, "meta.json")) as f:
+                return json.load(f)
+        except FileNotFoundError:
+            return {}
+
+    def write_metadata(self, path: str, meta: dict) -> None:
+        """Write updated metadata to the provided sensor directory."""
+        with open(os.path.join(self.path, path, "meta.json"), 'w') as f:
+            json.dump(meta, f, indent=4)
