@@ -68,7 +68,7 @@ class AWRSystem:
         self.awr.setup(**self.config.as_dict())
         self.awr.start()
 
-        return self.dca.stream(self.config.shape)
+        return self.dca.stream(self.config.raw_shape)
 
     def stop(self):
         """Stop data collection."""

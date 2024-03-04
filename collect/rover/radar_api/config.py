@@ -55,7 +55,13 @@ class RadarConfig(NamedTuple):
     def shape(self):
         """Radar data cube shape."""
         return [
-            self.frame_length, self.num_tx, self.num_rx, self.adc_samples, 2]
+            self.frame_length, self.num_tx, self.num_rx, self.adc_samples]
+
+    @property
+    def raw_shape(self):
+        """Radar IIQQ data shape."""
+        return [
+            self.frame_length, self.num_tx, self.num_rx, self.adc_samples * 2]
 
     @property
     def frame_size(self):

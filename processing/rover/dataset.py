@@ -2,10 +2,13 @@
 
 import os
 import json
+import yaml
 import struct
 from functools import cached_property
 import numpy as np
-from jaxtyping import Float64
+
+from beartype.typing import Iterator
+from jaxtyping import Float64, Int16, Complex64, Float32
 
 from ouster import client
 
@@ -109,7 +112,7 @@ class LidarData(SensorData):
         with open(os.path.join(self.path, "lidar.json")) as f:
             return client.SensorInfo(f.read())
 
-    def pointcloud_stream(self):
+    def pointcloud_stream(self) -> Iterator[Float32[np.ndarray, "..."]]:
         """Get an iterator which returns point clouds."""
         lut = client.XYZLut(self.lidar_metadata())
 
@@ -119,8 +122,35 @@ class LidarData(SensorData):
         return self.open("rng").stream_prefetch(transform=tf)
 
 
+class RadarData(SensorData):
+    """TI Radar sensor."""
+
+    @staticmethod
+    def iiqq16_to_iq64(
+        iiqq: Int16[np.ndarray, "... iiqq"]
+    ) -> Complex64[np.ndarray, "... iq"]:
+        """Convert IIQQ int16 to float64 IQ."""
+        iq = np.zeros(
+            (*iiqq.shape[:-1], iiqq.shape[-1] // 2), dtype=np.complex64)
+        iq[..., 0::2] = iiqq[..., 0::4] + 1j * iiqq[..., 2::4]
+        iq[..., 1::2] = iiqq[..., 1::4] + 1j * iiqq[..., 3::4]
+        return iq
+
+    def iq_stream(
+        self, batch: int = 64
+    ) -> Iterator[Complex64[np.ndarray, "..."]]:
+        """Get an iterator which returns a Complex64 stream of IQ frames.
+        
+        NOTE: TI, for some reason, streams data in IIQQ order instead of IQIQ.
+        This special stream (instead of a generic `.stream()`) handles this.
+        """
+        return self.open("iq").stream(
+            batch=batch, transform=self.iiqq16_to_iq64)
+
+
 SENSOR_TYPES = {
-    "lidar": LidarData
+    "lidar": LidarData,
+    "radar": RadarData
 }
 
 
@@ -130,16 +160,24 @@ class Dataset:
     Parameters
     ----------
     path: file path; should be a directory.
+
+    Attributes
+    ----------
+    sensors: dictionary of each sensor in the dataset. The value is an
+        initialized `SensorData` (or subclass).
     """
 
     def __init__(self, path: str) -> None:
         self.path = path
-        _sensors = os.listdir(path)
+
+        with open(os.path.join(self.path, "config.yaml")) as f:
+            self.cfg = yaml.load(f, Loader=yaml.FullLoader)
+
         self.sensors = {
-            s: SENSOR_TYPES.get(s, SensorData)(os.path.join(self.path, s))
-            for s in _sensors
-            if not s.startswith('_')
-            and os.path.exists(os.path.join(path, s, "meta.json"))}
+            k: SENSOR_TYPES.get(
+                v["type"], SensorData)(os.path.join(self.path, k))
+            for k, v in self.cfg.items()
+        }
 
     @cached_property
     def filesize(self):

@@ -77,6 +77,7 @@ def _main(args):
     dataset = Dataset(args.path)
     if args.out is None:
         args.out = os.path.join(args.path, "_scratch", "lidar.bag")    
+    os.makedirs(os.path.dirname(args.out), exist_ok=True)
 
     with Writer(args.out) as writer:
 

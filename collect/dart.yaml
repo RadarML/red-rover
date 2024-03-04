@@ -26,7 +26,7 @@ radar:
     radar:
       port: /dev/ttyACM0
       frequency: 77.0
-      idle_time: 191.0
+      idle_time: 190.0
       adc_start_time: 5.7
       ramp_end_time: 59.00
       tx_start_time: 1.0
@@ -34,7 +34,7 @@ radar:
       adc_samples: 128
       sample_rate: 2500
       frame_length: 128
-      frame_period: 128.0
+      frame_period: 64.0
     capture:
       sys_ip: 192.168.33.30
       fpga_ip: 192.168.33.180

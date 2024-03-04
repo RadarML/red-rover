@@ -8,11 +8,11 @@ from queue import Queue, Empty
 from threading import Thread
 
 from jaxtyping import Shaped
-from beartype.typing import Union, cast
+from beartype.typing import Union, cast, Iterator
 
 
 DATA_TYPES = {
-    "f64": np.float64, "f32": np.float32,
+    "f64": np.float64, "f32": np.float32, "i16": np.int16,
     "u8": np.uint8, "u16": np.uint16, "u32": np.uint32
 }
 
@@ -78,11 +78,13 @@ class BaseChannel:
         """Read all data."""
         raise NotImplementedError()
 
-    def stream(self, transform=None, batch: int = 0):
+    def stream(self, transform=None, batch: int = 0) -> Iterator[np.ndarray]:
         """Get iterable data stream."""
         raise NotImplementedError()
 
-    def stream_prefetch(self, transform=None, size: int = 64, batch: int = 0):
+    def stream_prefetch(
+        self, transform=None, size: int = 64, batch: int = 0
+    ) -> Iterator[np.ndarray]:
         """Stream with multi-threaded prefetching."""
         return Prefetch(
             self.stream(transform=transform, batch=batch), size=size)
@@ -104,7 +106,7 @@ class RawChannel(BaseChannel):
             data = cast(bytes, f.read())
         return np.frombuffer(data, dtype=self.type).reshape(-1, *self.shape)
 
-    def stream(self, transform=None, batch: int = 0):
+    def stream(self, transform=None, batch: int = 0) -> Iterator[np.ndarray]:
         """Get iterable data stream.
         
         Parameters
@@ -116,24 +118,23 @@ class RawChannel(BaseChannel):
         shape = self.shape if batch == 0 else [batch, *self.shape]
         size = self.size if batch == 0 else batch * self.size
 
+        if transform is None:
+            transform = lambda x: x
+
         with self._READ(self.path, 'rb') as fp:  # type: ignore
             while True:
                 data = cast(bytes, fp.read(size))  # type: ignore
                 if len(data) < size:
                     fp.close()
                     partial_batch = len(data) // self.size
-                    if partial_batch == 0:
-                        return
-                    else:
-                        yield np.frombuffer(
-                            data[:partial_batch * size], dtype=self.type
-                        ).reshape([partial_batch, *self.shape])
-                        return
-                out = np.frombuffer(data, dtype=self.type).reshape(shape)
-                if transform is None:
-                    yield out
-                else:
-                    yield transform(out)
+                    if partial_batch > 0:
+                        yield transform(
+                            np.frombuffer(
+                                data[:partial_batch * size], dtype=self.type
+                            ).reshape([partial_batch, *self.shape]))
+                    return
+                yield transform(
+                    np.frombuffer(data, dtype=self.type).reshape(shape))
 
 
 class LzmaChannel(RawChannel):

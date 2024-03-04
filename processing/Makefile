@@ -43,7 +43,10 @@ trajectory: $(TRAJ)
 validate:
 	cartographer_rosbag_validate -bag_filename $(BAG)
 
-$(PBSTREAM):
+$(OUT_DIR):
+	mkdir -p $(OUT_DIR)
+
+$(PBSTREAM): $(OUT_DIR)
 	-roslaunch slam offline_cart_3d.launch bag_filenames:=$(BAG)
 	mv $(BAG_DIR)/lidar.bag.pbstream $(PBSTREAM)
 

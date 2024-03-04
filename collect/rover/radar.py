@@ -17,8 +17,8 @@ class RadarCapture(BaseCapture):
         self.valid = open(os.path.join(path, "valid"), mode='wb')
         return {
             "iq": {
-                "format": "raw", "type": "u16", "shape": shape,
-                "desc": "Raw I/Q stream."},
+                "format": "raw", "type": "i16", "shape": shape,
+                "desc": "Raw I/Q stream (NOTE: in IIQQ order, not IQIQ!)."},
             "valid": {
                 "format": "raw", "type": "u8", "shape": [],
                 "desc": "True if this frame is complete (no zero-fill)."}}
@@ -51,7 +51,7 @@ class Radar(BaseSensor):
         """Create capture (while `active` is set)."""
         out = RadarCapture(
             os.path.join(path, self.name), log=self.log,
-            shape=self.radar.config.shape, fps=self.radar.fps)
+            shape=self.radar.config.raw_shape, fps=self.radar.fps)
 
         with open(os.path.join(path, self.name, "radar.json"), 'w') as f:
             json.dump(self.radar.config.as_intrinsics(), f, indent=4)

@@ -1,13 +1,11 @@
 """Common capture utilities."""
 
-import os, sys
+import os
 import json
-import yaml
 import struct
 import socket
 import logging
 import threading
-from queue import Queue, Empty
 import traceback
 from time import perf_counter, time
 

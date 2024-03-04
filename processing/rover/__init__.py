@@ -9,11 +9,13 @@ r"""Rover data processing pipeline.
 
 from .channel import (
     Prefetch, BaseChannel, RawChannel, LzmaChannel, CHANNEL_TYPES)
-from .dataset import (SensorData, LidarData, Dataset)
+from .dataset import (SensorData, LidarData, RadarData, Dataset)
 from .slam import Poses, Trajectory
+from .radar import range_doppler_azimuth, RadarAxis, CFAR
 
 __all__ = [
     "Prefetch", "BaseChannel", "RawChannel", "LzmaChannel", "CHANNEL_TYPES",
-    "SensorData", "LidarData", "Dataset",
-    "Poses", "Trajectory"
+    "SensorData", "LidarData", "RadarData", "Dataset",
+    "Poses", "Trajectory",
+    "range_doppler_azimuth", "RadarAxis", "CFAR"
 ]

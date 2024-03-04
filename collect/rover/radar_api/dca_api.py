@@ -144,7 +144,12 @@ class DCA1000EVM:
             self.log.error("Suppressing 'out of order' on the 10th trigger.")
 
     def stream(self, shape: list[int] = []):
-        """Get a python iterator corresponding to the data stream."""
+        """Get a python iterator corresponding to the data stream.
+
+        NOTE: `shape` should have twice as many samples on the last axis
+        to account for two IQ uint16s per sample. Note that these samples are
+        also in IIQQ order, not IQ order.
+        """
         size = int(np.prod(shape)) * np.dtype(np.uint16).itemsize
 
         offset = 0
