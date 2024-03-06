@@ -180,8 +180,8 @@ class DCA1000EVM:
 
             # Write out if the buffer contains complete
             while len(buf) >= size:
-                yield types.RadarFrame.from_bytes(
-                    timestamp, buf[:size], shape, complete)
+                yield types.RadarFrame(
+                    timestamp=timestamp, data=buf[:size], complete=complete)
                 buf[:size] = b''
 
                 # Update timestamp for remainder

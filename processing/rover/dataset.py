@@ -145,7 +145,7 @@ class RadarData(SensorData):
         iq[..., 0::2] = iiqq[..., 0::4] + 1j * iiqq[..., 2::4]
         iq[..., 1::2] = iiqq[..., 1::4] + 1j * iiqq[..., 3::4]
 
-        return iq[..., ::-1]
+        return iq
 
     def iq_stream(
         self, batch: int = 64

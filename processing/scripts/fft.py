@@ -35,6 +35,7 @@ def _main(args):
     # First step: convert to range-doppler. Record DC artifact.
     @jax.jit
     def to_rda(iq):
+        iq = iq[:, ::-1, ::-1, ::-1, ::-1]
         rda_raw = jax.vmap(partial(
             range_doppler_azimuth, hanning=args.hanning))(iq)
         zero = rda_raw.shape[2] // 2

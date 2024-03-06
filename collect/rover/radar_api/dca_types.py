@@ -163,7 +163,7 @@ class DataPacket(NamedTuple):
 
 
 class RadarFrame(NamedTuple):
-    """Radar frame.
+    """Radar frame, in IIQQ format (Fig 11, [7]).
     
     Attributes
     ----------
@@ -174,15 +174,5 @@ class RadarFrame(NamedTuple):
     """
 
     timestamp: float
-    data: np.ndarray
+    data: bytes
     complete: bool
-
-    @classmethod
-    def from_bytes(
-        cls, timestamp: float, data, shape: list[int], complete: bool
-    ) -> "RadarFrame":
-        """Generate from bytes."""
-        return cls(
-            timestamp=timestamp,
-            data=np.frombuffer(data, dtype=np.uint16).reshape(shape),
-            complete=complete)

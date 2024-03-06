@@ -19,6 +19,8 @@ References
     https://www.ti.com/tool/MMWAVE-STUDIO
 [6] AWR1843 Data Sheet
     https://www.ti.com/lit/ds/symlink/awr1843.pdf?ts=1708800208074
+[7] MMwave Radar Device ADC Raw Capture Data
+    https://www.ti.com/lit/an/swra581b/swra581b.pdf?ts=1609161628089
 """
 
 from . import dca_types, awr_types

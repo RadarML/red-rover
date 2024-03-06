@@ -25,7 +25,7 @@ class RadarCapture(BaseCapture):
 
     def write(self, scan: dca_types.RadarFrame) -> None:
         """Write a single frame."""
-        self.iq.write(scan.data.tobytes())
+        self.iq.write(scan.data)
         self.valid.write(b'\x01' if scan.complete else b'\x00')
 
     def close(self) -> None:
