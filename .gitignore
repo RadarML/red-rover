@@ -1,3 +1,10 @@
+# Red Rover
+# -----------------------------------------------------------------------------
+
+# Scratch notebooks
+*tmp*.ipynb
+*scratch*.ipynb
+
 # Data files
 collect/data/
 processing/data/
@@ -6,6 +13,9 @@ processing/data/
 processing/catkin_ws/devel/
 processing/catkin_ws/.catkin_workspace
 processing/catkin_ws/src/CMakeLists.txt
+
+# Standard python gitignore below
+# -----------------------------------------------------------------------------
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

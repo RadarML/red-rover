@@ -45,6 +45,8 @@ validate:
 
 $(OUT_DIR):
 	mkdir -p $(OUT_DIR)
+	mkdir -p $(BAG_DIR)
+	chmod 777 $(OUT_DIR)
 
 $(PBSTREAM): $(OUT_DIR)
 	-roslaunch slam offline_cart_3d.launch bag_filenames:=$(BAG)
@@ -53,6 +55,9 @@ $(PBSTREAM): $(OUT_DIR)
 $(POINTS): $(PBSTREAM)
 	roslaunch slam assets_writer_cart_3d.launch \
 		bag_filenames:=$(BAG) pose_graph_filename:=$(PBSTREAM)
+	mv $(BAG_DIR)/lidar.bag_points.ply $(OUT_DIR)
+	mv $(BAG_DIR)/lidar.bag_probability_grid.png $(OUT_DIR)
+	mv $(BAG_DIR)/lidar.bag_xray* $(OUT_DIR)
 
 $(POSE): $(PBSTREAM)
 	rosrun cartographer_ros cartographer_dev_pbstream_trajectories_to_rosbag \

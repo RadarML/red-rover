@@ -1,13 +1,22 @@
+# General
 numpy
-rosbags==0.9.19
-beartype
-scipy
-ouster-sdk
-jaxtyping
 scipy
 tqdm
-tqdm-stubs
 pyyaml
 pandas
+matplotlib
+imageio[ffmpeg]
+
+# Type checking
+beartype
+jaxtyping
+tqdm-stubs
 pandas-stubs
-h5py  # needed for legacy formats
+types-PyYAML
+
+# Sensor-specific
+opencv-python-headless  # Reading video
+ouster-sdk              # Interpreting Lidar data (destagger, range lut)
+rosbags==0.9.19         # Writing bags for the ROS converter
+plyfile                 # Cartographer point clouds
+h5py                    # Legacy Rover 1 data format

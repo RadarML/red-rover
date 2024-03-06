@@ -31,7 +31,6 @@
 
 ### Running
 
-
 These steps are taken care of by `make docker-run` in `collect`. Follow these steps for manual troubleshooting:
 
 1. Ensure that X11 forwarding is correctly set (if this does not work, you may need to activate non-local X11 forwarding).

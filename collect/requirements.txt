@@ -1,8 +1,13 @@
+# General
 numpy
-beartype
 pyyaml
-types-PyYAML
+
+# Type checking
+beartype
 jaxtyping
+types-PyYAML
+
+# Sensor-specific
 pyserial                # Radar, IMU
 opencv-python-headless  # Camera
 ouster-sdk              # Lidar

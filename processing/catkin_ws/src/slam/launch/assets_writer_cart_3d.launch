@@ -19,7 +19,7 @@
       type="cartographer_assets_writer" args="
           -configuration_directory $(find slam)/configuration_files
           -configuration_basename assets_writer_cart_3d.lua
-          -urdf_filename $(find slam)/urdf/os0_sensor.urdf
+          -urdf_filename $(find slam)/red-rover.urdf
           -bag_filenames $(arg bag_filenames)
           -pose_graph_filename $(arg pose_graph_filename)"
       output="screen">

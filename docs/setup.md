@@ -1,4 +1,4 @@
-# Setup Guide
+# Data Collection System Setup Guide
 
 ## Computer
 

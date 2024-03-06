@@ -3,6 +3,7 @@
 import os
 import lzma
 import numpy as np
+import cv2
 
 from queue import Queue, Empty
 from threading import Thread
@@ -143,7 +144,43 @@ class LzmaChannel(RawChannel):
     _READ = staticmethod(lzma.open)  # type: ignore
 
 
+class VideoChannel(BaseChannel):
+    """Video data."""
+
+    def read(self) -> Shaped[np.ndarray, "..."]:
+        """Read all data."""
+        cap = cv2.VideoCapture(self.path)
+        frames = []
+        while cap.isOpened():
+            ret, frame = cap.read()
+            if ret:
+                frames.append(frame)
+            else:
+                break
+        cap.release()
+        return np.stack(frames)
+
+    def stream(self, transform=None, batch: int = 0) -> Iterator[np.ndarray]:
+        """Get iterable data stream."""
+        if batch != 0:
+            raise NotImplementedError("Batch loading not yet implemented.")
+
+        if transform is None:
+            transform = lambda x: x
+
+        cap = cv2.VideoCapture(self.path)
+        while cap.isOpened():
+            ret, frame = cap.read()
+            if ret:
+                yield frame
+            else:
+                break
+        cap.release()
+        return
+
+
 CHANNEL_TYPES = {
     "raw": RawChannel,
-    "lzma": LzmaChannel
+    "lzma": LzmaChannel,
+    "mjpg": VideoChannel
 }

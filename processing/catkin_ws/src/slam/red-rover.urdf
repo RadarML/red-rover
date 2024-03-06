@@ -41,6 +41,9 @@
     <!-- Ouster Sensor -->
 	<link name="os_sensor"/>
 
+    <!-- Radar Sensor -->
+    <link name="radar"/>
+
     <!-- Ouster mounting plate: 22mm z-thickness. -->
 	<joint name="sensor_link_joint" type="fixed">
 		<parent link="base_link" />
@@ -68,5 +71,12 @@
 		<child link="imu_link" />
 		<origin xyz="0.0 0.0 -0.007" rpy="0 0 0" />
 	</joint>
+
+    <!-- Radar is 60mm in front and 110mm below the center. -->
+    <joint name="radar_link_joint" type="fixed">
+        <parent link="base_link" />
+        <child link="radar" />
+        <origin xyz="0.006 0 -0.011" rpy="0 0 0"/>
+    </joint>
 
 </robot>

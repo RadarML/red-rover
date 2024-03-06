@@ -8,7 +8,7 @@ from functools import cached_property
 import numpy as np
 
 from beartype.typing import Iterator
-from jaxtyping import Float64, Int16, Complex64, Float32
+from jaxtyping import Float64, UInt16, Int16, Complex64, Float32
 
 from ouster import client
 
@@ -107,6 +107,7 @@ class SensorData:
 class LidarData(SensorData):
     """Ouster Lidar sensor."""
 
+    @cached_property
     def lidar_metadata(self):
         """Get sensor metadata."""
         with open(os.path.join(self.path, "lidar.json")) as f:
@@ -114,12 +115,21 @@ class LidarData(SensorData):
 
     def pointcloud_stream(self) -> Iterator[Float32[np.ndarray, "..."]]:
         """Get an iterator which returns point clouds."""
-        lut = client.XYZLut(self.lidar_metadata())
+        lut = client.XYZLut(self.lidar_metadata)
 
         def tf(x):
             return lut(x).astype(np.float32)
 
         return self.open("rng").stream_prefetch(transform=tf)
+
+    def destaggered_stream(
+        self, key: str
+    ) -> Iterator[UInt16[np.ndarray, "..."]]:
+        """Get iterator which returns a destaggered range stream."""
+        def destagger(x):
+            return client.destagger(self.lidar_metadata, x)
+
+        return self.open(key).stream_prefetch(destagger)
 
 
 class RadarData(SensorData):
@@ -134,7 +144,8 @@ class RadarData(SensorData):
             (*iiqq.shape[:-1], iiqq.shape[-1] // 2), dtype=np.complex64)
         iq[..., 0::2] = iiqq[..., 0::4] + 1j * iiqq[..., 2::4]
         iq[..., 1::2] = iiqq[..., 1::4] + 1j * iiqq[..., 3::4]
-        return iq
+
+        return iq[..., ::-1]
 
     def iq_stream(
         self, batch: int = 64
@@ -173,10 +184,7 @@ class Dataset:
         with open(os.path.join(self.path, "config.yaml")) as f:
             self.cfg = yaml.load(f, Loader=yaml.FullLoader)
 
-        sensor_names = [
-            p for p in os.listdir(self.path)
-            if os.path.isdir(os.path.join(self.path, p))
-            and os.path.exists(os.path.join(self.path, p, "meta.json"))]
+        sensor_names = self.cfg.keys()
 
         self.sensors = {
             k: SENSOR_TYPES.get(
@@ -193,6 +201,12 @@ class Dataset:
     def datarate(self):
         """Total data rate."""
         return sum(s.datarate for _, s in self.sensors.items())
+
+    def get(self, key: str) -> SensorData:
+        """Get a sensor, which may be a "virtual" sensor."""
+        return SENSOR_TYPES.get(
+            self.cfg.get(key, {}).get("type", ""), SensorData
+        )(os.path.join(self.path, key))
 
     def __getitem__(self, key: str) -> SensorData:
         """Alias for `self.sensors[...]`."""

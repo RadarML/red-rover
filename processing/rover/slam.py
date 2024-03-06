@@ -21,6 +21,28 @@ class Poses(NamedTuple):
     rot: Float64[np.ndarray, "N 3 3"]
 
 
+
+class RawTrajectory(NamedTuple):
+    """Raw trajectory from cartographer."""
+
+    xyz: Float64[np.ndarray, "3 N"]
+    quat: Float64[np.ndarray, "4 N"]
+    t: Float64[np.ndarray, "N"]
+
+    @classmethod
+    def from_csv(cls, path: str) -> "RawTrajectory":
+        """Load `trajectory.csv` output file."""
+        df = pd.read_csv(path)
+        return RawTrajectory(
+            xyz=np.stack([
+                df["field.transform.translation.{}".format(axis)]
+                for axis in "xyz"]),
+            quat=np.stack([
+                df["field.transform.rotation.{}".format(axis)]
+                for axis in "xyzw"]),
+            t=np.array(df['field.header.stamp']) / 1e9)
+
+
 class Trajectory:
     """Sensor trajectory.
 
@@ -47,22 +69,15 @@ class Trajectory:
         self, path: str, smoothing: float = 10.0,
         start_threshold: float = 1.0, filter_size: int = 5,
     ) -> None:
-        df = pd.read_csv(path)
-        _xyz = np.stack([
-            df["field.transform.translation.{}".format(axis)]
-            for axis in "xyz"])
-        _quat = np.stack([
-            df["field.transform.rotation.{}".format(axis)]
-            for axis in "xyzw"])
-        _t_slam = np.array(df['field.header.stamp']) / 1e9
-
+        raw = RawTrajectory.from_csv(path)
         origin_dist = medfilt(
-            np.linalg.norm(_xyz - _xyz[0, None], axis=0), filter_size)
+            np.linalg.norm(raw.xyz - raw.xyz[0, None], axis=0), filter_size)
         start = np.argmax(origin_dist > start_threshold)
         end = np.argmax(origin_dist[::-1] > start_threshold)
-        _t_slam = _t_slam[start:-end]
-        self.xyz = _xyz[:, start:-end]
-        self.quat = _quat[:, start:-end]
+        _t_slam = raw.t[start:-end]
+
+        self.xyz = raw.xyz[:, start:-end]
+        self.quat = raw.quat[:, start:-end]
         self.base_time = _t_slam[0]
         self.t_slam = _t_slam - self.base_time
 
@@ -95,4 +110,5 @@ class Trajectory:
         rot = self.slerp(t_valid).as_matrix()
 
         return Poses(
-            t=t_valid + self.base_time, pos=pos, vel=vel, rot=rot, acc=acc), mask
+            t=t_valid + self.base_time,
+            pos=pos, vel=vel, rot=rot, acc=acc), mask
