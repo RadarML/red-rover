@@ -196,7 +196,7 @@ class AWR1843(AWR1843_Mixins):
     def adcbufCfg(
         self, subFrameIdx: int = -1,
         adcOutputFmt: types.ADCFormat = types.ADCFormat.COMPLEX_1X,
-        sampleSwap: types.SampleSwap = types.SampleSwap.MSB_LSB_IQ,
+        sampleSwap: types.SampleSwap = types.SampleSwap.MSB_LSB_QI,
         chanInterleave: int = 1, chirpThreshold: int = 1
     ) -> None:
         """ADC Buffer hardware configuration.
@@ -205,7 +205,9 @@ class AWR1843(AWR1843_Mixins):
         ----------
         subFrameIdx: subframe to apply to. If `-1`, applies to all subframes.
         adcOutputFmt: real/complex ADC format.
-        sampleSwap: write samples in IQ or QI order.
+        sampleSwap: write samples in IQ or QI order. We assume `MSB_LSB_QI`.
+            NOTE: the output is an interleaved complex-int-32 format; see
+            `RadarFrame` for details.
         chanInterleave: only non-interleaved (1) is supported.
         chirpThreshold: some kind of "ping-pong" demo parameter.
         """

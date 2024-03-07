@@ -171,6 +171,35 @@ class RadarFrame(NamedTuple):
     data: radar frame data.
     complete: whether the frame is "complete"; if `False`, this frame includes
         zero-filled data.
+
+    Notes
+    -----
+    Assuming the radar/capture card are configured for 16-bit capture and
+    `SampleSwap.MSB_LSB_QI` order (see `awr_types.py`), the output data use an
+    interleaved Complex32 format consisting of real (I: in-phase) and complex
+    (Q: quadrature) `i16` parts.
+
+    NOTE: since the output is litte-endian, `MSB_LSB_QI` indicates that `Q`
+    is in the MSB, i.e. comes last, and the `I` in the LSB comes first.
+
+    For example, if there are two LVDS lanes, each lane takes the following
+    structure::
+        Lane 0  | I[0] | Q[0] | I[2] | Q[2] | ...
+        Lane 1  | I[1] | Q[1] | I[3] | Q[3] | ...
+
+    These lanes are then interleaved by the capture card::
+        Output  | I[0] | I[1] | Q[0] | Q[1] | I[2] | I[3] | Q[2] | Q[3] | ...
+
+    Example
+    -------
+    Interpreting the `data`::
+
+        shape = [64, 4, 2, 128]  # shape: (chirps, tx, rx, samples)
+        raw = np.frombuffer(
+            frame.data, dtype=np.int16).reshape([*shape[:-1], shape[-1] * 2])
+        iq = np.zeros(shape, dtype=np.complex64)
+        iq[..., 0::2] = iiqq[..., 0::4] + 1j * iiqq[..., 2::4]
+        iq[..., 1::2] = iiqq[..., 1::4] + 1j * iiqq[..., 3::4]
     """
 
     timestamp: float
