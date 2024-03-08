@@ -54,7 +54,7 @@ def _main(args):
     outfile.create_dataset("valid", data=valid)
 
     # Pose metadata
-    with open(os.path.join(args.path, "metadata.json"), 'w') as f:
+    with open(os.path.join(args.out, "metadata.json"), 'w') as f:
         keys = ["min_speed", "max_accel", "accel_excl", "speed_excl"]
         meta = {k: getattr(args, k) for k in keys}
         json.dump({
@@ -65,7 +65,7 @@ def _main(args):
     # Radar data
     ds = rover.Dataset(args.path)
     radarfile = h5py.File(os.path.join(args.out, "radar.h5"), 'w')
-    radardata = ds.get('_radar')['rda'].read()[poses["mask"]]
+    radardata = ds.get('_radar')['rda'].read()
     radarfile.create_dataset("rad", data=radardata)
 
     # Radar metadata

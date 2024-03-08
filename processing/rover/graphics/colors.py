@@ -50,12 +50,11 @@ def lut(
     ----------
     colors: list of discrete colors to apply (e.g. 0-255 RGB values). Can be
         an arbitrary number of channels, not just RGB.
-    data: input data to index (`0 < data < 1`).
+    data: input data to index (`0 <= data <= 1`).
 
     Returns
     -------
     An array with the same shape as `data`, with an extra dimension appended.
     """
-    fidx = data * (colors.shape[0] - 1)
-    left = jnp.clip(jnp.floor(fidx).astype(int), 0, colors.shape[0] - 1)
-    return jnp.take(colors, left, axis=0)
+    fidx = jnp.clip(data, 0.0, 1.0) * (colors.shape[0] - 1)
+    return jnp.take(colors, fidx.astype(int), axis=0)

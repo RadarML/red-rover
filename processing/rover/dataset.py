@@ -139,11 +139,13 @@ class RadarData(SensorData):
     def iiqq16_to_iq64(
         iiqq: Int16[np.ndarray, "... iiqq"]
     ) -> Complex64[np.ndarray, "... iq"]:
-        """Convert IIQQ int16 to float64 IQ."""
+        """Convert IIQQ int16 to float64 IQ.
+        
+        NOTE: See `radar_api.dca_types.RadarFrame for data format info."""
         iq = np.zeros(
             (*iiqq.shape[:-1], iiqq.shape[-1] // 2), dtype=np.complex64)
-        iq[..., 0::2] = iiqq[..., 0::4] + 1j * iiqq[..., 2::4]
-        iq[..., 1::2] = iiqq[..., 1::4] + 1j * iiqq[..., 3::4]
+        iq[..., 0::2] = 1j * iiqq[..., 0::4] + iiqq[..., 2::4]
+        iq[..., 1::2] = 1j * iiqq[..., 1::4] + iiqq[..., 3::4]
 
         return iq
 

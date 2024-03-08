@@ -9,11 +9,9 @@ from tqdm import tqdm
 import numpy as np
 import jax
 from jax import numpy as jnp
-
 from beartype.typing import cast
 
-from graphics import JaxFont, resize, lut
-from rover import smooth_timestamps, Dataset, LidarData
+from rover import smooth_timestamps, Dataset, LidarData, graphics
 
 
 def _parse(p):
@@ -22,7 +20,7 @@ def _parse(p):
         "-o", "--out", default=None, help="Output path; defaults to "
         "`_report/data.mp4` in the dataset folder.")
     p.add_argument(
-        "--font", default="roboto.ttf", help="Path to `.ttf` font file.")
+        "--font", default=None, help="Use a specific `.ttf` font file.")
     p.add_argument(
         "-f", "--fps", type=float, default=30.0,
         help="Output video framerate.")
@@ -64,15 +62,17 @@ def _transforms():
     def lidar_tf(x):
         p1, p99 = jnp.percentile(x, jnp.array((1, 99)))
         x_norm = (x - p1) / p99
-        return resize(lut(greys, x_norm), 480, 1920)
+        return graphics.resize(graphics.lut(greys, x_norm), 480, 1920)
 
     @jax.jit
     def radar_tf(x):
+        x = jnp.swapaxes(x, -3, -2)
         p1, p99 = jnp.percentile(x, jnp.array((1, 99.9)))
         x_norm = (jnp.clip(x, p1, p99) - p1) / p99
         return jax.vmap(
-            partial(resize, width=480, height=480), in_axes=2, out_axes=2
-        )(lut(viridis, x_norm))
+            partial(graphics.resize, width=480, height=720),
+            in_axes=2, out_axes=2
+        )(graphics.lut(viridis, x_norm))
 
     return {
         "radar": radar_tf, "camera": jnp.array,
@@ -81,12 +81,12 @@ def _transforms():
 
 def _renderer(dataset_path, font_path):
     """Create (and close on) renderer."""
-    font = JaxFont(font_path, size=80)
+    font = graphics.JaxFont(font_path, size=80)
 
     @jax.jit
     def _render_frame(active, text):
         frame = (
-            jnp.zeros((1920, 3840, 3), dtype=jnp.uint8)
+            jnp.zeros((2160, 3840, 3), dtype=jnp.uint8)
             .at[360:360 + 1080, :1920].set(active["camera"][:, :, [2, 1, 0]])
             .at[:480, 1920:].set(active["rng"])
             .at[480:960, 1920:].set(active["rfl"])

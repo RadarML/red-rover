@@ -205,9 +205,9 @@ class AWR1843(AWR1843_Mixins):
         ----------
         subFrameIdx: subframe to apply to. If `-1`, applies to all subframes.
         adcOutputFmt: real/complex ADC format.
-        sampleSwap: write samples in IQ or QI order. We assume `MSB_LSB_QI`.
+        sampleSwap: write samples in IQ or QI order. We assume `MSB_LSB_IQ`.
             NOTE: the output is an interleaved complex-int-32 format; see
-            `RadarFrame` for details.
+            `RadarFrame` for details. `MSB_LSB_QI` doesn't seem to work.
         chanInterleave: only non-interleaved (1) is supported.
         chirpThreshold: some kind of "ping-pong" demo parameter.
         """

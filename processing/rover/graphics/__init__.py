@@ -1,4 +1,4 @@
-"""GPU-accelerated 2D graphics."""
+"""GPU-accelerated 2D graphics using JAX."""
 
 from .font import JaxFont
 from .colors import hsv_to_rgb, lut

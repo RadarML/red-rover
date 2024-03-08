@@ -67,6 +67,7 @@ class BaseCapture:
         self.runtime: list[float] = []
         self.prev_time = self.start_time = self.trace_time = perf_counter()
         self._ref_time: Optional[tuple[float, float]] = None
+        self._first_loop = True
 
         self.fps = fps
         self.report_interval = report_interval
@@ -99,6 +100,9 @@ class BaseCapture:
 
         if self.len % int(self.fps * self.report_interval) == 0:
             self.reset_stats()
+        if self._first_loop:
+            self._first_loop = False
+            self.log.info("Receiving data.")
 
     def write(self, arg: Any) -> None:
         """Write data."""

@@ -2,6 +2,9 @@
 numpy
 pyyaml
 
+# Control / Logging Web App
+flask
+
 # Type checking
 beartype
 jaxtyping

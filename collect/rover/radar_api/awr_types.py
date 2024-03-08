@@ -46,7 +46,10 @@ class ADCFormat(Enum):
 
 
 class SampleSwap(Enum):
-    """ADC i/Q bit order."""
+    """ADC I/Q bit order.
+    
+    NOTE: MSB_LSB_QI doesn't seem to work.
+    """
 
     MSB_LSB_QI = 0
     MSB_LSB_IQ = 1

@@ -12,11 +12,11 @@ from jax import numpy as jnp
 from jaxtyping import Float32, Array, Complex64, Bool
 
 
-def range_doppler_azimuth(
+def dopper_range_azimuth(
     iq: Complex64[Array, "doppler tx rx range"],
-    hanning: list[int] = [0, 2]
-) -> Float32[Array, "range doppler antenna"]:
-    """Compute range-doppler-azimuth FFTs.
+    hanning: list[int] = [0, 1]
+) -> Float32[Array, "doppler range antenna"]:
+    """Compute doppler-range-azimuth FFTs.
 
     Parameters
     ----------
@@ -28,10 +28,10 @@ def range_doppler_azimuth(
     -----
     Axes are indexed as follows:
     - 0: doppler
-    - 1: azimuth (antenna)
-    - 2: range
+    - 1: range
+    - 2: azimuth (antenna)
     """
-    iqa = iq.reshape(iq.shape[0], -1, iq.shape[-1])
+    iqa = jnp.swapaxes(iq.reshape(iq.shape[0], -1, iq.shape[-1]), -2, -1)
 
     for axis in hanning:
         shape = [1, 1, 1]
@@ -40,9 +40,8 @@ def range_doppler_azimuth(
         iqa = iqa * window
 
     rda = jnp.fft.fftn(iqa, axes=(0, 1, 2))
-    rda_shf = jnp.fft.fftshift(rda, axes=(0, 1))
-    rda_real = jnp.moveaxis(jnp.abs(rda_shf), [0, 1, 2], [1, 2, 0])
-    return rda_real
+    rda_shf = jnp.fft.fftshift(rda, axes=(0, 2))
+    return jnp.abs(rda_shf)
 
 
 class CFAR:

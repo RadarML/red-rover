@@ -8,7 +8,7 @@ from tqdm import tqdm
 
 import jax
 from jax import numpy as jnp
-from rover import Dataset, RadarData, range_doppler_azimuth
+from rover import Dataset, RadarData, dopper_range_azimuth
 
 from beartype.typing import cast
 
@@ -22,7 +22,7 @@ def _parse(p):
         "-n", "--name", default="rda",
         help="Output channel name; defaults to `rda`.")
     p.add_argument(
-        "--hanning", default=[0, 2], type=int, nargs='+',
+        "--hanning", default=[0, 1], type=int, nargs='+',
         help="Axes to perform hanning window processing on.")
 
 
@@ -32,13 +32,13 @@ def _main(args):
         cast(RadarData, ds["radar"]).iq_stream(batch=128),
         desc="Initial FFT", total=math.ceil(len(ds["radar"]) / 128))
 
-    # First step: convert to range-doppler. Record DC artifact.
+    # First step: convert to range-doppler. Record DC artifact (median).
     @jax.jit
     def to_rda(iq):
         rda_raw = jax.vmap(partial(
-            range_doppler_azimuth, hanning=args.hanning))(iq)
-        zero = rda_raw.shape[2] // 2
-        dc = jnp.median(rda_raw[:, :, zero - 1:zero + 2, :], axis=0)
+            dopper_range_azimuth, hanning=args.hanning))(iq)
+        zero = rda_raw.shape[1] // 2
+        dc = jnp.median(rda_raw[:, zero - 1:zero + 2], axis=0)
         return rda_raw, dc
 
     rda, _dc  = zip(*[to_rda(frame) for frame in stream])
@@ -48,8 +48,8 @@ def _main(args):
     @jax.jit
     def dc_correction(rda):
         zero = rda.shape[2] // 2
-        rda_corr = rda.at[:, :, zero - 1:zero + 2].set(
-            jnp.maximum(rda[:, :, zero - 1:zero + 2] - dc[None, :, :], 0))
+        rda_corr = rda.at[:, zero - 1:zero + 2].set(
+            jnp.maximum(rda[:, zero - 1:zero + 2] - dc[None, :, :], 0))
 
         return rda_corr
 
@@ -63,6 +63,6 @@ def _main(args):
     meta = ds.get_metadata(args.out)
     meta[args.name] = {
         "format": "raw", "type": "f32", "shape": rda[0].shape[1:],
-        "desc": "Range-doppler-azimuth image (hann={}).".format(args.hanning)
+        "desc": "Doppler-range-azimuth image (hann={}).".format(args.hanning)
     }
     ds.write_metadata(args.out, meta)

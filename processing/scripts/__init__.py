@@ -8,5 +8,5 @@ r"""Rover data processing pipeline.
 """
 
 _scripts = [
-    "rosbag", "info", "radarpose", "fft", "as_rover1", "lidarmap",
+    "rosbag", "info", "sensorpose", "fft", "as_rover1", "lidarmap",
     "report", "video"]

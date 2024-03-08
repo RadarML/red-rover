@@ -27,7 +27,7 @@ tar --exclude '*/_*' -cvf data.tar data
     ```json
     {
         "iq": {
-            "format": "raw", "type": "u16", "shape": [64, 3, 4, 256, 2],
+            "format": "raw", "type": "i16", "shape": [64, 3, 4, 512],
             "desc": "Raw I/Q stream."
         },
         "valid": {

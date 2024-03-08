@@ -1,10 +1,11 @@
 """GPU-accelerated font rendering."""
 
+import os
 from jax import numpy as jnp
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
-from beartype.typing import Iterable, Union
+from beartype.typing import Iterable, Union, Optional
 from jaxtyping import Array, UInt8
 
 
@@ -16,11 +17,23 @@ class JaxFont:
     
     Parameters
     ----------
-    font: Font file; must be monospace (or will be treated like one!)
+    font: Font file; must be monospace (or will be treated like one!). If
+        `None`, load the included `roboto.ttf` file.
     size: Font size; is static to allow pre-computing the font.
+
+    Usage
+    -----
+    1. Initialize: `font = JaxFont(font_name, size)`.
+    2. Convert text to array(s): `arr = font.encode("Hello World!")`.
+    3. Render onto canvas: `canvas = font.render(arr, canvas, color, x, y)`.
+    4. Wrap any `render` calls into a JIT-compiled function to guarantee
+        in-place editing.
     """
 
-    def __init__(self, font: str, size: int = 18) -> None:
+    def __init__(self, font: Optional[str] = None, size: int = 18) -> None:
+        if font is None:
+            font = os.path.join(os.path.dirname(__file__), "roboto.ttf")
+
         ttf = ImageFont.truetype(font, size, encoding="ascii")
         chars = bytes(list(range(32, 127))).decode('ascii')
 

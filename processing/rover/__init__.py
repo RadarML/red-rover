@@ -1,4 +1,4 @@
-r"""Rover data processing pipeline.
+r"""Rover data processing and loading library.
 ::
      ______  _____  _    _ _______  ______
     |_____/ |     |  \  /  |______ |_____/
@@ -12,11 +12,13 @@ from .channel import (
 from .dataset import (
     SensorData, LidarData, RadarData, Dataset, smooth_timestamps)
 from .slam import Poses, Trajectory, RawTrajectory
-from .radar import range_doppler_azimuth, CFAR
+from .radar import dopper_range_azimuth, CFAR
+from . import graphics
 
 __all__ = [
     "Prefetch", "BaseChannel", "RawChannel", "LzmaChannel", "CHANNEL_TYPES",
     "SensorData", "LidarData", "RadarData", "Dataset", "smooth_timestamps",
     "Poses", "Trajectory", "RawTrajectory",
-    "range_doppler_azimuth", "CFAR"
+    "dopper_range_azimuth", "CFAR",
+    "graphics"
 ]
