@@ -9,7 +9,7 @@ import rover
 
 def _parse(p):
     p.add_argument(
-        "-c", "--config", default="config.yaml", help="Config file.")
+        "-c", "--config", default=os.getenv('ROVER_CFG'), help="Config file.")
     p.add_argument(
         "-l", "--log_level", type=int, default=logging.INFO,
         help="Logging level (defaut=info=20; 0-50).")

@@ -1,3 +1,9 @@
+#     ______  _____  _    _ _______  ______
+#    |_____/ |     |  \  /  |______ |_____/
+#    |    \_ |_____|   \/   |______ |    \_
+#    Radar sensor fusion research platform
+#
+
 PYTHON?=python3.11
 JAX_CUDA?=cuda11_pip
 ROVER_DIR=$(shell pwd)

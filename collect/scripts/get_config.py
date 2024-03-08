@@ -1,11 +1,12 @@
 """Get configuration key."""
 
+import os
 import yaml
 
 
 def _parse(p):
     p.add_argument(
-        "-c", "--config", default="config.yaml", help="Config file.")
+        "-c", "--config", default=os.getenv('ROVER_CFG'), help="Config file.")
     p.add_argument(
         "-p", "--path", default='', help="Configuration key path to get.")
 

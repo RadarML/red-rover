@@ -62,8 +62,15 @@ class AWRSystem:
 
     def stream(self):
         """Get frame iterator."""
-        # Reboot radar in case it is stuck
+        # send a "stop" command in case the capture card is still running
+        self.dca.stop()
+        # reboot radar in case it is stuck
         self.dca.reset_ar_device()
+        # clear buffer from possible previous data collection
+        # (will mess up byte count indices if we don't)
+        self.dca.flush()
+
+        # start capture card & radar
         self.dca.start()
         self.awr.setup(**self.config.as_dict())
         self.awr.start()

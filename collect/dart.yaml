@@ -22,11 +22,12 @@ camera:
 radar:
   type: radar
   interface: enx207bd2bd84d3
+  comment: "DART, indoor"
   args:
     radar:
       port: /dev/ttyACM0
       frequency: 77.0
-      idle_time: 190.0
+      idle_time: 190.2
       adc_start_time: 5.7
       ramp_end_time: 59.00
       tx_start_time: 1.0

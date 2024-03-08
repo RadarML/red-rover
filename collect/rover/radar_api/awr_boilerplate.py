@@ -79,13 +79,13 @@ class AWR1843_Mixins:
         numAvgFrames: int = 256
     ) -> None:
         """DC range calibration at radar start.
-        
+
         TI's note [4]:
 
             Antenna coupling signature dominates the range bins close to
             the radar. These are the bins in the range FFT output located
             around DC.
-    
+
             When this feature is enabled, the signature is estimated during
             the first N chirps, and then it is subtracted during the
             subsequent chirps
@@ -94,7 +94,7 @@ class AWR1843_Mixins:
         """
         cmd = "calibDcRangeSig {} {} {} {} {}".format(
             subFrameIdx, enabled, negativeBinIdx, positiveBinIdx, numAvgFrames)
-        self.send(cmd)    
+        self.send(cmd)
 
     def clutterRemoval(self, subFrameIdx: int = -1, enabled: int = 0) -> None:
         """Static clutter removal."""
@@ -133,7 +133,7 @@ class AWR1843_Mixins:
         cmd = "measureRangeBiasAndRxChanPhase {} {} {}".format(
             enabled, targetDistance, searchWin)
         self.send(cmd)
-        
+
     def extendedMaxVelocity(
         self, subFrameIdx: int = -1, enabled: int = 0
     ) -> None:

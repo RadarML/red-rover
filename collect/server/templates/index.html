@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<title>Red Rover</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+:root {
+    --background: #fff;
+    --panel: #ddd;
+    --highlight: #000;
+    --active: #e43610;
+    --info: #0fbce2;
+    --disabled: #999;
+}
+
+html, body {
+    font-family: Tahoma, sans-serif;
+    background-color: var(--background);
+    width: 100%; margin: 0; font-size: 16px
+}
+.controls {
+    background-color: var(--panel);
+    width: 100%; height: 72px; padding: 10px;
+    position: fixed; left: 0; top: 0; font-size: 28px;
+}
+.button {
+    background-color: var(--disabled);
+    color: var(--background);
+    padding: 0.5em; margin: 0.5em 0em;
+    border-radius: 4px; text-align: center;
+    display: inline-block;
+}
+.button.active:hover { background-color: var(--active); }
+.button.active { background-color: var(--highlight); }
+
+.log {
+    position: fixed; left: 0px; bottom: 0px;
+    font-size: 15px; height: calc(100vh - 92px);
+}
+.log > div { width: 100%; height: 25%; }
+.log > div > div {
+    padding: 5px; height: 100%; overflow-y: scroll;
+    font-family: 'Courier New', Courier, monospace;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="controls">
+    <span>
+        Red Rover
+        <div style="font-size: 12px">
+            red-rover<br>
+            Version XX.YY.ZZ
+        </div>
+    </span>
+    <span style="position: fixed; right: 10px; top: 0">
+        <span class="button active">Start</span>
+        <span class="button">Stop</span>
+    </span>
+</div>
+
+<!--
+<div class="log">
+    <div>
+        <div id="radar">
+            radar
+        </div>
+    </div><div>
+        <div id="lidar">
+            lidar
+        </div>
+    </div><div>
+        <div id="camera">
+            camera
+        </div>
+    </div><div>
+        <div id="imu">
+            imu
+        </div>
+    </div>
+</div>
+-->
+</body>
+</html>

@@ -56,17 +56,6 @@ class DCA1000EVM:
         sock = socket.socket(
             socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
         sock.bind(addr)
-
-        # Flush data
-        sock.settimeout(0.0)
-        try:
-            while True:
-                data = sock.recv(self._MAX_PACKET_SIZE)
-                if not data:
-                    break
-        except BlockingIOError:
-            pass
-
         sock.settimeout(timeout)
         self.log.info("Connected to {}:{}".format(*addr))
         return sock
@@ -95,6 +84,19 @@ class DCA1000EVM:
 
         self._warn_ooo_counter = 0
 
+    def flush(self) -> None:
+        """Clear data receive buffers."""
+        self.data_socket.settimeout(0.0)
+        try:
+            while True:
+                data = self.data_socket.recv(self._MAX_PACKET_SIZE)
+                if not data:
+                    break
+        except BlockingIOError:
+            pass
+
+        self.data_socket.settimeout(self.timeout)
+
     def setup(
         self, delay: float = 5.0, lvds=types.LVDS.TWO_LANE
     ) -> None:
@@ -106,12 +108,6 @@ class DCA1000EVM:
         lvds: `FOUR_LANE` or `TWO_LANE`; select based on radar.
         """
         self.system_aliveness()
-
-        # reset the radar to make sure invalid LVDS data isn't coming in
-        self.reset_ar_device()
-        # send a "stop" command in case the capture card is still running
-        self.stop()
-
         self.read_fpga_version()
         self.configure_record(delay=delay)
         self.configure_fpga(

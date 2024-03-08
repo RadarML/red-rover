@@ -22,6 +22,7 @@ camera:
 radar:
   type: radar
   interface: enx207bd2bd84d3
+  comment: "RadarHD, indoor"
   args:
     radar:
       port: /dev/ttyACM0
