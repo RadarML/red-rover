@@ -10,7 +10,7 @@ SPEED_OF_LIGHT = 299792458
 RADAR_PROPERTIES = [
     "frequency", "idle_time", "adc_start_time", "ramp_end_time",
     "tx_start_time", "freq_slope", "adc_samples", "sample_rate",
-    "frame_length", "frame_period"]
+    "frame_length", "frame_period", "num_tx"]
 """Properties which define a radar configuration."""
 
 

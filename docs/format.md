@@ -4,10 +4,10 @@
 
 Dataset are created by `roverc`, and can be copied to a faster computer for processing. After processing, any created files should be stored in directories starting with `_`. These files do not need to be distributed, and can be excluded, e.g.
 ```sh
-tar --exclude '*/_*' -cvf data.tar data
+tar --exclude '*/_*' -cf data.tar data
 ```
 
-**NOTE**: the underlying data representations should already be compressed; further compressing the dataset as a whole is unlikely to yield a nontrivial compression ratio.
+**NOTE**: the underlying data representations should already be compressed; further compressing the dataset (e.g. `-z`) as a whole is unlikely to yield a nontrivial compression ratio.
 
 ## Specifications
 

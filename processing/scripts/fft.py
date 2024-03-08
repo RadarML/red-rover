@@ -23,7 +23,8 @@ def _parse(p):
         help="Output channel name; defaults to `rda`.")
     p.add_argument(
         "--hanning", default=[0, 1], type=int, nargs='+',
-        help="Axes to perform hanning window processing on.")
+        help="Axes to perform hanning window processing on "
+        "(0:doppler, 1:range, 2:azimuth).")
 
 
 def _main(args):

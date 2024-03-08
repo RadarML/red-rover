@@ -53,7 +53,8 @@ class AWR1843(AWR1843_Mixins):
             self.send(c.rstrip('\n'))
 
     def setup(
-        self, frequency: float = 77.0, idle_time: float = 110.0,
+        self, num_tx: int = 2,
+        frequency: float = 77.0, idle_time: float = 110.0,
         adc_start_time: float = 4.0, ramp_end_time: float = 56.0,
         tx_start_time: float = 1.0, freq_slope: float = 70.006,
         adc_samples: int = 256, sample_rate: int = 5000,
@@ -63,6 +64,7 @@ class AWR1843(AWR1843_Mixins):
 
         Parameters
         ----------
+        num_tx: TX antenna config (2 or 3).
         frequency: frequency band, in GHz; 77.0 or 76.0.
         idle_time, adc_start_time, ramp_end_time, tx_start_time: see TI chirp
             timing documentation; in us.
@@ -73,11 +75,11 @@ class AWR1843(AWR1843_Mixins):
         frame_period: time between the start of each frame; in ms.
         """
         assert frame_length & (frame_length - 1) == 0
+        assert num_tx in {2, 3}
 
         self.stop()
         self.flushCfg()
         self.dfeDataOutputMode(types.DFEMode.LEGACY)
-        self.channelCfg(rxChannelEn=0b1111, txChannelEn=0b101)
         self.adcCfg(adcOutputFmt=types.ADCFormat.COMPLEX_1X)
         self.adcbufCfg(adcOutputFmt=types.ADCFormat.COMPLEX_1X)
         self.profileCfg(
@@ -85,10 +87,19 @@ class AWR1843(AWR1843_Mixins):
             adcStartTime=adc_start_time, rampEndTime=ramp_end_time,
             txStartTime=tx_start_time, freqSlopeConst=freq_slope,
             numAdcSamples=adc_samples, digOutSampleRate=sample_rate)
-        self.chirpCfg(chirpIdx=0, txEnable=0)
-        self.chirpCfg(chirpIdx=1, txEnable=2)
+
+        if num_tx == 2:
+            self.channelCfg(rxChannelEn=0b1111, txChannelEn=0b101)
+            self.chirpCfg(chirpIdx=0, txEnable=0)
+            self.chirpCfg(chirpIdx=1, txEnable=2)
+        else:
+            self.channelCfg(rxChannelEn=0b1111, txChannelEn=0b111)
+            self.chirpCfg(chirpIdx=0, txEnable=0)
+            self.chirpCfg(chirpIdx=1, txEnable=1)
+            self.chirpCfg(chirpIdx=1, txEnable=2)
+
         self.frameCfg(
-            numLoops=frame_length, chirpEndIdx=1,
+            numLoops=frame_length, chirpEndIdx=num_tx - 1,
             framePeriodicity=frame_period)
         self.compRangeBiasAndRxChanPhase()
         self.lvdsStreamCfg()

@@ -18,7 +18,7 @@ class RadarCapture(BaseCapture):
         return {
             "iq": {
                 "format": "raw", "type": "i16", "shape": shape,
-                "desc": "Raw I/Q stream (NOTE: in IIQQ order, not IQIQ!)."},
+                "desc": "Raw I/Q stream."},
             "valid": {
                 "format": "raw", "type": "u8", "shape": [],
                 "desc": "True if this frame is complete (no zero-fill)."}}
