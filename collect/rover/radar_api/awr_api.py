@@ -96,7 +96,7 @@ class AWR1843(AWR1843_Mixins):
             self.channelCfg(rxChannelEn=0b1111, txChannelEn=0b111)
             self.chirpCfg(chirpIdx=0, txEnable=0)
             self.chirpCfg(chirpIdx=1, txEnable=1)
-            self.chirpCfg(chirpIdx=1, txEnable=2)
+            self.chirpCfg(chirpIdx=2, txEnable=2)
 
         self.frameCfg(
             numLoops=frame_length, chirpEndIdx=num_tx - 1,
@@ -207,7 +207,7 @@ class AWR1843(AWR1843_Mixins):
     def adcbufCfg(
         self, subFrameIdx: int = -1,
         adcOutputFmt: types.ADCFormat = types.ADCFormat.COMPLEX_1X,
-        sampleSwap: types.SampleSwap = types.SampleSwap.MSB_LSB_QI,
+        sampleSwap: types.SampleSwap = types.SampleSwap.MSB_LSB_IQ,
         chanInterleave: int = 1, chirpThreshold: int = 1
     ) -> None:
         """ADC Buffer hardware configuration.
