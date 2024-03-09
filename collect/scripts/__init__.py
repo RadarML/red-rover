@@ -7,4 +7,6 @@ r"""Rover data collection platform.
 .
 """
 
+from .control import Controller
+
 _scripts = ["run", "start", "stop", "exit", "get_config"]

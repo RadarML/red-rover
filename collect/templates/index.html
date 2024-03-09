@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<title>Red Rover</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+:root {
+    --background: #fff;
+    --panel: #ddd;
+    --highlight: #000;
+    --error: #e43610;
+    --warning: #e2a00f;
+    --active: #bce20f;
+    --info: #0fbce2;
+    --disabled: #999;
+}
+
+html, body {
+    font-family: Tahoma, sans-serif;
+    background-color: var(--background);
+    width: 100%; margin: 0; font-size: 16px;
+}
+
+
+.button {
+    background-color: var(--disabled);
+    color: var(--background);
+    padding: 0.3em 0.5em; border-radius: 4px; text-align: center;
+    display: inline-block;
+}
+.button.active:hover { background-color: var(--active); }
+.button.active { background-color: var(--highlight); }
+
+.log {
+    font-size: 15px; width: 100%; flex: 1 1 0;
+    overflow-y: scroll; overflow-x: hidden;
+}
+.log pre {
+    padding: 0px 0px 0px 4px; margin: 0em; width: 100%;
+    white-space: pre-wrap; box-sizing: border-box; }
+.log > div { padding: 8px; }
+.INFO { border-left: 6px solid var(--info); }
+.WARNING { border-left: 6px solid var(--warning); }
+.ERROR, .CRITICAL {border-left: 6px solid var(--error); }
+</style>
+<script>
+function _command(args) {
+    fetch("http://{{ request.host }}/command", {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(args)
+    });
+}
+
+function start() {
+    const path = document.getElementById('datapath').value;
+    const cl = document.getElementById('start').classList;
+    if (cl.contains('active')) {
+        cl.remove('active');
+        document.getElementById('stop').classList.add('active');
+        _command({"action": "start", "path": path});
+    }
+}
+
+function stop() {
+    _command({"action": "stop"});
+    document.getElementById('stop').classList.remove('active');
+    document.getElementById('start').classList.add('active');
+}
+</script>
+</head>
+
+<body>
+<div style="width: 100vw; height: 100vh; display: flex; flex-flow: column;">
+
+<div style="background-color: var(--panel); flex: 0 0 auto">
+    <div style="margin: 10px">
+        <div style="display: flex; width: 100%; font-size: 28px;">
+            <span style="flex-grow: 1;">
+                <div>Red Rover</div>
+                <div style="font-size: 12px;">{{ version }}</div>
+            </span>
+            <span>
+                <span id='start' class="button active" onclick="start();">Start</span>
+                <span id='stop' class="button" onclick="stop();">Stop</span>
+            </span>
+        </div>
+        <div style="display: flex; width: 100%; margin-top: 8px">
+            <span style="padding-right: 4px">Path</span>
+            <input type="text" id="datapath" style="flex-grow: 1;">
+        </div>
+    </div>
+</div>
+
+<div class="log">
+    <div id="radar"></div>
+</div><div class="log">
+    <div id="lidar"></div>
+</div><div class="log"> 
+    <div id="camera"></div>
+</div><div class="log">
+    <div id="imu"></div>
+</div>
+
+</div>
+
+<!-- Handle logging after to make sure the output divs are initialized.-->
+<script>
+var ts_last = '';
+const log_url = "http://{{ request.host }}/log";
+
+function update_log() {
+    const url = (ts_last == '') ? log_url : log_url + '/' + ts_last;
+    fetch(url)
+    .then(response => {return response.json();})
+    .then(data => {
+        ts_last = data.ts;
+        for (let [sensor, messages] of Object.entries(data.entries)) {
+            const container = document.getElementById(sensor);
+            messages.forEach(entry => {
+                const div = document.createElement("pre");
+                div.textContent = entry.msg;
+                div.className = entry.lvl;
+                container.appendChild(div);
+                container.parentNode.scrollTop += div.offsetHeight;
+            })
+        }
+    })
+    .catch(error => { console.error("Failed to fetch log messages:", error); })
+}
+
+update_log();
+setInterval(update_log, 500);
+</script>
+
+</body>
+
+</html>

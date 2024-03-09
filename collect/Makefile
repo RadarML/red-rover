@@ -4,6 +4,10 @@
 #    Radar sensor fusion research platform
 #
 
+ifndef ROVER_CFG
+$(error No config file specified: ROVER_CFG is not set)
+endif
+
 PYTHON?=python3.11
 VENV=./env/bin
 ROVERC=$(VENV)/python collect.py
@@ -21,7 +25,7 @@ run:
 
 
 server:
-	cd server; ../env/bin/flask run --host=0.0.0.0
+	./env/bin/flask run --host=0.0.0.0
 
 env:
 	$(PYTHON) -m venv env

@@ -34,12 +34,6 @@ class BaseCapture:
     kwargs: passthrough to sensor-specific initialization    
     """
 
-    _STATS: dict[str, Callable[[np.ndarray], float]] = {
-        "mean": np.mean,
-        "p1": lambda x: np.percentile(x, 1),
-        "p99": lambda x: np.percentile(x, 99)
-    }
-
     _COMMON: SensorMetadata = {
         "ts": {
             "format": "raw", "type": "f64", "shape": (),
@@ -117,10 +111,8 @@ class BaseCapture:
         period = np.array(self.period)
         runtime = np.array(self.runtime)
         self.log.info(
-            "freq: {:.3f} (p99={:.3f})  util: {:.3f} (p99={:.3f})".format(
-                1 / np.mean(period), 1 / np.percentile(period, 99),
-                np.mean(runtime) * self.fps,
-                np.percentile(runtime, 1) * self.fps))
+            "freq: {:.3f}  util: {:.3f}".format(
+                1 / np.mean(period), np.mean(runtime) * self.fps))
         self.period = []
         self.runtime = []
 
