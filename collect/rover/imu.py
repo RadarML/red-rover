@@ -2,7 +2,7 @@
 
 import os
 
-from .imu_api import XsensIMU, IMUData
+from .imu_api import XsensIMU, IMUData, InvalidChecksum
 from .common import BaseCapture, BaseSensor, SensorMetadata
 
 
@@ -76,6 +76,8 @@ class IMU(BaseSensor):
                 out.start()
                 out.write(data)
                 out.end()
+            except InvalidChecksum:
+                self.log.warn("Received invalid checksum.")
             except Exception as e:
                 self.log.critical(repr(e))
 

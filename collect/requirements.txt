@@ -9,6 +9,7 @@ flask
 beartype
 jaxtyping
 types-PyYAML
+types-pyserial
 
 # Sensor-specific
 pyserial                # Radar, IMU

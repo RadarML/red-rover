@@ -18,26 +18,20 @@ RADAR_IF=$(shell $(GETCONF) radar/interface)
 LIDAR_IF=$(shell $(GETCONF) lidar/interface)
 RECV_BUF_SIZE=$(shell $(GETCONF) radar/args/capture/socket_buffer)
 
-.PHONY: run server
+.PHONY: run server start stop
+server:
+	./env/bin/flask run --host=0.0.0.0
 run:
 	echo "Launched with config: $(ROVER_CFG)"
 	zellij --layout rover.kdl
-
-
-server:
-	./env/bin/flask run --host=0.0.0.0
-
-env:
-	$(PYTHON) -m venv env
-	$(VENV)/pip install -r requirements.txt
-
-
-.PHONY: start, stop
 start:
 	$(ROVERC) start
 stop:
 	$(ROVERC) stop
 
+env:
+	$(PYTHON) -m venv env
+	$(VENV)/pip install -r requirements.txt
 
 # -- Configuration (on each reboot) -------------------------------------------
 

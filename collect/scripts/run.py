@@ -1,4 +1,4 @@
-"""Helper for launch data collection processes."""
+"""Launch data collection process."""
 
 import os
 import yaml

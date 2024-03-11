@@ -7,38 +7,32 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
 :root {
-    --background: #fff;
-    --panel: #ddd;
-    --highlight: #000;
-    --error: #e43610;
-    --warning: #e2a00f;
-    --active: #bce20f;
-    --info: #0fbce2;
-    --disabled: #999;
+    --bg: #121212; --panel: #2a2a2a; --fg: #fff;
+    --error: #e83938; --warning: #ffc142; --active: #8be836;
+    --info: #5793ff; --disabled: #555; --highlight: #c100ff;
 }
-
 html, body {
     font-family: Tahoma, sans-serif;
-    background-color: var(--background);
+    background-color: var(--bg); color: var(--fg);
     width: 100%; margin: 0; font-size: 16px;
 }
-
-
 .button {
     background-color: var(--disabled);
-    color: var(--background);
+    color: var(--bg);
     padding: 0.3em 0.5em; border-radius: 4px; text-align: center;
     display: inline-block;
 }
-.button.active:hover { background-color: var(--active); }
-.button.active { background-color: var(--highlight); }
-
+.button.active:hover { background-color: var(--highlight); }
+.button.active { background-color: var(--fg); }
+.container { width: 100vw; height: 100vh; display: flex; flex-flow: column; }
+.controls { background-color: var(--panel); flex: 0 0 auto; }
+.controls > div { margin: 10px; }
 .log {
     font-size: 15px; width: 100%; flex: 1 1 0;
     overflow-y: scroll; overflow-x: hidden;
 }
 .log pre {
-    padding: 0px 0px 0px 4px; margin: 0em; width: 100%;
+    padding: 0px 0px 0px 6px; margin: 0em; width: 100%;
     white-space: pre-wrap; box-sizing: border-box; }
 .log > div { padding: 8px; }
 .INFO { border-left: 6px solid var(--info); }
@@ -55,7 +49,9 @@ function _command(args) {
 }
 
 function start() {
-    const path = document.getElementById('datapath').value;
+    const path = (
+        document.getElementById('datadir').value + '/'
+        + document.getElementById('datapath').value);
     const cl = document.getElementById('start').classList;
     if (cl.contains('active')) {
         cl.remove('active');
@@ -73,26 +69,29 @@ function stop() {
 </head>
 
 <body>
-<div style="width: 100vw; height: 100vh; display: flex; flex-flow: column;">
+<div class="container">
 
-<div style="background-color: var(--panel); flex: 0 0 auto">
-    <div style="margin: 10px">
-        <div style="display: flex; width: 100%; font-size: 28px;">
-            <span style="flex-grow: 1;">
-                <div>Red Rover</div>
-                <div style="font-size: 12px;">{{ version }}</div>
-            </span>
-            <span>
-                <span id='start' class="button active" onclick="start();">Start</span>
-                <span id='stop' class="button" onclick="stop();">Stop</span>
-            </span>
-        </div>
-        <div style="display: flex; width: 100%; margin-top: 8px">
-            <span style="padding-right: 4px">Path</span>
-            <input type="text" id="datapath" style="flex-grow: 1;">
-        </div>
+<div class="controls"><div style="margin: 10px">
+    <div style="display: flex; width: 100%; font-size: 28px;">
+        <span style="flex-grow: 1;">
+            <div>Red Rover</div>
+            <div style="font-size: 12px;">{{ version }}</div>
+        </span>
+        <span>
+            <span id='start' class="button active" onclick="start();">Start</span>
+            <span id='stop' class="button" onclick="stop();">Stop</span>
+        </span>
     </div>
-</div>
+    <div style="display: flex; width: 100%; margin-top: 8px">
+        <select name="datadir" id="datadir">
+            {% for disk in disks -%}
+            <option value="{{media}}/{{disk}}">/{{disk}}</option>
+            {%- endfor %}
+            <option value="./data">./data</option>
+        </select>
+        <input type="text" id="datapath" style="flex: 1 1 0;">
+    </div>
+</div></div>
 
 <div class="log">
     <div id="radar"></div>
@@ -121,7 +120,7 @@ function update_log() {
             const container = document.getElementById(sensor);
             messages.forEach(entry => {
                 const div = document.createElement("pre");
-                div.textContent = entry.msg;
+                div.textContent = '(' + entry.mod + ') ' + entry.msg;
                 div.className = entry.lvl;
                 container.appendChild(div);
                 container.parentNode.scrollTop += div.offsetHeight;

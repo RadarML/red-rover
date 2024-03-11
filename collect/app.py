@@ -12,19 +12,19 @@ from scripts import Controller
 from flask import Flask, render_template, jsonify, request
 
 
-
 class RoverSensor:
+    """Data collection process wrapper."""
 
     def __init__(self, sensor: str) -> None:
         self.name = sensor
-        self.log = []
+        self.log: list[tuple[float, dict]] = []
         self.log_tail = 0
 
         self.thread = threading.Thread(target=self.loop)
         self.thread.start()
 
     def loop(self):
-
+        """Run / log loop."""
         with subprocess.Popen(
             ['./env/bin/python', 'collect.py', "run", "-s", self.name],
             stdout=subprocess.PIPE, stderr=subprocess.STDOUT
@@ -43,10 +43,13 @@ class RoverSensor:
                     print("Invalid json: {}".format(line.rstrip()))
 
     def log_entries(self, start: float):
+        """Aggregate log entries more recent than the start time."""
         return [(ts, entry) for ts, entry in self.log if ts > start]
 
 
 class Rover:
+    """Rover system."""
+
     def __init__(self):
         with open(os.getenv('ROVER_CFG')) as f:
             self.cfg = yaml.load(f, Loader=yaml.FullLoader)
@@ -55,6 +58,7 @@ class Rover:
         self.sensors = {s: RoverSensor(s) for s in self.cfg}
 
     def log(self, start: float):
+        """Get log entries."""
         if start < 0:
             msgs = {k: v.log for k, v in self.sensors.items()}
         else:
@@ -67,8 +71,7 @@ class Rover:
         return {
             "entries": {k: [entry for _, entry in v] for k, v in msgs.items()},
             "ts": datetime.strftime(
-                datetime.fromtimestamp(ts_last), "%Y-%m-%dT%H:%M:%S,%f")
-        }
+                datetime.fromtimestamp(ts_last), "%Y-%m-%dT%H:%M:%S,%f")}
 
 
 def _get_version_info():
@@ -90,18 +93,25 @@ with app.app_context():
 
 @app.route('/')
 def index():
-    return render_template("index.html", version=version)
+    media = "/media/rover"
+    disks = os.listdir(media)
+    return render_template(
+        "index.html", version=version, media=media, disks=disks)
+
 
 @app.route('/command', methods=['POST'])
 def command():
     try:
         action = request.json['action']
         if action == 'start':
-            rover.controller.start(request.json["path"])
-            return "ok", 200
+            path = request.json["path"]
+            if path.endswith('/'):
+                path += datetime.now().strftime("%Y-%m-%d.%H-%M-%S")
+            rover.controller.start(path)
+            return "ok"
         elif action == 'stop':
             rover.controller.stop()
-            return "ok", 200
+            return "ok"
         else:
             return "invalid action", 400
     except KeyError:
@@ -111,6 +121,7 @@ def command():
 @app.route('/log')
 def log_all():
     return jsonify(rover.log(start=-1.))
+
 
 @app.route('/log/<start>')
 def log(start=None):

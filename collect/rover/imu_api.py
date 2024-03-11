@@ -15,6 +15,11 @@ from beartype.typing import NamedTuple, Optional
 from jaxtyping import Float32
 
 
+class InvalidChecksum(Exception):
+    """Non-fatal IMU error message."""
+    pass
+
+
 class IMUData(NamedTuple):
     """IMU orientation, angular velocity, acceleration data."""
 
@@ -72,7 +77,7 @@ class XsensIMU:
 
         summation = self.BID + mid + packet_len + sum(payload + checksum)
         if (summation & 0xff) != 0:
-            raise Exception("Checksum does not match.")
+            raise InvalidChecksum(summation & 0xff)
 
         # We only handle MTData2 messages.
         if mid != self.MTData2:
