@@ -26,5 +26,5 @@ def _main(args):
     poses, mask = traj.interpolate(t_radar)
 
     np.savez(
-        os.path.join(args.path, "_slam", "{}.npz".format(args.sensor)),
+        os.path.join(args.path, "_" + args.sensor, "pose.npz"),
         **poses._asdict(), mask=mask, **cfg)

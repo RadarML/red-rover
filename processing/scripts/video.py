@@ -66,7 +66,7 @@ def _transforms():
 
     @jax.jit
     def radar_tf(x):
-        x = jnp.swapaxes(x, -3, -2)
+        x = jnp.swapaxes(x, 0, 1)
         p1, p99 = jnp.percentile(x, jnp.array((1, 99.9)))
         x_norm = (jnp.clip(x, p1, p99) - p1) / p99
         return jax.vmap(
@@ -121,6 +121,7 @@ def _main(args):
 
     if args.out is None:
         args.out = os.path.join(args.path, "_report", "data.mp4")
+    os.makedirs(os.path.dirname(args.out), exist_ok=True)
 
     timestamps, streams = _load(args.path)
     transforms = _transforms()

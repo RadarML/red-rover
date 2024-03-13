@@ -107,6 +107,11 @@ def command():
             path = request.json["path"]
             if path.endswith('/'):
                 path += datetime.now().strftime("%Y-%m-%d.%H-%M-%S")
+
+            os.makedirs(path, exist_ok=True)
+            with open(os.path.join(path, 'config.yaml'), 'w') as f:
+                f.write(rover.cfg)
+
             rover.controller.start(path)
             return "ok"
         elif action == 'stop':

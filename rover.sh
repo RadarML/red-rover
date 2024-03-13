@@ -1,5 +1,7 @@
 if [ "$#" -eq 0 ]; then
-    echo "Usage: source rover.sh <config>"
+    alias roverp="$_ROVER_DIR/processing/env/bin/python $_ROVER_DIR/processing/process.py"
+
+    echo "ROVER_CFG not provided; only roverp will be available."
 else
     _ROVER_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
