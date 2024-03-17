@@ -48,6 +48,7 @@ def _main(args):
         for lw, u in zip(lower, upper)]
     grid = np.zeros(size, dtype=bool)
     print("Creating {}x{}x{} map @ {} cells/m".format(*size, args.resolution))
+    print("Format: {}".format("rover1" if args.legacy else "red-rover"))
 
     for _ in tqdm(range(math.ceil(x.shape[0] / args.batch))):
         ix = ((x[:args.batch] - lower[0]) * args.resolution).astype(int)

@@ -12,7 +12,7 @@ def _parse(p):
         "-s", "--sensor", default="radar",
         help="Sensor timestamps to interpolate for.")
     p.add_argument(
-        "-m", "--smoothing", type=float, default=10.0,
+        "-m", "--smoothing", type=float, default=500.0,
         help="Smoothing coefficient; higher = more smooth.")
 
 
@@ -25,6 +25,7 @@ def _main(args):
     t_radar = Dataset(args.path)[args.sensor]["ts"].read()
     poses, mask = traj.interpolate(t_radar)
 
+    os.makedirs(os.path.join(args.path, "_" + args.sensor), exist_ok=True)
     np.savez(
         os.path.join(args.path, "_" + args.sensor, "pose.npz"),
         **poses._asdict(), mask=mask, **cfg)

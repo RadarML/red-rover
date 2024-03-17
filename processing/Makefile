@@ -43,7 +43,7 @@ TRAJ=$(OUT_DIR)/trajectory.csv
 
 .PRECIOUS: $(PBSTREAM)
 .PHONY: lidar validate
-lidar: $(POINTS) $(TRAJ)
+lidar: $(TRAJ) $(POINTS)
 
 trajectory: $(TRAJ)
 

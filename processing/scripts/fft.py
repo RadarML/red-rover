@@ -1,11 +1,11 @@
 """Generate range-doppler-azimuth images."""
 
-import os
-import json
+import os, json
 import math
 from functools import partial
 from tqdm import tqdm
 
+import numpy as np
 import jax
 from jax import numpy as jnp
 from rover import Dataset, RadarData, dopper_range_azimuth
@@ -18,20 +18,22 @@ def _parse(p):
     p.add_argument(
         "-o", "--out", default='_radar',
         help="Output sensor name; defaults to `_radar`.")
-    p.add_argument(
-        "-n", "--name", default="rda",
-        help="Output channel name; defaults to `rda`.")
+    p.add_argument("-b", "--batch", type=int, default=128, help="Batch size.")
     p.add_argument(
         "--hanning", default=[0, 1], type=int, nargs='+',
         help="Axes to perform hanning window processing on "
         "(0:doppler, 1:range, 2:azimuth).")
+    p.add_argument(
+        "--nomask", default=False, action='store_true',
+        help="Don't apply valid mask; no longer requires `_radar/pose.npz`.")
 
 
 def _main(args):
     ds = Dataset(args.path)
+    out_dir = os.path.join(args.path, args.out)
     stream = tqdm(
-        cast(RadarData, ds["radar"]).iq_stream(batch=128),
-        desc="Initial FFT", total=math.ceil(len(ds["radar"]) / 128))
+        cast(RadarData, ds["radar"]).iq_stream(batch=args.batch),
+        desc="Initial FFT", total=math.ceil(len(ds["radar"]) / args.batch))
 
     # First step: convert to range-doppler. Record DC artifact (median).
     @jax.jit
@@ -54,16 +56,25 @@ def _main(args):
 
         return rda_corr
 
-    # Writeout
-    os.makedirs(os.path.join(args.path, args.out), exist_ok=True)
-    with open(os.path.join(args.path, args.out, args.name), 'wb') as f:
-        for frame in tqdm(rda, desc="DC Correction & Writeout"):
-            f.write(dc_correction(frame).tobytes())
-
-    # Metadata (append or write)
-    meta = ds.get_metadata(args.out)
-    meta[args.name] = {
+    # Create `_radar` virtual sensor
+    radar = ds.create(args.out)
+    rda_out = radar.create("rda", {
         "format": "raw", "type": "f32", "shape": rda[0].shape[1:],
-        "desc": "Doppler-range-azimuth image (hann={}).".format(args.hanning)
-    }
-    ds.write_metadata(args.out, meta)
+        "desc": "Doppler-range-azimuth image (hann={}, nomask={}).".format(
+            args.hanning, args.nomask)})
+    ts_out = radar.create("ts", {
+        "format": "raw", "type": "f64", "shape": [],
+        "desc": "Smoothed timestamp, in seconds."})
+
+    # Writeout
+    ts = ds["radar"]["ts"].read()
+    rda_pbar = tqdm(rda, desc="DC Correction & Writeout")
+    if args.nomask:
+        ts_out.write(ts)
+        rda_out.consume(dc_correction(frame) for frame in rda_pbar)
+    else:
+        mask = np.load(os.path.join(args.path, "_radar", "pose.npz"))["mask"]
+        ts_out.write(ts[mask])
+        rda_out.consume(
+            dc_correction(frame)[mask[i * args.batch:(i + 1) * args.batch]]
+            for i, frame in enumerate(rda_pbar))

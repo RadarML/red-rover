@@ -11,7 +11,7 @@ import jax
 from jax import numpy as jnp
 from beartype.typing import cast
 
-from rover import smooth_timestamps, Dataset, LidarData, graphics
+from rover import Dataset, LidarData, graphics
 
 
 def _parse(p):
@@ -33,11 +33,9 @@ def _load(path: str):
     """Load timestamps and streams."""
     ds = Dataset(path)
 
-    _ts = {
-        k: smooth_timestamps(ds[k]["ts"].read())
-        for k in ["radar", "lidar", "camera"]}
+    _ts = {k: ds.get(k).timestamps() for k in ["_radar", "lidar", "camera"]}
     timestamps = {
-        "radar": _ts["radar"], "camera": _ts["camera"],
+        "radar": _ts["_radar"], "camera": _ts["camera"],
         "rfl": _ts["lidar"], "nir": _ts["lidar"], "rng": _ts["lidar"]}
 
     streams = {
@@ -105,7 +103,7 @@ def _renderer(dataset_path, font_path):
     def render_frame(active, ii, dt):
         text =  {
             (40, 20): "red-rover",
-            (40, 120): dataset_path,
+            (40, 120): dataset_path[:18],
             (40, 220): "+{:02d}:{:05.2f}s".format(int(dt / 60), dt % 60),
             (1000, 20): "radar   {:06d}".format(ii["radar"]),
             (1000, 120): "lidar   {:06d}".format(ii["rng"]),

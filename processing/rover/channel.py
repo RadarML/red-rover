@@ -2,13 +2,14 @@
 
 import os
 import lzma
-import numpy as np
-import cv2
-
+from functools import cached_property
 from queue import Queue, Empty
 from threading import Thread
 
-from jaxtyping import Shaped
+import cv2
+import numpy as np
+
+from jaxtyping import Shaped, Array
 from beartype.typing import Union, cast, Iterator
 
 
@@ -73,11 +74,20 @@ class BaseChannel:
         self.type = DATA_TYPES.get(dtype, dtype)  # type: ignore
         self.shape = shape
         self.size = np.prod(shape) * np.dtype(self.type).itemsize
-        self.filesize = os.stat(self.path).st_size
+
+    @cached_property
+    def filesize(self) -> int:
+        """Get file size on disk."""
+        return os.stat(self.path).st_size
 
     def read(self) -> Shaped[np.ndarray, "..."]:
         """Read all data."""
         raise NotImplementedError()
+
+    def write(self, data: Shaped[Union[np.ndarray, Array], "..."]) -> None:
+        """Write all data."""
+        with open(self.path, 'wb') as f:
+            f.write(data.tobytes())
 
     def stream(self, transform=None, batch: int = 0) -> Iterator[np.ndarray]:
         """Get iterable data stream."""
@@ -89,6 +99,12 @@ class BaseChannel:
         """Stream with multi-threaded prefetching."""
         return Prefetch(
             self.stream(transform=transform, batch=batch), size=size)
+
+    def consume(self, iterator: Iterator[Union[np.ndarray, Array]]) -> None:
+        """Consume iterator and write to file."""
+        with open(self.path, 'wb') as f:
+            for data in iterator:
+                f.write(data.tobytes())
 
     def __repr__(self):
         """Get string representation."""

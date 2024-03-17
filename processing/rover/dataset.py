@@ -86,6 +86,14 @@ class SensorData:
             os.path.join(self.path, channel),
             dtype=cfg["type"], shape=cfg["shape"])
 
+    def create(self, channel: str, meta: dict) -> BaseChannel:
+        """Create and open new channel."""
+        self.config[channel] = meta
+        self.channels[channel] = self.open(channel)
+        with open(os.path.join(self.path, "meta.json"), 'w') as f:
+            json.dump(self.config, f, indent=4)
+        return self.channels[channel]
+
     def timestamps(self, interval: float = 60.0) -> Float64[np.ndarray, "n"]:
         """Get smoothed timestamps."""
         return smooth_timestamps(self.open("ts").read(), interval)
@@ -210,6 +218,15 @@ class Dataset:
             self.cfg.get(key, {}).get("type", ""), SensorData
         )(os.path.join(self.path, key))
 
+    def create(self, key: str) -> SensorData:
+        """Intialize new sensor with an empty `meta.json` file."""
+        assert key.startswith('_')
+
+        os.makedirs(os.path.join(self.path, key), exist_ok=True)
+        with open(os.path.join(self.path, key, "meta.json"), 'w') as f:
+            json.dump({}, f)
+        return self.get(key)
+
     def __getitem__(self, key: str) -> SensorData:
         """Alias for `self.sensors[...]`."""
         return self.sensors[key]
@@ -218,16 +235,3 @@ class Dataset:
         """Get string representation."""
         return "{}({}: [{}])".format(
             self.__class__.__name__, self.path, ", ".join(self.sensors))
-
-    def get_metadata(self, path: str) -> dict:
-        """Get metadata for a given sensor (or `{}` if it does not exist)."""
-        try:
-            with open(os.path.join(self.path, path, "meta.json")) as f:
-                return json.load(f)
-        except FileNotFoundError:
-            return {}
-
-    def write_metadata(self, path: str, meta: dict) -> None:
-        """Write updated metadata to the provided sensor directory."""
-        with open(os.path.join(self.path, path, "meta.json"), 'w') as f:
-            json.dump(meta, f, indent=4)

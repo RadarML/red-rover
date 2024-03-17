@@ -18,7 +18,7 @@ def _parse(p):
         default=0.2, type=float)
     p.add_argument(
         "--max_accel", help="Maximum allowed acceleration (m/s^2).",
-        default=2.0, type=float)
+        default=4.0, type=float)
     p.add_argument(
         "--accel_excl", help="Exclusion width for acceleration violations.",
         default=15, type=int)
@@ -36,16 +36,21 @@ def _main(args):
         args.out = os.path.join(args.path, "_rover1")
     os.makedirs(args.out, exist_ok=True)
 
-    poses = np.load(os.path.join(args.path, "_slam", "radar.npz"))
+    poses = np.load(os.path.join(args.path, "_radar", "pose.npz"))
 
-    # Type annotation for binary_dilation thinks the return type is float64
-    valid = ~(  # type: ignore
-        binary_dilation(
-            ~(np.linalg.norm(poses['acc'], ord=2, axis=1) < args.max_accel),
-            np.ones(args.accel_excl, dtype=bool))
-        | binary_dilation(
-            ~(np.linalg.norm(poses['vel'], ord=2, axis=1) > args.min_speed),
-            np.ones(args.speed_excl, dtype=bool)))
+    speed_violation = binary_dilation(
+        (np.linalg.norm(poses['vel'], ord=2, axis=1) < args.min_speed),
+        np.ones(args.speed_excl, dtype=bool))
+    accel_violation = binary_dilation(
+        (np.linalg.norm(poses['acc'], ord=2, axis=1) > args.max_accel),
+        np.ones(args.accel_excl, dtype=bool))
+    valid = ~(speed_violation | accel_violation)  # type: ignore
+
+    print("Speed violation (<{}m/s): {}".format(
+        args.min_speed, np.sum(speed_violation)))
+    print("Acceleration violation (>{}m/s^2): {}".format(
+        args.max_accel, np.sum(accel_violation)))
+    print("Total valid: {}/{}".format(np.sum(valid), valid.shape[0]))
 
     # Pose data
     outfile = h5py.File(os.path.join(args.out, "trajectory.h5"), 'w')
@@ -65,7 +70,7 @@ def _main(args):
     # Radar data
     ds = rover.Dataset(args.path)
     radarfile = h5py.File(os.path.join(args.out, "radar.h5"), 'w')
-    radardata = np.swapaxes(ds.get('_radar')['rda'].read(), 1, 2)
+    radardata = np.swapaxes(ds.get('_radar1')['rda'].read(), 1, 2)
     radarfile.create_dataset("rad", data=radardata)
 
     # Radar metadata
