@@ -214,13 +214,21 @@ class Dataset:
 
     def get(self, key: str) -> SensorData:
         """Get a sensor, which may be a "virtual" sensor."""
-        return SENSOR_TYPES.get(
-            self.cfg.get(key, {}).get("type", ""), SensorData
-        )(os.path.join(self.path, key))
+        if key in self.sensors:
+            return self.sensors[key]
+        else:
+            return SENSOR_TYPES.get(
+                self.cfg.get(key, {}).get("type", ""), SensorData
+            )(os.path.join(self.path, key))
 
-    def create(self, key: str) -> SensorData:
+    def create(self, key: str, exist_ok: bool = False) -> SensorData:
         """Intialize new sensor with an empty `meta.json` file."""
         assert key.startswith('_')
+        if os.path.exists(os.path.join(self.path, key, "meta.json")):
+            if exist_ok:
+                return self.get(key)
+            else:
+                raise ValueError("Sensor already exists: {}".format(key))
 
         os.makedirs(os.path.join(self.path, key), exist_ok=True)
         with open(os.path.join(self.path, key, "meta.json"), 'w') as f:

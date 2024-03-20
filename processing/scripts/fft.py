@@ -8,7 +8,7 @@ from tqdm import tqdm
 import numpy as np
 import jax
 from jax import numpy as jnp
-from rover import Dataset, RadarData, dopper_range_azimuth
+from rover import Dataset, RadarData, doppler_range_azimuth
 
 from beartype.typing import cast
 
@@ -16,13 +16,12 @@ from beartype.typing import cast
 def _parse(p):
     p.add_argument("-p", "--path", help="Dataset path.")
     p.add_argument(
-        "-o", "--out", default='_radar',
-        help="Output sensor name; defaults to `_radar`.")
+        "-o", "--out", default='rda',
+        help="Output channel name; defaults to `rda`.")
     p.add_argument("-b", "--batch", type=int, default=128, help="Batch size.")
     p.add_argument(
-        "--hanning", default=[0, 1], type=int, nargs='+',
-        help="Axes to perform hanning window processing on "
-        "(0:doppler, 1:range, 2:azimuth).")
+        "--raw", default=False, action='store_true',
+        help="Don't apply hanning window on range and doppler axes.")
     p.add_argument(
         "--nomask", default=False, action='store_true',
         help="Don't apply valid mask; no longer requires `_radar/pose.npz`.")
@@ -30,7 +29,6 @@ def _parse(p):
 
 def _main(args):
     ds = Dataset(args.path)
-    out_dir = os.path.join(args.path, args.out)
     stream = tqdm(
         cast(RadarData, ds["radar"]).iq_stream(batch=args.batch),
         desc="Initial FFT", total=math.ceil(len(ds["radar"]) / args.batch))
@@ -39,7 +37,7 @@ def _main(args):
     @jax.jit
     def to_rda(iq):
         rda_raw = jax.vmap(partial(
-            dopper_range_azimuth, hanning=args.hanning))(iq)
+            doppler_range_azimuth, hanning=[] if args.raw else [0, 1]))(iq)
         zero = rda_raw.shape[1] // 2
         dc = jnp.median(rda_raw[:, zero - 1:zero + 2], axis=0)
         return rda_raw, dc
@@ -57,11 +55,11 @@ def _main(args):
         return rda_corr
 
     # Create `_radar` virtual sensor
-    radar = ds.create(args.out)
-    rda_out = radar.create("rda", {
+    radar = ds.create("_radar", exist_ok=True)
+    rda_out = radar.create(args.out, {
         "format": "raw", "type": "f32", "shape": rda[0].shape[1:],
-        "desc": "Doppler-range-azimuth image (hann={}, nomask={}).".format(
-            args.hanning, args.nomask)})
+        "desc": "Doppler-range-azimuth image (raw={}, nomask={}).".format(
+            args.raw, args.nomask)})
     ts_out = radar.create("ts", {
         "format": "raw", "type": "f64", "shape": [],
         "desc": "Smoothed timestamp, in seconds."})

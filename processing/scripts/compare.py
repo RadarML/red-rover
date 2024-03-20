@@ -27,11 +27,13 @@ def _parse(p):
 
 DEFAULT_NAMES = {
     "rda": "Measured",
-    "sim_lidar": "Lidar Simulation"
+    "raw": "Without Hanning Window",
+    "sim_lidar": "Lidar Simulation",
+    "sim_nearest": "Nearest Neighbor"
 }
 
 
-def _renderer(dataset_path, font_path, channel_names):
+def _renderer(dataset_path, font_path, channel_names, n_frames):
     """Create (and close on) renderer."""
     font = graphics.JaxFont(font_path, size=60)
     viridis = (
@@ -56,7 +58,7 @@ def _renderer(dataset_path, font_path, channel_names):
             for j in range(8):
                 frame = frame.at[
                     i * 480 + 96:(i + 1) * 480 + 96, j * 480: (j + 1) * 480
-                ].set(img[:, :, i])
+                ].set(img[:, :, j])
 
         white = jnp.array([255, 255, 255], dtype=np.uint8)
         for k, v in text.items():
@@ -64,10 +66,12 @@ def _renderer(dataset_path, font_path, channel_names):
 
         return frame
 
-    def render_frame(frames, t):
+    def render_frame(frames, i, t):
         text = {
             (20, 10): dataset_path[:18],
-            (1000, 10): "+{:02d}:{:05.2f}s".format(int(t / 60), t % 60)
+            (980, 10): "t+{:02d}:{:05.2f}s ({:02d}%)".format(
+                int(t / 60), t % 60, int(100 * i / n_frames)),
+            (1940, 10): "f+{:06d}/{:06d}".format(i, n_frames)
         }
         for i, cn in enumerate(channel_names):
             n = DEFAULT_NAMES.get(cn, cn)
@@ -86,15 +90,15 @@ def _main(args):
 
     radar = Dataset(args.path).get("_radar")
 
-    render_func = _renderer(args.path, args.font, args.compare)
-
     ts = radar.timestamps()
     ts = ts - ts[0]
     fps = (ts.shape[0] - 1) / ts[-1]
     data = [radar[k].stream_prefetch() for k in args.compare]
 
+    render_func = _renderer(args.path, args.font, args.compare, ts.shape[0])
+
     writer = imageio.get_writer(args.out, fps=fps, codec="h264")            
-    for t, *frames in zip(tqdm(ts), *data):
-        writer.append_data(render_func(frames, t))
+    for i, (t, *frames) in enumerate(zip(tqdm(ts), *data)):
+        writer.append_data(render_func(frames, i, t))
 
     writer.close()

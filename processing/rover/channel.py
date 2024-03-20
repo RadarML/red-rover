@@ -73,7 +73,7 @@ class BaseChannel:
         self.path = path
         self.type = DATA_TYPES.get(dtype, dtype)  # type: ignore
         self.shape = shape
-        self.size = np.prod(shape) * np.dtype(self.type).itemsize
+        self.size = int(np.prod(shape) * np.dtype(self.type).itemsize)
 
     @cached_property
     def filesize(self) -> int:
@@ -88,6 +88,12 @@ class BaseChannel:
         """Write all data."""
         with open(self.path, 'wb') as f:
             f.write(data.tobytes())
+
+    def memmap(self) -> np.memmap:
+        """Open memory mapped array."""
+        return np.memmap(
+            self.path, dtype=self.type, mode='r',
+            shape=(self.filesize // self.size, *self.shape))
 
     def stream(self, transform=None, batch: int = 0) -> Iterator[np.ndarray]:
         """Get iterable data stream."""

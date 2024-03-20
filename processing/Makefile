@@ -7,6 +7,7 @@
 PYTHON?=python3.11
 JAX_CUDA?=cuda11_pip
 ROVER_DIR=$(shell pwd)
+DATA_DIR?=$(ROVER_DIR)/data
 ROVER_MNT?=/rover
 DOCKER_IMAGE?=qoschatz/cartographer_ros
 
@@ -17,8 +18,8 @@ env:
 	$(VENV)/pip install --upgrade "jax[$(JAX_CUDA)]" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
 	$(VENV)/pip install -r requirements.txt
 
-.PHONY: docker-dev
-docker-dev:
+.PHONY: docker
+docker:
 	sudo docker run \
 		-it --privileged --net=host \
 		--env=NVIDIA_VISIBLE_DEVICES=all --env=NVIDIA_DRIVER_CAPABILITIES=all \
@@ -26,6 +27,7 @@ docker-dev:
 		--gpus all \
 		-v /tmp/.X11-unix:/tmp/.X11-unix \
 		-v $(ROVER_DIR):$(ROVER_MNT) \
+		-v $(DATA_DIR):/data \
 		$(DOCKER_IMAGE) bash
 
 
@@ -54,6 +56,7 @@ $(OUT_DIR):
 	mkdir -p $(OUT_DIR)
 	mkdir -p $(BAG_DIR)
 	chmod 777 $(OUT_DIR)
+	chmod 777 $(BAG_DIR)
 
 $(PBSTREAM): $(OUT_DIR)
 	-roslaunch slam offline_cart_3d.launch bag_filenames:=$(BAG)

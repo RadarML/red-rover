@@ -87,7 +87,6 @@ logging.getLogger('werkzeug').setLevel(logging.ERROR)
 
 with app.app_context():
     version = _get_version_info()
-    print(version)
     rover = Rover()
 
 

@@ -1,0 +1,10 @@
+layout {
+    pane size=10 command="htop"
+    pane split_direction="vertical" {
+        pane
+        pane
+    }
+    pane size=2 borderless=true {
+        plugin location="zellij:status-bar"
+    }
+}

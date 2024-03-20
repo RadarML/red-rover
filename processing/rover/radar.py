@@ -12,9 +12,9 @@ from jax import numpy as jnp
 from jaxtyping import Float32, Array, Complex64, Bool
 
 
-def dopper_range_azimuth(
+def doppler_range_azimuth(
     iq: Complex64[Array, "doppler tx rx range"],
-    hanning: list[int] = [0, 1]
+    hanning: list[int] = [0, 1], pad: int = 0
 ) -> Float32[Array, "doppler range antenna"]:
     """Compute doppler-range-azimuth FFTs.
 
@@ -23,6 +23,7 @@ def dopper_range_azimuth(
     iq: input IQ array, in doppler-tx-rx-range order.
     hanning: list of indices to apply a Hanning window to; defaults to `[0, 2]`
         (i.e. range-doppler). Must be closed on in order to jit-compile.
+    pad: apply zero-padding in the antenna axis.
 
     Notes
     -----
@@ -31,7 +32,12 @@ def dopper_range_azimuth(
     - 1: range
     - 2: azimuth (antenna)
     """
-    iqa = jnp.swapaxes(iq.reshape(iq.shape[0], -1, iq.shape[-1]), -2, -1)
+    iqa: Complex64[Array, "doppler range antenna"] = jnp.swapaxes(
+        iq.reshape(iq.shape[0], -1, iq.shape[-1]), -2, -1)
+
+    if pad > 0:
+        zeros = jnp.zeros((*iqa.shape[:2], pad), dtype=jnp.complex64)
+        iqa = jnp.concatenate([iqa, zeros], axis=2)
 
     for axis in hanning:
         shape = [1, 1, 1]
@@ -53,30 +59,18 @@ class CFAR:
 
     def __init__(
         self, guard_band: tuple[int, int] = (2, 2),
-        window_size: tuple[int, int] = (4, 4),
-        threshold: float = 10.0, percentile: float = 0.0
+        window_size: tuple[int, int] = (4, 4)
     ) -> None:
-        self.threshold = threshold
-        self.percentile = percentile
-
         w0, w1 = window_size
         g0, g1 = guard_band
         mask = np.ones((2 * w0 + 1, 2 * w1 + 1), dtype=np.float32)
         mask[w0 - g0: w0 + g0 + 1, w1 - g1: w1 + g1 + 1] = 0.0
         self.mask = jnp.array(mask)
 
-    def __call__(
-        self, rd: Float32[Array, "range doppler"]
-    ) -> Bool[Array, "range doppler"]:
-        """Find CFAR mask."""
+    def __call__(self, rd: Float32[Array, "d r"]) -> Bool[Array, "d r"]:
+        """Find CFAR values; the caller can then threshold as they see fit."""
         # Jax currently only supports 'fill', but this should be changed to
         # 'wrap' if they ever decide to add support.
         denom = convolve2d(jnp.ones_like(rd), self.mask, mode='same')
         cell_sum = convolve2d(rd, self.mask, mode='same')
-        ca_mask = rd > (cell_sum / denom * self.threshold)
-
-        if self.percentile > 0:
-            minval = jnp.percentile(rd, self.percentile)
-            ca_mask = jnp.logical_and(ca_mask, rd > minval)
-
-        return ca_mask
+        return rd / (cell_sum / denom)

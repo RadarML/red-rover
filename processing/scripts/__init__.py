@@ -9,4 +9,4 @@ r"""Rover data processing pipeline.
 
 _scripts = [
     "rosbag", "info", "sensorpose", "fft", "as_rover1", "lidarmap",
-    "report", "video", "simulate", "compare"]
+    "report", "video", "simulate", "compare", "nearest"]

@@ -6,8 +6,8 @@
 *scratch*.ipynb
 
 # Data files
-collect/data/
-processing/data/
+collect/data*
+processing/data*
 
 # Ros files
 processing/catkin_ws/devel/
