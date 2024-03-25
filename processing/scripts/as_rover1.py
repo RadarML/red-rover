@@ -26,8 +26,6 @@ def _parse(p):
         "--speed_excl", help="Exclusion width for speed violations.",
         default=5, type=int)
 
-    return p
-
 
 def _main(args):
     import h5py
@@ -70,7 +68,7 @@ def _main(args):
     # Radar data
     ds = rover.Dataset(args.path)
     radarfile = h5py.File(os.path.join(args.out, "radar.h5"), 'w')
-    radardata = np.swapaxes(ds.get('_radar')['rda_nomask'].read(), 1, 2)
+    radardata = np.swapaxes(ds.get('_radar')['rover1'].read(), 1, 2) * 1e-6
     radarfile.create_dataset("rad", data=radardata)
 
     # Radar metadata

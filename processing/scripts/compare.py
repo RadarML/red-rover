@@ -26,8 +26,9 @@ def _parse(p):
 
 
 DEFAULT_NAMES = {
-    "rda": "Measured",
-    "raw": "Without Hanning Window",
+    "rda": "Measured / Hybrid Window",
+    "hann": "Measured / Hanning Window",
+    "raw": "Measured / Raw FFT",
     "sim_lidar": "Lidar Simulation",
     "sim_nearest": "Nearest Neighbor"
 }

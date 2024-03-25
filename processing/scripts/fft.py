@@ -1,14 +1,13 @@
 """Generate range-doppler-azimuth images."""
 
-import os, json
+import os
 import math
-from functools import partial
 from tqdm import tqdm
 
 import numpy as np
 import jax
 from jax import numpy as jnp
-from rover import Dataset, RadarData, doppler_range_azimuth
+from rover import Dataset, RadarData, RadarProcessing
 
 from beartype.typing import cast
 
@@ -16,63 +15,69 @@ from beartype.typing import cast
 def _parse(p):
     p.add_argument("-p", "--path", help="Dataset path.")
     p.add_argument(
-        "-o", "--out", default='rda',
-        help="Output channel name; defaults to `rda`.")
+        "-o", "--out", default=None,
+        help="Output channel name; defaults depend on `--mode`.")
     p.add_argument("-b", "--batch", type=int, default=128, help="Batch size.")
     p.add_argument(
-        "--raw", default=False, action='store_true',
-        help="Don't apply hanning window on range and doppler axes.")
+        "-w", "--artifact_window", type=int, default=2048,
+        help="Zero doppler artifact calculation window; must fit in memory.")
     p.add_argument(
-        "--nomask", default=False, action='store_true',
-        help="Don't apply valid mask; no longer requires `_radar/pose.npz`.")
+        "--mode", default="raw", help="FFT mode: raw, hann (with hanning "
+        "window), hybrid (min(raw, hann)), rover1 (hybrid + nomask)")
+
+
+DEFAULT_NAMES = {
+    "hann": "hann", "raw": "raw", "hybrid": "rda", "rover1": "rover1"}
 
 
 def _main(args):
+    assert args.mode in DEFAULT_NAMES
+    if args.out is None:
+        args.out = DEFAULT_NAMES[args.mode]
+
     ds = Dataset(args.path)
+    radar = cast(RadarData, ds["radar"])
     stream = tqdm(
-        cast(RadarData, ds["radar"]).iq_stream(batch=args.batch),
-        desc="Initial FFT", total=math.ceil(len(ds["radar"]) / args.batch))
+        radar.iq_stream(batch=args.batch), desc=args.mode,
+        total=math.ceil(len(ds["radar"]) / args.batch))
 
-    # First step: convert to range-doppler. Record DC artifact (median).
-    @jax.jit
-    def to_rda(iq):
-        rda_raw = jax.vmap(partial(
-            doppler_range_azimuth, hanning=[] if args.raw else [0, 1]))(iq)
-        zero = rda_raw.shape[1] // 2
-        dc = jnp.median(rda_raw[:, zero - 1:zero + 2], axis=0)
-        return rda_raw, dc
+    if args.mode == "hybrid" or args.mode == "rover1":
+        for sample in radar.iq_stream(batch=args.artifact_window):
+            sample = jnp.array(sample)
+            proc_hann = RadarProcessing(sample, hanning=True)
+            proc_raw = RadarProcessing(sample, hanning=False)
+            shape = proc_raw.shape
+            break
 
-    rda, _dc  = zip(*[to_rda(frame) for frame in stream])
-    dc = jnp.median(jnp.stack(_dc), axis=0)
+        @jax.jit
+        def _process(frame):
+            return jnp.minimum(proc_hann(frame), proc_raw(frame))
 
-    # Second step: remove artifact to obtain corrected images.
-    @jax.jit
-    def dc_correction(rda):
-        zero = rda.shape[2] // 2
-        rda_corr = rda.at[:, zero - 1:zero + 2].set(
-            jnp.maximum(rda[:, zero - 1:zero + 2] - dc[None, :, :], 0))
-
-        return rda_corr
+    else:
+        for sample in radar.iq_stream(batch=args.artifact_window):
+            process = RadarProcessing(
+                jnp.array(sample), hanning=(args.mode == "hann"))
+            shape = process.shape
+            break
+        _process = jax.jit(process)
 
     # Create `_radar` virtual sensor
     radar = ds.create("_radar", exist_ok=True)
     rda_out = radar.create(args.out, {
-        "format": "raw", "type": "f32", "shape": rda[0].shape[1:],
-        "desc": "Doppler-range-azimuth image (raw={}, nomask={}).".format(
-            args.raw, args.nomask)})
+        "format": "raw", "type": "f32", "shape": shape,
+        "desc": "Doppler-range-azimuth image (mode={}).".format(args.mode)})
     ts_out = radar.create("ts", {
         "format": "raw", "type": "f64", "shape": [],
         "desc": "Smoothed timestamp, in seconds."})
 
     # Writeout
     ts = ds["radar"]["ts"].read()
-    rda_pbar = tqdm(rda, desc="DC Correction & Writeout")
-    if args.nomask:
+    if args.mode == "rover1":
         ts_out.write(ts)
-        rda_out.consume(dc_correction(frame) for frame in rda_pbar)
+        rda_out.consume(_process(frame) for frame in stream)
     else:
         mask = np.load(os.path.join(args.path, "_radar", "pose.npz"))["mask"]
         ts_out.write(ts[mask])
         rda_out.consume(
-            dc_correction(frame)[mask[i * args.batch:(i + 1) * args.batch]]
-            for i, frame in enumerate(rda_pbar))
+            _process(frame)[mask[i * args.batch:(i + 1) * args.batch]]
+            for i, frame in enumerate(stream))

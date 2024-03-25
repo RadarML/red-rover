@@ -10,7 +10,7 @@ import cv2
 import numpy as np
 
 from jaxtyping import Shaped, Array
-from beartype.typing import Union, cast, Iterator
+from beartype.typing import Union, cast, Iterator, List
 
 
 DATA_TYPES = {
@@ -80,7 +80,7 @@ class BaseChannel:
         """Get file size on disk."""
         return os.stat(self.path).st_size
 
-    def read(self) -> Shaped[np.ndarray, "..."]:
+    def read(self, samples: int = -1) -> Shaped[np.ndarray, "..."]:
         """Read all data."""
         raise NotImplementedError()
 
@@ -123,10 +123,11 @@ class RawChannel(BaseChannel):
 
     _READ = staticmethod(open)
 
-    def read(self) -> Shaped[np.ndarray, "..."]:
+    def read(self, samples: int = -1) -> Shaped[np.ndarray, "..."]:
         """Read all data."""
         with self._READ(self.path, 'rb') as f:  # type: ignore
-            data = cast(bytes, f.read())
+            size = -1 if samples == -1 else samples * self.size
+            data = cast(bytes, f.read(size))
         return np.frombuffer(data, dtype=self.type).reshape(-1, *self.shape)
 
     def stream(self, transform=None, batch: int = 0) -> Iterator[np.ndarray]:
@@ -169,16 +170,17 @@ class LzmaChannel(RawChannel):
 class VideoChannel(BaseChannel):
     """Video data."""
 
-    def read(self) -> Shaped[np.ndarray, "..."]:
+    def read(self, samples: int = -1) -> Shaped[np.ndarray, "..."]:
         """Read all data."""
         cap = cv2.VideoCapture(self.path)
-        frames = []
+        frames: List[np.ndarray] = []
         while cap.isOpened():
             ret, frame = cap.read()
-            if ret:
+            if ret and len(frames) + 1 != samples:
                 frames.append(frame)
             else:
                 break
+
         cap.release()
         return np.stack(frames)
 

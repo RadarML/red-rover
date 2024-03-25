@@ -69,7 +69,6 @@ def _parse(p):
     p.add_argument(
         "-o", "--out", default=None, help="Output path; defaults to "
         "`_scratch/lidar.bag` in the dataset folder.")
-    return p
 
 
 def _main(args):

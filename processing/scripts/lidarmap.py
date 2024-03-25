@@ -22,7 +22,6 @@ def _parse(p):
     p.add_argument(
         "--resolution", default=50.0, type=float,
         help="Grid resolution in grid cells per meter.")
-    return p
 
 
 def _set_bounds(args):

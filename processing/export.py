@@ -15,7 +15,7 @@ def _main(args):
 
     def should_copy(path):
         if path.startswith('_') and "_report" not in path:
-            if path.endswith(".npz"):
+            if path.endswith(".npz") or path.endswith(".csv"):
                 return True
             else:
                 return False
