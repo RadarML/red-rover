@@ -1,4 +1,8 @@
-"""Convert to legacy DART format."""
+"""Convert to legacy DART format.
+
+Inputs: `radar/`, `_radar/pose.npz`, `_radar/rover1`
+Outputs: `_rover1/*`
+"""
 
 import os
 import json

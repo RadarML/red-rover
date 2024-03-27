@@ -1,4 +1,8 @@
-"""Create sensor data video."""
+"""Create sensor data video.
+
+Inputs: `camera/*`, `lidar/*`, `_radar/rda`
+Outputs: `_report/data.mp4`
+"""
 
 import os
 import matplotlib as mpl

@@ -1,5 +1,7 @@
 # Red Rover Data Processing System
 
+![Data processing pipeline](/docs/processing.svg)
+
 ## Quick Start
 
 Assuming you have `python3.11`, `python3.11-venv`, and `python3-pip` installed:
@@ -12,6 +14,7 @@ make env
 1. Install Python 3.11 (`ouster-sdk` does not support `python>=3.12` at present):
     ```sh
     conda create -n rover python=3.11
+    conda activate rover
     conda install pip
     # or
     sudo add-apt-repository ppa:deadsnakes/ppa
@@ -19,14 +22,41 @@ make env
     sudo apt install python3.11-venv
     ```
 
-2. Install JAX manually to include GPU support:
+2. Install libraries.
+
+    If using `venv`:
+    ```sh
+    make env
+    ```
+
+    If using `conda`:
     ```sh
     pip install --upgrade "jax[cuda11_pip]" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
     pip install -r requirements.txt
     ```
 
-3. (Optional) Set up aliases:
+3. (Optional) Set up aliases (requires `venv`):
     ```sh
     source rover.sh
     roverp <command> <args...>
     ```
+
+## Commands
+
+Run `roverp <command> -h` for more information.
+
+| Command | Description | Inputs | Outputs |
+| ------- | ----------- | ------ | ------- |
+| `as_rover1` | Convert to legacy DART format. | `radar/`, `_radar/pose.npz`, `_radar/rover1`  | `_rover1/*`  |
+| `compare` | Create simulation (novel view synthesis) comparison video. | any set of radar-like data in `_radar`, or elsewhere so long as they match the format of `_radar/rda`.  | `_report/compare.mp4` unless overridden.  |
+| `fft` | Generate range-doppler-azimuth images. | `_radar/pose.npz`, `radar/*`  | `_radar/{mode}` depending on the selected mode.  |
+| `info` | Print dataset metadata. | `/*`  | Printed to `stdout`.  |
+| `lidarmap` | Create ground truth occupancy grid. | `_slam/trajectory.csv`, `_slam/lidar.bag_points.ply`  | `_rover1/map.npz` or `_slam/map.npz`, depending on `--legacy`.  |
+| `nearest` | Run nearest-neighbor simulation. | `_radar/pose.npz`, `_radar/rda`  | `_radar/sim_nearest`  |
+| `report` | Get speed report. | `_radar/pose.npz`, `_slam/trajectory.csv`  | `_report/speed.pdf`  |
+| `rosbag` | Convert Rover dataset to ROS 1 bag for Cartographer. | `lidar/*`  | `_scratch/lidar.bag`  |
+| `sensorpose` | Calculate interpolated poses for a specific sensor. | `_slam/trajectory.csv`  | `{sensor}/pose.npz` depending on the specified `--sensor`.  |
+| `simulate` | Simulate radar range-doppler data. | `_radar/pose.npz`, `_slam/map.npz`  | `_radar/sim_lidar`  |
+| `video` | Create sensor data video. | `camera/*`, `lidar/*`, `_radar/rda`  | `_report/data.mp4`  |
+
+Generate this table with `scripts/_summary_table.py`.

@@ -1,4 +1,9 @@
-"""Create simulation (novel view synthesis) comparison video."""
+"""Create simulation (novel view synthesis) comparison video.
+
+Inputs: any set of radar-like data in `_radar`, or elsewhere so long as they
+    match the format of `_radar/rda`.
+Outputs: `_report/compare.mp4` unless overridden.
+"""
 
 import os
 import imageio
@@ -10,7 +15,7 @@ import jax
 from jax import numpy as jnp
 import numpy as np
 
-from rover import graphics, Dataset
+from rover import graphics, Dataset, RawChannel
 
 
 def _parse(p):
@@ -75,7 +80,7 @@ def _renderer(dataset_path, font_path, channel_names, n_frames):
             (1940, 10): "f+{:06d}/{:06d}".format(i, n_frames)
         }
         for i, cn in enumerate(channel_names):
-            n = DEFAULT_NAMES.get(cn, cn)
+            n = DEFAULT_NAMES.get(cn, cn.replace('/rda', '').split('/')[-1])
             text[(20, 10 + 96 + 480 * i)] = n  # type: ignore
         return np.array(_render_frame(
             frames, {k: font.encode(v) for k, v in text.items()}))
@@ -94,8 +99,14 @@ def _main(args):
     ts = radar.timestamps()
     ts = ts - ts[0]
     fps = (ts.shape[0] - 1) / ts[-1]
-    data = [radar[k].stream_prefetch() for k in args.compare]
 
+    def _get_data(k):
+        if k in radar.channels:
+            return radar[k]
+        else:
+            return RawChannel(k, radar["rda"].type, radar["rda"].shape)
+
+    data = [_get_data(k).stream_prefetch() for k in args.compare]
     render_func = _renderer(args.path, args.font, args.compare, ts.shape[0])
 
     writer = imageio.get_writer(args.out, fps=fps, codec="h264")            

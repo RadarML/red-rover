@@ -1,4 +1,8 @@
-"""Convert Rover dataset to ROS 1 bag for Cartographer."""
+"""Convert Rover dataset to ROS 1 bag for Cartographer.
+
+Inputs: `lidar/*`
+Outputs: `_scratch/lidar.bag`
+"""
 
 import os
 from tqdm import tqdm

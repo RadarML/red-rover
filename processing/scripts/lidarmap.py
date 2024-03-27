@@ -1,4 +1,8 @@
-"""Create ground truth occupancy grid from point cloud (.ply)."""
+"""Create ground truth occupancy grid.
+
+Inputs: `_slam/trajectory.csv`, `_slam/lidar.bag_points.ply`
+Outputs: `_rover1/map.npz` or `_slam/map.npz`, depending on `--legacy`.
+"""
 
 import os
 import math
@@ -17,19 +21,25 @@ def _parse(p):
     p.add_argument(
         "-b", "--batch", default=16 * 1024 * 1024, help="Batch size.")
     p.add_argument(
-        "--padding", type=float, nargs='+', default=[5.0, 5.0, 2.5],
-        help="Region padding relative to trajectory min/max.")
+        "--margin_xy", type=float, default=5.0,
+        help="Margin along the horizontal plane.")
+    p.add_argument(
+        "--margin_z", type=float, default=2.0,
+        help="Margin along the vertical axis.")
     p.add_argument(
         "--resolution", default=50.0, type=float,
         help="Grid resolution in grid cells per meter.")
+    p.add_argument(
+        "--align", type=int, default=16,
+        help="Each map axis is rounded up to the nearest multiple of `align`.")
 
 
 def _set_bounds(args):
-    args.padding = np.array((args.padding * 3)[:3])
+    margin = np.array([args.margin_xy, args.margin_xy, args.margin_z])
     traj = RawTrajectory.from_csv(
         os.path.join(args.path, "_slam", "trajectory.csv"))
-    lower = np.min(traj.xyz, axis=1) - args.padding
-    upper = np.max(traj.xyz, axis=1) + args.padding
+    lower = np.min(traj.xyz, axis=1) - margin
+    upper = np.max(traj.xyz, axis=1) + margin
     return lower, upper
 
 
@@ -43,8 +53,8 @@ def _main(args):
     z = data['vertex']['z']
 
     size = [
-        math.ceil((u - lw) * args.resolution)
-        for lw, u in zip(lower, upper)]
+        int(((x + args.align - 1) // args.align) * args.align)
+        for x in (upper - lower) * args.resolution]
     grid = np.zeros(size, dtype=bool)
     print("Creating {}x{}x{} map @ {} cells/m".format(*size, args.resolution))
     print("Format: {}".format("rover1" if args.legacy else "red-rover"))

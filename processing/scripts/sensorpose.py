@@ -1,4 +1,8 @@
-"""Calculate interpolated poses for a specific sensor."""
+"""Calculate interpolated poses for a specific sensor.
+
+Inputs: `_slam/trajectory.csv`
+Outputs: `{sensor}/pose.npz` depending on the specified `--sensor`.
+"""
 
 import os
 import numpy as np

@@ -1,4 +1,8 @@
-"""Generate range-doppler-azimuth images."""
+"""Generate range-doppler-azimuth images.
+
+Inputs: `_radar/pose.npz`, `radar/*`
+Outputs: `_radar/{mode}` depending on the selected mode.
+"""
 
 import os
 import math

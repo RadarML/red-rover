@@ -1,4 +1,8 @@
-"""Run nearest-neighbor simulation."""
+"""Run nearest-neighbor simulation.
+
+Inputs: `_radar/pose.npz`, `_radar/rda`
+Outputs: `_radar/sim_nearest`
+"""
 
 import os
 import numpy as np

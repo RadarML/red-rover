@@ -1,10 +1,13 @@
-"""Simulate radar range-doppler data."""
+"""Simulate radar range-doppler data.
+
+Inputs: `_radar/pose.npz`, `_slam/map.npz`
+Outputs: `_radar/sim_lidar`
+"""
 
 import os
 from tqdm import tqdm
 from functools import partial
 
-import numpy as np
 import jax
 from jax import numpy as jnp
 
