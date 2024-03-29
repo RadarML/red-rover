@@ -34,30 +34,21 @@ def _parse(p):
         help="Each map axis is rounded up to the nearest multiple of `align`.")
 
 
-def _set_bounds(args):
-    margin = np.array([args.margin_xy, args.margin_xy, args.margin_z])
-    traj = RawTrajectory.from_csv(
-        os.path.join(args.path, "_slam", "trajectory.csv"))
-    lower = np.min(traj.xyz, axis=1) - margin
-    upper = np.max(traj.xyz, axis=1) + margin
-    return lower, upper
-
-
 def _main(args):
-    lower, upper = _set_bounds(args)
+    lower, upper, size = RawTrajectory.from_csv(
+        os.path.join(args.path, "_slam", "trajectory.csv")
+    ).bounds(
+        margin_xy=args.margin_xy, margin_z=args.margin_z,
+        resolution=args.resolution, align=args.align)
+    grid = np.zeros(size, dtype=bool)
+    print("Creating {}x{}x{} map @ {} cells/m".format(*size, args.resolution))
+    print("Format: {}".format("rover1" if args.legacy else "red-rover"))
 
     data = PlyData.read(
         os.path.join(args.path, "_slam", "lidar.bag_points.ply"))
     x = data['vertex']['x']
     y = data['vertex']['y']
     z = data['vertex']['z']
-
-    size = [
-        int(((x + args.align - 1) // args.align) * args.align)
-        for x in (upper - lower) * args.resolution]
-    grid = np.zeros(size, dtype=bool)
-    print("Creating {}x{}x{} map @ {} cells/m".format(*size, args.resolution))
-    print("Format: {}".format("rover1" if args.legacy else "red-rover"))
 
     for _ in tqdm(range(math.ceil(x.shape[0] / args.batch))):
         ix = ((x[:args.batch] - lower[0]) * args.resolution).astype(int)
@@ -77,9 +68,8 @@ def _main(args):
     if args.legacy:
         np.savez_compressed(
             os.path.join(args.path, "_rover1", "map.npz"),
-            grid=grid, lower=np.array(lower), upper=np.array(upper))
+            grid=grid, lower=lower, upper=upper)
     else:
         np.savez_compressed(
             os.path.join(args.path, "_slam", "map.npz"),
-            grid=np.packbits(grid), shape=grid.shape,
-            lower=np.array(lower), upper=np.array(upper))
+            grid=np.packbits(grid), shape=grid.shape, lower=lower, upper=upper)

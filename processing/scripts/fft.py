@@ -26,18 +26,18 @@ def _parse(p):
         "-w", "--artifact_window", type=int, default=2048,
         help="Zero doppler artifact calculation window; must fit in memory.")
     p.add_argument(
-        "--mode", default="raw", help="FFT mode: raw, hann (with hanning "
-        "window), hybrid (min(raw, hann)), rover1 (hybrid + nomask)")
+        "--mode", default="raw", help="FFT mode: raw (no hann, nomask), "
+        "hann (with hanning window, masked), hybrid (min(raw + mask, hann)), "
+        "rover1 (hybrid + nomask)")
 
 
-DEFAULT_NAMES = {
-    "hann": "hann", "raw": "raw", "hybrid": "rda", "rover1": "rover1"}
+NAMES = {"hann": "hann", "raw": "raw", "hybrid": "rda", "rover1": "rover1"}
 
 
 def _main(args):
-    assert args.mode in DEFAULT_NAMES
+    assert args.mode in NAMES
     if args.out is None:
-        args.out = DEFAULT_NAMES[args.mode]
+        args.out = NAMES[args.mode]
 
     ds = Dataset(args.path)
     radar = cast(RadarData, ds["radar"])
@@ -76,8 +76,7 @@ def _main(args):
 
     # Writeout
     ts = ds["radar"]["ts"].read()
-    if args.mode == "rover1":
-        ts_out.write(ts)
+    if args.mode == "rover1" or args.mode == "raw":
         rda_out.consume(_process(frame) for frame in stream)
     else:
         mask = np.load(os.path.join(args.path, "_radar", "pose.npz"))["mask"]

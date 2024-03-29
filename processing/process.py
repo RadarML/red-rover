@@ -1,8 +1,9 @@
 """Script dispatcher."""
 
+import sys
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
 import importlib
-from beartype.typing import cast
+from typing import cast
 
 
 def dispatch(target: str) -> None:
@@ -28,6 +29,10 @@ def dispatch(target: str) -> None:
             formatter_class=RawDescriptionHelpFormatter)
         command._parse(p)
         p.set_defaults(_func=command._main)
+
+    if len(sys.argv) == 1:
+        parser.print_help(sys.stderr)
+        sys.exit(1)
 
     args = parser.parse_args()
     args._func(args)

@@ -1,7 +1,9 @@
 """Script dispatcher."""
 
+import sys
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
 import importlib
+from typing import cast
 
 
 def dispatch(target: str) -> None:
@@ -22,9 +24,15 @@ def dispatch(target: str) -> None:
     subparsers = parser.add_subparsers()
     for name, command in commands.items():
         p = subparsers.add_parser(
-            name, help=command.__doc__, description=command.__doc__)
+            name, help=cast(str, command.__doc__).split('\n')[0],
+            description=command.__doc__,
+            formatter_class=RawDescriptionHelpFormatter)
         command._parse(p)
         p.set_defaults(_func=command._main)
+
+    if len(sys.argv) == 1:
+        parser.print_help(sys.stderr)
+        sys.exit(1)
 
     args = parser.parse_args()
     args._func(args)

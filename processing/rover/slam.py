@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 
 from beartype.typing import NamedTuple
-from jaxtyping import Bool, Float64
+from jaxtyping import Bool, Float64, Float, Integer
 
 from scipy.interpolate import splprep, splev
 from scipy.spatial.transform import Rotation, Slerp
@@ -42,6 +42,34 @@ class RawTrajectory(NamedTuple):
                 for axis in "xyzw"]),
             t=np.array(df['field.header.stamp']) / 1e9)
 
+    def bounds(
+        self, margin_xy: float = 5.0, margin_z: float = 5.0,
+        resolution: float = 50.0, align: int = 16
+    ) -> tuple[
+        Float[np.ndarray, "3"],
+        Float[np.ndarray, "3"],
+        Integer[np.ndarray, "3"]
+    ]:
+        """Get grid bounds.
+        
+        Parameters
+        ----------
+        margin_xy, margin_z: grid margin around trajectory bounds in the
+            horizontal plane and vertical axis, respectively.
+        resolution: resolution, in grid cells/m.
+        align: grid resolution alignment; the grid will be expanded from the
+            specified margin until the resolution is divisible by `align`.
+        """
+        margin = np.array([margin_xy, margin_xy, margin_z])
+        lower = np.min(self.xyz, axis=1) - margin
+        upper = np.max(self.xyz, axis=1) + margin
+
+        size = ((upper - lower) * resolution + align - 1) // align * align
+
+        round_up = (size / resolution) - (upper - lower)
+        lower = lower - round_up / 2
+        upper = upper + round_up / 2
+        return lower, upper, size.astype(int)
 
 class Trajectory:
     """Sensor trajectory.

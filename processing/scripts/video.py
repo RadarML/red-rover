@@ -42,8 +42,14 @@ def _load(path: str):
         "radar": _ts["_radar"], "camera": _ts["camera"],
         "rfl": _ts["lidar"], "nir": _ts["lidar"], "rng": _ts["lidar"]}
 
+    radar = ds.get("_radar")
+    if "rda" in radar.channels:
+        radarstream = ds.get("_radar")["rda"].stream_prefetch()
+    else:
+        radarstream = ds.get("_radar")["raw"].stream_prefetch()
+
     streams = {
-        "radar": ds.get("_radar")["rda"].stream_prefetch(),
+        "radar": radarstream,
         "rng": cast(LidarData, ds["lidar"]).destaggered_stream("rng"),
         "rfl": cast(LidarData, ds["lidar"]).destaggered_stream("rfl"),
         "nir": cast(LidarData, ds["lidar"]).destaggered_stream("nir"),

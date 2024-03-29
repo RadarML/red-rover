@@ -40,7 +40,7 @@ make env
     source rover.sh
     roverp <command> <args...>
     ```
-
+    This will also assign `export $ROVERP=...` to allow calling `roverp` in scripts, nq, and makefiles as `$(ROVERP)`.
 ## Commands
 
 Run `roverp <command> -h` for more information.

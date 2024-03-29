@@ -23,7 +23,6 @@ See the [setup instructions](/docs/setup.md).
     ```sh
     ROVER_CFG=`realpath dart.yaml`
     ```
-    - `source rover.sh collect/dart.yaml` will also configure this, along with setting `roverc` and `roverp` aliases.
 
 1. Configure interfaces.
     ```sh

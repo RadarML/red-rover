@@ -15,7 +15,8 @@ VENV=./env/bin
 
 env:
 	$(PYTHON) -m venv env
-	$(VENV)/pip install --upgrade "jax[$(JAX_CUDA)]" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
+	$(VENV)/pip install --upgrade "jax[$(JAX_CUDA)]" \
+		-f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
 	$(VENV)/pip install -r requirements.txt
 
 .PHONY: docker
