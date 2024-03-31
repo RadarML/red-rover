@@ -41,6 +41,7 @@ make env
     roverp <command> <args...>
     ```
     This will also assign `export $ROVERP=...` to allow calling `roverp` in scripts, nq, and makefiles as `$(ROVERP)`.
+
 ## Commands
 
 Run `roverp <command> -h` for more information.
@@ -57,6 +58,7 @@ Run `roverp <command> -h` for more information.
 | `rosbag` | Convert Rover dataset to ROS 1 bag for Cartographer. | `lidar/*`  | `_scratch/lidar.bag`  |
 | `sensorpose` | Calculate interpolated poses for a specific sensor. | `_slam/trajectory.csv`  | `{sensor}/pose.npz` depending on the specified `--sensor`.  |
 | `simulate` | Simulate radar range-doppler data. | `_radar/pose.npz`, `_slam/map.npz`  | `_radar/sim_lidar`  |
+| `slice` | Render map slices. | any map-like data, e.g. `_slam/map.npz`.  | `_report/slices.mp4` unless overridden.  |
 | `video` | Create sensor data video. | `camera/*`, `lidar/*`, `_radar/rda`  | `_report/data.mp4`  |
 
 Generate this table with `scripts/_summary_table.py`.
