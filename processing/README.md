@@ -50,6 +50,7 @@ Run `roverp <command> -h` for more information.
 | ------- | ----------- | ------ | ------- |
 | `as_rover1` | Convert to legacy DART format. | `radar/`, `_radar/pose.npz`, `_radar/rover1`  | `_rover1/*`  |
 | `compare` | Create simulation (novel view synthesis) comparison video. | any set of radar-like data in `_radar`, or elsewhere so long as they match the format of `_radar/rda`.  | `_report/compare.mp4` unless overridden.  |
+| `export` | Export dataset to another location. | an entire dataset.  | the dataset is copied into the `dst` directory (e.g. on an external drive or file server), except for easily recreated processed output files.  |
 | `fft` | Generate range-doppler-azimuth images. | `_radar/pose.npz`, `radar/*`  | `_radar/{mode}` depending on the selected mode.  |
 | `info` | Print dataset metadata. | `/*`  | Printed to `stdout`.  |
 | `lidarmap` | Create ground truth occupancy grid. | `_slam/trajectory.csv`, `_slam/lidar.bag_points.ply`  | `_rover1/map.npz` or `_slam/map.npz`, depending on `--legacy`.  |

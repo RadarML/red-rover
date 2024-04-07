@@ -1,17 +1,3 @@
--- Copyright 2016 The Cartographer Authors
---
--- Licensed under the Apache License, Version 2.0 (the "License");
--- you may not use this file except in compliance with the License.
--- You may obtain a copy of the License at
---
---      http://www.apache.org/licenses/LICENSE-2.0
---
--- Unless required by applicable law or agreed to in writing, software
--- distributed under the License is distributed on an "AS IS" BASIS,
--- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
--- See the License for the specific language governing permissions and
--- limitations under the License.
-
 include "map_builder.lua"
 include "trajectory_builder.lua"
 
@@ -43,64 +29,89 @@ options = {
   publish_tracked_pose = true,
 }
 
--- TRAJECTORY_BUILDER.pure_localization_trimmer = {
---   max_submaps_to_keep = 99999999,
--- }
 
--- Pure Localization Param
--- POSE_GRAPH.optimize_every_n_nodes = 2
--- POSE_GRAPH.constraint_builder.sampling_ratio = 0.1
--- POSE_GRAPH.global_sampling_ratio = 0.1
-
-POSE_GRAPH.optimization_problem.log_solver_summary = true
-
-TRAJECTORY_BUILDER_3D.num_accumulated_range_data = 1
-POSE_GRAPH.optimization_problem.use_online_imu_extrinsics_in_3d = true
-
-MAP_BUILDER.use_trajectory_builder_3d = true
-MAP_BUILDER.num_background_threads = 64
-
-POSE_GRAPH.optimization_problem.huber_scale = 5e2
-
--- small room use more frequent submap relocalization
-MAP_BUILDER.pose_graph.optimize_every_n_nodes = 50
--- MAP_BUILDER.pose_graph.optimize_every_n_nodes = 50
-POSE_GRAPH.constraint_builder.sampling_ratio = 0.5
+-- Tuning: see
+-- [1] Cartographer-ROS algorithm walkthrough
+--     https://google-cartographer-ros.readthedocs.io/en/latest/algo_walkthrough.html
+-- [2] Cartographer configuration documentation
+--     https://google-cartographer.readthedocs.io/en/latest/configuration.html
+-- [3] Cartographer default configuration values
+--     (note: tuned for google street view backpack -- outdoors)
+--     https://github.com/cartographer-project/cartographer/blob/master/configuration_files/trajectory_builder_3d.lua
+--     https://github.com/cartographer-project/cartographer/blob/master/configuration_files/map_builder.lua
+--     https://github.com/cartographer-project/cartographer/blob/master/configuration_files/pose_graph.lua
 
 
-POSE_GRAPH.optimization_problem.ceres_solver_options.max_num_iterations = 500
--- POSE_GRAPH.constraint_builder.min_score = 0.6
-POSE_GRAPH.constraint_builder.global_localization_min_score = 0.66
+-- TRAJECTORY_BUILDER [3.1]
 
--- TRAJECTORY_BUILDER_3D.ceres_scan_matcher.translation_weight = 0.5
--- TRAJECTORY_BUILDER_3D.ceres_scan_matcher.rotation_weight = 0.5
-
-TRAJECTORY_BUILDER_3D.use_online_correlative_scan_matching = false
-
+-- Sensor carrier exclusion: 0.5m; no real maximum
 TRAJECTORY_BUILDER_3D.min_range = 0.5
 TRAJECTORY_BUILDER_3D.max_range = 50
 
+-- 1 message per scan
+-- The entire pipeline is very slow when each column is provided separately.
+TRAJECTORY_BUILDER_3D.num_accumulated_range_data = 1
+
+-- Scans per local submap; each local submap is assumed to be locally correct.
+TRAJECTORY_BUILDER_3D.submaps.num_range_data = 100
+
+-- Not sure what this does; see [2].
+TRAJECTORY_BUILDER_3D.use_online_correlative_scan_matching = false
+
+-- Cartographer first downsamples point clouds into voxels targeting a fixed
+-- number of points (voxel centers).
 TRAJECTORY_BUILDER_3D.high_resolution_adaptive_voxel_filter.max_length = 1.
 TRAJECTORY_BUILDER_3D.high_resolution_adaptive_voxel_filter.min_num_points = 250.
 TRAJECTORY_BUILDER_3D.low_resolution_adaptive_voxel_filter.max_length = 2.
 TRAJECTORY_BUILDER_3D.low_resolution_adaptive_voxel_filter.min_num_points = 400.
 
--- TRAJECTORY_BUILDER_3D.submaps.high_resolution = .05
--- TRAJECTORY_BUILDER_3D.submaps.low_resolution = .1
+-- Cartographer then tries to align the low res voxels to the low res submap,
+-- followed by tuning the high res voxels on the high res submap.
+TRAJECTORY_BUILDER_3D.submaps.high_resolution = 0.05
+TRAJECTORY_BUILDER_3D.submaps.low_resolution = 0.1
 
--- small room use more frequent submap relocalization
-TRAJECTORY_BUILDER_3D.submaps.num_range_data = 100
--- TRAJECTORY_BUILDER_3D.submaps.num_range_data = 100
+-- Give ceres a lot of iterations to make sure it will always converge
+-- We're also not trying to run real time anyways
 TRAJECTORY_BUILDER_3D.ceres_scan_matcher.ceres_solver_options.max_num_iterations = 500
 
--- MAP_BUILDER.pose_graph.constraint_builder.sampling_ratio = 0.5
-MAP_BUILDER.pose_graph.optimization_problem.ceres_solver_options.max_num_iterations = 500
 
-MAP_BUILDER.pose_graph.constraint_builder.min_score = 0.6
+-- MAP_BUILDER [3.2]
 
--- POSE_GRAPH.constraint_builder.fast_correlative_scan_matcher_3d.linear_xy_search_window = 50
--- POSE_GRAPH.constraint_builder.fast_correlative_scan_matcher_3d.linear_z_search_window = 15
+-- 3D slam on all available threads
+MAP_BUILDER.use_trajectory_builder_3d = true
+MAP_BUILDER.num_background_threads = 32
 
+
+-- POSE_GRAPH [3.3]
+
+-- Optimize the pose graph after adding every `n` nodes.
+-- Set to 0 to disable global loop closure. Otherwise, the value shouldn't
+-- make a significant impact on offline slam.
+POSE_GRAPH.optimize_every_n_nodes = 50
+
+-- Give ceres a lot of iterations to make sure it will always converge
+-- We're also not trying to run real time anyways
+POSE_GRAPH.optimization_problem.ceres_solver_options.max_num_iterations = 500
+POSE_GRAPH.constraint_builder.ceres_scan_matcher.ceres_solver_options.max_num_iterations = 500
+
+-- Minimum score needed to make a constraint between nearby nodes.
+-- Lower = more constraints, but with a higher chance of erroneous matches.
+POSE_GRAPH.constraint_builder.min_score = 0.6
+
+-- Minimum score needed ot make a loop closure constraint in the global map.
+POSE_GRAPH.constraint_builder.global_localization_min_score = 0.6
+
+-- Higher huber scale = more impactful outliers.
+-- Tend to require a higher value if more "loops" are taken.
+POSE_GRAPH.optimization_problem.huber_scale = 5e2
+
+-- Sample a subset of nodes to build constraints.
+POSE_GRAPH.constraint_builder.sampling_ratio = 0.5
+
+-- Maximum number of cleanup iterations to run.
 POSE_GRAPH.max_num_final_iterations = 200000
+
+-- Print optimization progress metadata.
+POSE_GRAPH.optimization_problem.log_solver_summary = true
 
 return options

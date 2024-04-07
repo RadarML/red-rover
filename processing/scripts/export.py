@@ -1,9 +1,13 @@
-"""Export data files to another location."""
+"""Export dataset to another location.
+
+Inputs: an entire dataset.
+Outputs: the dataset is copied into the `dst` directory (e.g. on an external
+    drive or file server), except for easily recreated processed output files.
+"""
 
 import os
 import shutil
 from tqdm import tqdm
-from argparse import ArgumentParser
 
 
 def _parse(p):
@@ -39,11 +43,6 @@ def _main(args):
     pbar = tqdm(total=totalsize, unit_scale=True, unit='B')
     for (size, src, dst) in pairs:
         os.makedirs(os.path.dirname(dst), exist_ok=True)
-        shutil.copy(src, dst)
+        if not os.path.exists(dst):
+            shutil.copy(src, dst)
         pbar.update(size)
-
-
-if __name__ == '__main__':
-    parser = ArgumentParser(description="Export dataset to another location.")
-    _parse(parser)
-    _main(parser.parse_args())

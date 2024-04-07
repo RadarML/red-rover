@@ -11,7 +11,8 @@ from tqdm import tqdm
 import numpy as np
 import jax
 from jax import numpy as jnp
-from rover import Dataset, RadarData, RadarProcessing
+from rover import (
+    Dataset, RadarData, RadarProcessing, doppler_range_azimuth_elevation)
 
 from beartype.typing import cast
 
@@ -24,14 +25,19 @@ def _parse(p):
     p.add_argument("-b", "--batch", type=int, default=128, help="Batch size.")
     p.add_argument(
         "-w", "--artifact_window", type=int, default=2048,
-        help="Zero doppler artifact calculation window; must fit in memory.")
+        help="Zero doppler artifact calculation window.")
     p.add_argument(
         "--mode", default="raw", help="FFT mode: raw (no hann, nomask), "
         "hann (with hanning window, masked), hybrid (min(raw + mask, hann)), "
         "rover1 (hybrid + nomask)")
+    p.add_argument(
+        "--pad", default=[], nargs='+', type=int,
+        help="range-doppler-azimuth-(elevation) padding.")
 
 
-NAMES = {"hann": "hann", "raw": "raw", "hybrid": "rda", "rover1": "rover1"}
+NAMES = {
+    "hann": "hann", "raw": "raw", "hybrid": "rda",
+    "rover1": "rover1", "radarhd": "radarhd"}
 
 
 def _main(args):
@@ -42,33 +48,50 @@ def _main(args):
     ds = Dataset(args.path)
     radar = cast(RadarData, ds["radar"])
     stream = tqdm(
-        radar.iq_stream(batch=args.batch), desc=args.mode,
+        radar.iq_stream(batch=args.batch), desc=args.out,
         total=math.ceil(len(ds["radar"]) / args.batch))
 
+    # Grab the first sample
+    for sample in radar.iq_stream(batch=args.artifact_window):
+        break
+
     if args.mode == "hybrid" or args.mode == "rover1":
-        for sample in radar.iq_stream(batch=args.artifact_window):
-            sample = jnp.array(sample)
-            proc_hann = RadarProcessing(sample, hanning=True)
-            proc_raw = RadarProcessing(sample, hanning=False)
-            shape = proc_raw.shape
-            break
+        sample = jnp.array(sample)
+        proc_hann = RadarProcessing(sample, hanning=True, pad=args.pad)
+        proc_raw = RadarProcessing(sample, hanning=False, pad=args.pad)
+        shape = proc_raw.shape
+        dtype = "f32"
 
         @jax.jit
         def _process(frame):
             return jnp.minimum(proc_hann(frame), proc_raw(frame))
 
-    else:
-        for sample in radar.iq_stream(batch=args.artifact_window):
-            process = RadarProcessing(
-                jnp.array(sample), hanning=(args.mode == "hann"))
-            shape = process.shape
-            break
+    elif args.mode == "hybrid" or args.mode == "hann":
+        process = RadarProcessing(
+            jnp.array(sample), hanning=(args.mode == "hann"))
+        shape = process.shape
+        dtype = "f32"
+
         _process = jax.jit(process)
+
+    elif args.mode == "radarhd":
+        _, doppler, tx, rx, num_range = sample.shape
+        if tx != 3 or rx != 4:
+            print("Must be running in 3x4 mode.")
+            exit(1)
+        shape = [doppler, num_range, 8, 2]
+        dtype = "c64"
+
+        _process = jax.jit(doppler_range_azimuth_elevation)
+
+    else:
+        print("Unknown mode: {}".format(args.mode))
+        exit(1)
 
     # Create `_radar` virtual sensor
     radar = ds.create("_radar", exist_ok=True)
     rda_out = radar.create(args.out, {
-        "format": "raw", "type": "f32", "shape": shape,
+        "format": "raw", "type": dtype, "shape": shape,
         "desc": "Doppler-range-azimuth image (mode={}).".format(args.mode)})
     ts_out = radar.create("ts", {
         "format": "raw", "type": "f64", "shape": [],

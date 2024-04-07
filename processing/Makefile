@@ -4,13 +4,14 @@
 #    Radar sensor fusion research platform
 #
 
+DATASET?=example
+
+
+# ------------------------------ Python Config ------------------------------ #
+
 PYTHON?=python3.11
 JAX_CUDA?=cuda11_pip
 ROVER_DIR=$(shell pwd)
-DATA_DIR?=$(ROVER_DIR)/data
-ROVER_MNT?=/rover
-DOCKER_IMAGE?=qoschatz/cartographer_ros
-
 VENV=./env/bin
 
 env:
@@ -19,60 +20,77 @@ env:
 		-f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
 	$(VENV)/pip install -r requirements.txt
 
+# ------------------------------ Docker Config ------------------------------ #
+
+DOCKER_IMAGE?=qoschatz/cartographer_ros
+DATA_DIR?=$(ROVER_DIR)/data
+ROVER_MNT?=/rover
+
+# Docker run command
+DOCKER=sudo docker run
+DOCKER+=-it --privileged --net=host
+DOCKER+=--env=NVIDIA_VISIBLE_DEVICES=all --env=NVIDIA_DRIVER_CAPABILITIES=all
+DOCKER+=--env=DISPLAY --env=QT_X11_NO_MITSHM=1 --gpus all
+DOCKER+=-v /tmp/.X11-unix:/tmp/.X11-unix
+DOCKER+=-v $(ROVER_DIR):$(ROVER_MNT) -v $(DATA_DIR):/data
+DOCKER+=$(DOCKER_IMAGE)
+
+# docker_run is a function so we can add that pesky trailing (")
+define docker_run
+	$(DOCKER) bash -c "source $(ROVER_MNT)/catkin_ws/devel/setup.bash && $(1)"
+endef
+
 .PHONY: docker
 docker:
-	sudo docker run \
-		-it --privileged --net=host \
-		--env=NVIDIA_VISIBLE_DEVICES=all --env=NVIDIA_DRIVER_CAPABILITIES=all \
-		--env=DISPLAY --env=QT_X11_NO_MITSHM=1 \
-		--gpus all \
-		-v /tmp/.X11-unix:/tmp/.X11-unix \
-		-v $(ROVER_DIR):$(ROVER_MNT) \
-		-v $(DATA_DIR):/data \
-		$(DOCKER_IMAGE) bash
+	$(DOCKER) bash
 
+# -------------------------- Docker / Cartographer -------------------------- #
 
-DATASET?=example
+# Docker paths
+D_BAG_DIR=/data/$(DATASET)/_scratch
+D_OUT_DIR=/data/$(DATASET)/_slam
+D_PBSTREAM=$(D_OUT_DIR)/lidar.pbstream
+D_BAG=/data/$(DATASET)/_scratch/lidar.bag
 
-BAG_DIR=$(shell realpath $(DATASET))/_scratch
-BAG=$(BAG_DIR)/lidar.bag
-OUT_DIR=$(shell realpath $(DATASET))/_slam
-
+# Host paths
+BAG_DIR=$(DATA_DIR)/$(DATASET)/_scratch
+OUT_DIR=$(DATA_DIR)/$(DATASET)/_slam
 PBSTREAM=$(OUT_DIR)/lidar.pbstream
-POINTS=$(OUT_DIR)_points.ply
-POSE=$(BAG_DIR)/pose.bag
+POINTS=$(OUT_DIR)/lidar.bag_points.ply
 TRAJ=$(OUT_DIR)/trajectory.csv
 
-
 .PRECIOUS: $(PBSTREAM)
-.PHONY: lidar validate
+.PHONY: lidar validate info
 lidar: $(TRAJ) $(POINTS)
 
 trajectory: $(TRAJ)
 
 validate:
-	cartographer_rosbag_validate -bag_filename $(BAG)
+	$(call docker_run, cartographer_rosbag_validate -bag_filename $(D_BAG))
+
+info:
+	$(call docker_run, rosbag info $(D_BAG))
 
 $(OUT_DIR):
 	mkdir -p $(OUT_DIR)
-	mkdir -p $(BAG_DIR)
-	chmod 777 $(OUT_DIR)
-	chmod 777 $(BAG_DIR)
 
 $(PBSTREAM): $(OUT_DIR)
-	-roslaunch slam offline_cart_3d.launch bag_filenames:=$(BAG)
+	$(call docker_run, roslaunch slam offline_cart_3d.launch \
+		bag_filenames:=$(D_BAG))
 	mv $(BAG_DIR)/lidar.bag.pbstream $(PBSTREAM)
 
 $(POINTS): $(PBSTREAM)
-	roslaunch slam assets_writer_cart_3d.launch \
-		bag_filenames:=$(BAG) pose_graph_filename:=$(PBSTREAM)
+	$(call docker_run, roslaunch slam assets_writer_cart_3d.launch \
+		bag_filenames:=$(D_BAG) pose_graph_filename:=$(D_PBSTREAM))
 	mv $(BAG_DIR)/lidar.bag_points.ply $(OUT_DIR)
 	mv $(BAG_DIR)/lidar.bag_probability_grid.png $(OUT_DIR)
 	mv $(BAG_DIR)/lidar.bag_xray* $(OUT_DIR)
 
-$(POSE): $(PBSTREAM)
-	rosrun cartographer_ros cartographer_dev_pbstream_trajectories_to_rosbag \
-		--input $(PBSTREAM) --output $(POSE)
+$(BAG_DIR)/pose.bag: $(PBSTREAM)
+	$(call docker_run, rosrun cartographer_ros \
+		cartographer_dev_pbstream_trajectories_to_rosbag \
+		--input $(D_PBSTREAM) --output $(D_BAG_DIR)/pose.bag)
 
-$(TRAJ): $(POSE)
-	rostopic echo -b $(POSE) -p trajectory_0 > $(TRAJ)
+$(TRAJ): $(BAG_DIR)/pose.bag
+	$(call docker_run, rostopic echo -b $(D_BAG_DIR)/pose.bag -p trajectory_0 \
+		> $(D_OUT_DIR)/trajectory.csv)

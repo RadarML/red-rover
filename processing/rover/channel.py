@@ -14,8 +14,10 @@ from beartype.typing import Union, cast, Iterator, List
 
 
 DATA_TYPES = {
-    "f64": np.float64, "f32": np.float32, "i16": np.int16,
-    "u8": np.uint8, "u16": np.uint16, "u32": np.uint32
+    "c128": np.complex128, "c64": np.complex64,
+    "f64": np.float64, "f32": np.float32,
+    "i64": np.int64, "i32": np.int32, "i16": np.int16, "i8": np.int8,
+    "u64": np.uint64, "u32": np.uint32, "u16": np.uint16, "u8": np.uint8
 }
 
 

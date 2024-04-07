@@ -17,21 +17,23 @@ from beartype.typing import Union
 
 def doppler_range_azimuth(
     iq: Complex64[Array, "doppler tx rx range"],
-    hanning: Union[list[int], bool] = False, pad: int = 0
+    hanning: Union[list[int], bool] = False, pad: list[int] = []
 ) -> Float32[Array, "doppler range antenna"]:
     """Compute doppler-range-azimuth FFTs with optional hanning window(s).
 
     Notes
     -----
-    When applying a hanning window, we also normalize so that the total measure
-    is preserved (e.g. fft(x) and fft(x * hann) have the same magnitude).
+    - The (virtual) antenna must be arranged in a line on the same elevation.
+    - When applying a hanning window, we also normalize so that the total
+      measure is preserved (e.g. fft(x) and fft(x * hann) have the same
+      magnitude).
  
     Parameters
     ----------
     iq: input IQ array, in doppler-tx-rx-range order.
     hanning: list of indices to apply a Hanning window to; defaults to `[0, 2]`
         (i.e. range-doppler). Must be closed on in order to jit-compile.
-    pad: apply zero-padding in the antenna axis.
+    pad: padding to apply in the (doppler, range, azimuth) axes.
 
     Notes
     -----
@@ -43,9 +45,50 @@ def doppler_range_azimuth(
     iqa: Complex64[Array, "doppler range antenna"] = jnp.swapaxes(
         iq.reshape(iq.shape[0], -1, iq.shape[-1]), -2, -1)
 
-    if pad > 0:
-        zeros = jnp.zeros((*iqa.shape[:2], pad), dtype=jnp.complex64)
-        iqa = jnp.concatenate([iqa, zeros], axis=2)
+    if isinstance(hanning, bool):
+        hanning = [0, 1] if hanning else []
+    for axis in hanning:
+        shape = [1, 1, 1]
+        shape[axis] = -1
+        hann = jnp.hanning(iqa.shape[axis])
+        window = hann.reshape(shape) / jnp.mean(hann)
+        iqa = iqa * window
+
+    for i, size in enumerate(pad):
+        if size > 0:
+            shape = list(iqa.shape)
+            shape[i] = size
+            zeros = jnp.zeros(shape, dtype=jnp.complex64)
+            iqa = jnp.concatenate([iqa, zeros], axis=i)
+
+    rda = jnp.fft.fftn(iqa, axes=(0, 1, 2))
+    rda_shf = jnp.fft.fftshift(rda, axes=(0, 2))
+    return jnp.abs(rda_shf)
+
+
+def doppler_range_azimuth_elevation(
+    iq: Complex64[Array, "doppler 4 3 range"],
+    hanning: Union[list[int], bool] = False, pad: list[int] = []
+) -> Float32[Array, "doppler range azimuth elevation"]:
+    """Compute doppler-range-azimuth-elevation FFTs for the 3x4 TI AWR1843.
+
+    See `doppler_range_azimuth` for additional documentation.
+
+    Parameters
+    ----------
+    iq: input IQ array, in doppler-tx-rx-range order.
+    hanning: list of indices to apply a Hanning window to; defaults to `[0, 2]`
+        (i.e. range-doppler). Must be closed on in order to jit-compile.
+    pad: padding to apply in the (doppler, range, azimuth, elevation) axes.
+    """
+    iqa_raw: Complex64[Array, "doppler range 12"] = jnp.swapaxes(
+        iq.reshape(iq.shape[0], -1, iq.shape[-1]), -2, -1)
+
+    iqa: Complex64[Array, "doppler range 8 2"] = jnp.zeros(
+        iq.shape[0], iq.shape[-1], 8, 2, dtype=jnp.complex64
+    ).at[:, :, 2:6, 0].set(iqa_raw[:, :, 0:4]
+    ).at[:, :, 0:4, 1].set(iqa_raw[:, :, 4:8]
+    ).at[:, :, 4:8, 1].set(iqa_raw[:, :, 8:12])
 
     if isinstance(hanning, bool):
         hanning = [0, 1] if hanning else []
@@ -56,8 +99,15 @@ def doppler_range_azimuth(
         window = hann.reshape(shape) / jnp.mean(hann)
         iqa = iqa * window
 
-    rda = jnp.fft.fftn(iqa, axes=(0, 1, 2))
-    rda_shf = jnp.fft.fftshift(rda, axes=(0, 2))
+    for i, size in enumerate(pad):
+        if size > 0:
+            shape = list(iqa.shape)
+            shape[i] = size
+            zeros = jnp.zeros(shape, dtype=jnp.complex64)
+            iqa = jnp.concatenate([iqa, zeros], axis=i)
+
+    rda = jnp.fft.fftn(iqa, axes=(0, 1, 2, 3))
+    rda_shf = jnp.fft.fftshift(rda, axes=(0, 2, 3))
     return jnp.abs(rda_shf)
 
 
@@ -68,23 +118,37 @@ class RadarProcessing:
     ----------
     sample: sample IQ data for one-time artifact computation.
     hanning: whether to apply a hanning window in the range-doppler axes.
+    pad: (doppler, range, azimuth) padding.
     """
 
     def __init__(
         self, sample: Complex64[Array, "batch doppler tx rx range"],
-        hanning: bool = False
+        hanning: bool = False, pad: list[int] = []
     ) -> None:
         self.hanning = hanning
+        self.pad = pad
 
-        zero = sample.shape[1] // 2
-        start = zero - (1 if hanning else 0)
-        stop = zero + 1 + (1 if hanning else 0)
+        # Not batched to make sure this always succeeds.
+        @jax.jit
+        def _get_artifact(frame):
+            return doppler_range_azimuth(
+                frame, hanning=self.hanning, pad=pad)[self.patch[1:]]
+
+        self.shape = doppler_range_azimuth(
+            sample[0], hanning=self.hanning, pad=pad).shape
+        zero = self.shape[0] // 2
+        start, stop = zero, zero
+
+        if hanning:
+            start -= 1
+            stop -= 1
+        if len(pad) > 0:
+            start -= 4
+            stop += 4
+
         self.patch = (slice(None), slice(start, stop))
-        
-        rda = jax.vmap(partial(
-            doppler_range_azimuth, hanning=self.hanning))(sample)
-        self.artifact = jnp.median(rda[self.patch], axis=0)[None, :, :, :]
-        self.shape = rda.shape[1:]
+        self.artifact = jnp.median(jnp.array(
+            [_get_artifact(x) for x in sample]), axis=0)[None, :, :, :]
 
     def __call__(
         self, iq: Complex64[Array, "batch doppler tx rx range"]
@@ -100,7 +164,7 @@ class RadarProcessing:
         Doppler-range-antenna batch, with zero doppler correction applied.
         """
         rda = jax.vmap(partial(
-            doppler_range_azimuth, hanning=self.hanning))(iq)
+            doppler_range_azimuth, hanning=self.hanning, pad=self.pad))(iq)
         corrected = rda.at[self.patch].set(
             jnp.maximum(rda[self.patch] - self.artifact, 0.0))
         return corrected

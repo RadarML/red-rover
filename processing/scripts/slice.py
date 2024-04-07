@@ -59,7 +59,7 @@ def _main(args):
                 jnp.stack([viridis[0], viridis[-1]]), x, axis=0)
     else:
         sigma = jnp.rollaxis(normalize(npz["sigma"], 1, 99.5), 2)
-        alpha = jnp.rollaxis(normalize(-jnp.array(npz["alpha"]), 0.5, 95), 2)
+        alpha = jnp.rollaxis(normalize(-jnp.array(npz["alpha"]), 5, 99.5), 2)
         data = zip(sigma, alpha)
         nz = sigma.shape[0]
 

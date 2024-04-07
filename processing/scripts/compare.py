@@ -104,7 +104,8 @@ def _main(args):
         if k in radar.channels:
             return radar[k]
         else:
-            return RawChannel(k, radar["rda"].type, radar["rda"].shape)
+            return RawChannel(
+                k, radar[args.compare[0]].type, radar[args.compare[0]].shape)
 
     data = [_get_data(k).stream_prefetch() for k in args.compare]
     render_func = _renderer(args.path, args.font, args.compare, ts.shape[0])

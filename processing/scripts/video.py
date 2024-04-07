@@ -31,9 +31,10 @@ def _parse(p):
     p.add_argument(
         "-s", "--timescale", type=float, default=1.0,
         help="Real time to video time scale factor (larger = faster)")
+    p.add_argument("-r", "--radar", default="rda", help="Radar stream to use.")
 
 
-def _load(path: str):
+def _load(path: str, radar: str):
     """Load timestamps and streams."""
     ds = Dataset(path)
 
@@ -42,14 +43,8 @@ def _load(path: str):
         "radar": _ts["_radar"], "camera": _ts["camera"],
         "rfl": _ts["lidar"], "nir": _ts["lidar"], "rng": _ts["lidar"]}
 
-    radar = ds.get("_radar")
-    if "rda" in radar.channels:
-        radarstream = ds.get("_radar")["rda"].stream_prefetch()
-    else:
-        radarstream = ds.get("_radar")["raw"].stream_prefetch()
-
     streams = {
-        "radar": radarstream,
+        "radar": ds.get("_radar")[radar].stream_prefetch(),
         "rng": cast(LidarData, ds["lidar"]).destaggered_stream("rng"),
         "rfl": cast(LidarData, ds["lidar"]).destaggered_stream("rfl"),
         "nir": cast(LidarData, ds["lidar"]).destaggered_stream("nir"),
@@ -131,7 +126,7 @@ def _main(args):
         args.out = os.path.join(args.path, "_report", "data.mp4")
     os.makedirs(os.path.dirname(args.out), exist_ok=True)
 
-    timestamps, streams = _load(args.path)
+    timestamps, streams = _load(args.path, args.radar)
     transforms = _transforms()
     render_func = _renderer(args.path, args.font)
     frame_time = 1 / args.fps * args.timescale
