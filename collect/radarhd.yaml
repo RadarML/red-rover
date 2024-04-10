@@ -5,8 +5,8 @@ lidar:
     addr: null
     port_lidar: 7502
     port_imu: 7503
-    mode: 1024x20
-    beams: 64
+    mode: 2048x10
+    beams: 128
 imu:
   type: imu
   args:

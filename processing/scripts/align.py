@@ -14,11 +14,11 @@ from rover import Dataset
 def _parse(p):
     p.add_argument("-p", "--path", help="Dataset path.")
     p.add_argument(
+        "-o", "--out", default=None,
+        help="Output dataset; defaults to the input dataset.")
+    p.add_argument(
         "-s", "--sensors", nargs='+', default=['radar', 'lidar'],
         help="Sensors to align.")
-    p.add_argument(
-        "-o", "--out", default=None, help="Output path; defaults to "
-        "`_fusion/indices.npz` in the dataset folder.")
     p.add_argument(
         "-m", "--mode", default="left", help="Alignment mode. `left`: align "
         "to first sensor; `union`: align to all sensors.")
@@ -27,9 +27,9 @@ def _parse(p):
 def _main(args):
 
     if args.out is None:
-        args.out = os.path.join(args.path, "_fusion", "indices.npz")
-    os.makedirs(os.path.dirname(args.out), exist_ok=True)
-
+        args.out = args.path
+    out = os.path.join(args.out, "_fusion", "indices.npz")
+    os.makedirs(os.path.dirname(out), exist_ok=True)
 
     ds = Dataset(args.path)
     timestamps = [ds.get(s).timestamps() for s in args.sensors]
@@ -67,4 +67,4 @@ def _main(args):
         res[i] = np.array(aligned)
 
     print(f"Aligned {len(res)} indices in {time.time() - t0:.3f}s.")
-    np.savez(args.out, indices=res, sensors=np.array(args.sensors, dtype=str))
+    np.savez(out, indices=res, sensors=np.array(args.sensors, dtype=str))

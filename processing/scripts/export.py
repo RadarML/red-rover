@@ -13,18 +13,24 @@ from tqdm import tqdm
 def _parse(p):
     p.add_argument("src", help="Dataset to copy.")
     p.add_argument("dst", help="Destination directory.")
+    p.add_argument(
+        "--metadata", default=False, action='store_true',
+        help="Copy metadata only.")
 
 
 def _main(args):
 
     def should_copy(path):
-        if path.startswith('_') and "_report" not in path:
-            if path.endswith(".npz") or path.endswith(".csv"):
-                return True
-            else:
-                return False
+        if args.metadata:
+            return (
+                (not path.startswith('_')) and (
+                    os.path.splitext(path)[1] in {'.json', '.yaml'}
+                    or os.path.split(path)[-1] == 'ts'))
         else:
-            return True
+            if path.startswith('_') and "_report" not in path:
+                return os.path.splitext(path)[1] in {'.npz', '.csv'}
+            else:
+                return True
 
     out = os.path.join(args.dst, os.path.basename(os.path.normpath(args.src)))
 

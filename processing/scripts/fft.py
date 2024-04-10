@@ -20,8 +20,8 @@ from beartype.typing import cast
 def _parse(p):
     p.add_argument("-p", "--path", help="Dataset path.")
     p.add_argument(
-        "-o", "--out", default=None,
-        help="Output channel name; defaults depend on `--mode`.")
+        "-o", "--out",
+        help="Output dataset path; should be a clone of the first dataset.")
     p.add_argument("-b", "--batch", type=int, default=128, help="Batch size.")
     p.add_argument(
         "-w", "--artifact_window", type=int, default=2048,
@@ -35,20 +35,16 @@ def _parse(p):
         help="range-doppler-azimuth-(elevation) padding.")
 
 
-NAMES = {
-    "hann": "hann", "raw": "raw", "hybrid": "rda",
-    "rover1": "rover1", "radarhd": "radarhd"}
-
-
 def _main(args):
-    assert args.mode in NAMES
-    if args.out is None:
-        args.out = NAMES[args.mode]
-
     ds = Dataset(args.path)
+    if args.out is None:
+        out = ds
+    else:
+        out = Dataset(args.out)
+
     radar = cast(RadarData, ds["radar"])
     stream = tqdm(
-        radar.iq_stream(batch=args.batch), desc=args.out,
+        radar.iq_stream(batch=args.batch), desc=args.mode,
         total=math.ceil(len(ds["radar"]) / args.batch))
 
     # Grab the first sample
@@ -93,17 +89,18 @@ def _main(args):
         exit(1)
 
     # Create `_radar` virtual sensor
-    radar = ds.create("_radar", exist_ok=True)
-    rda_out = radar.create(args.out, {
+    radar = out.create("_radar", exist_ok=True)
+    rda_out = radar.create(args.mode, {
         "format": "raw", "type": dtype, "shape": shape,
         "desc": "Doppler-range-azimuth image (mode={}).".format(args.mode)})
-    ts_out = radar.create("ts", {
-        "format": "raw", "type": "f64", "shape": [],
-        "desc": "Smoothed timestamp, in seconds (only for clipped modes)."})
 
     # Writeout
-    ts = ds["radar"]["ts"].read()
     if args.mode in {"hann", "hybrid"}:
+        ts = ds["radar"]["ts"].read()
+        ts_out = radar.create("ts", {
+            "format": "raw", "type": "f64", "shape": [],
+            "desc": "Smoothed timestamp, in seconds (only for clipped modes)."})
+
         mask = np.load(os.path.join(args.path, "_radar", "pose.npz"))["mask"]
         ts_out.write(ts[mask])
         rda_out.consume(

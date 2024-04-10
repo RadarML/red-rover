@@ -9,6 +9,7 @@ Assuming you have `python3.11`, `python3.11-venv`, and `python3-pip` installed:
 make env
 ```
 
+
 ## Setup
 
 1. Install Python 3.11 (`ouster-sdk` does not support `python>=3.12` at present):
@@ -41,6 +42,12 @@ make env
     roverp <command> <args...>
     ```
     This will also assign `export $ROVERP=...` to allow calling `roverp` in scripts, nq, and makefiles as `$(ROVERP)`.
+
+
+## Common Recipes
+
+Prepare radarhd data:
+
 
 ## Commands
 

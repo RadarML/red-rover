@@ -1,7 +1,7 @@
 """Decompress lidar data.
 
-Inputs: lidar/*
-Outputs: _lidar/*
+Inputs: `lidar/*`
+Outputs: `_lidar/*`, unless overridden.
 """
 
 from rover import Dataset
@@ -10,6 +10,9 @@ from rover import Dataset
 def _parse(p):
     p.add_argument("-p", "--path", help="Dataset path.")
     p.add_argument(
+        "-o", "--out",
+        help="Output dataset path; should be a clone of the first dataset.")
+    p.add_argument(
         "-c", "--channels", nargs='+',
         help="Channels to decompress.", default=["rng"])
 
@@ -17,9 +20,14 @@ def _parse(p):
 def _main(args):
 
     ds = Dataset(args.path)
-    
+
+    if args.out is None:
+        out = ds
+    else:
+        out = Dataset(args.out)
+
     lidar = ds["lidar"]
-    _lidar = ds.create("_lidar", exist_ok=True)
+    _lidar = out.create("_lidar", exist_ok=True)
     
     for k, v in lidar.config.items():
         v = dict(**v)

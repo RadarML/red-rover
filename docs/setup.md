@@ -4,6 +4,24 @@
 
 The data collection computer uses a linux installation; we use ubuntu 22.04, though other versions should work as well.
 
+0. Install linux.
+    - If using a usb C monitor / dock to debug (e.g. the [NexDock](https://nexdock.com/explore-nexdock/)), you may need to install [DisplayLink drivers](https://www.synaptics.com/products/displaylink-graphics/downloads/ubuntu) in order to allow hot-plugging the dock.
+    - Internet access is required during setup.
+    - Other helpful packages:
+        ```sh
+        sudo apt install -y htop openssh-server git
+        sudo snap install zellij --classic
+        ```
+
+1. Install dependencies:
+    ```sh
+    sudo add-apt-repository ppa:deadsnakes/ppa
+    sudo apt install python3.11
+    sudo apt install python3.11-venv
+    ```
+    - Python 3.11 is required, since `ouster-dsk` does not support `python3.12` as of April 2024.
+
+
 TODO: try this procedure and write up the steps.
 - Python (deadsnakes 3.11)
     ```sh

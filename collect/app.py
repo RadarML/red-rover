@@ -109,7 +109,7 @@ def command():
 
             os.makedirs(path, exist_ok=True)
             with open(os.path.join(path, 'config.yaml'), 'w') as f:
-                f.write(rover.cfg)
+                yaml.dump(rover.cfg, f)
 
             rover.controller.start(path)
             return "ok"

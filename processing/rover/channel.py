@@ -23,7 +23,7 @@ DATA_TYPES = {
 
 class Prefetch:
     """Simple prefetch queue wrapper.
-    
+
     Parameters
     ----------
     iterator: any python iterator.
