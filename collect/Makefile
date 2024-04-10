@@ -16,7 +16,7 @@ GETCONF=$(ROVERC) get_config -c $(ROVER_CFG) -p
 RADAR_SYS_IP=$(shell $(GETCONF) radar/args/capture/sys_ip)
 RADAR_IF=$(shell $(GETCONF) radar/interface)
 LIDAR_IF=$(shell $(GETCONF) lidar/interface)
-LIDAR_IP=$(shell ip -f inet addr show $(LIDAR_IF) | awk '/inet / {print $2}')
+LIDAR_IP=$(shell ip -f inet addr show enp86s0 | grep 'inet ' | awk '{print $$2}')
 RECV_BUF_SIZE=$(shell $(GETCONF) radar/args/capture/socket_buffer)
 
 .PHONY: run server start stop
