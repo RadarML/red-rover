@@ -9,11 +9,13 @@ See the [setup instructions](/docs/setup.md).
     ROVER_CFG=`dart.yaml` make server
     ```
 
-2. Select the output path.
+2. Connect to the web server; the server address should be `{computer_name}.local:5000`.
+
+3. Select the output path.
     - Dropdown: output location (locally in the `./data` folder or in an external drive)
     - Text input: output dataset name. If blank, will be named after the current timestamp in `YYYY-MM-DD.HH-MM-SS` format.
 
-3. Use the start/stop buttons.
+4. Use the start/stop buttons.
     - The **Start** button will be disabled after starting data collection until the **Stop** button is pressed. This status may not be accurate if there are multiple connections or the page is refreshed.
     - The **Stop** button will be greyed out if the page thinks no data collection sessions are active, but the `stop` command will still be sent even if clicked in case a desync has occured since there is no harm in attempting to stop when there is no active session.
 
