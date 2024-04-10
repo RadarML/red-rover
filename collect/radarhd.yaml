@@ -21,7 +21,7 @@ camera:
     fps: 60.0
 radar:
   type: radar
-  interface: enx207bd2bd84d3
+  interface: enx207bd2be1456
   comment: "RadarHD, indoor"
   args:
     radar:

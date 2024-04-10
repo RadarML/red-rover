@@ -12,25 +12,21 @@ The data collection computer uses a linux installation; we use ubuntu 22.04, tho
         sudo apt install -y htop openssh-server git
         sudo snap install zellij --classic
         ```
+    - Make sure that all ethernet interfaces are enabled (3 in total), and that the lidar interface is set to "link-local only".
 
 1. Install dependencies:
     ```sh
     sudo add-apt-repository ppa:deadsnakes/ppa
-    sudo apt install python3.11
-    sudo apt install python3.11-venv
+    sudo apt install -y python3.11 python3.11-venv build-essential net-tools
     ```
     - Python 3.11 is required, since `ouster-dsk` does not support `python3.12` as of April 2024.
 
-
-TODO: try this procedure and write up the steps.
-- Python (deadsnakes 3.11)
+2. Install `red-rover`:
     ```sh
-    sudo add-apt-repository ppa:deadsnakes/ppa
-    sudo apt install python3.11
-    sudo apt install python3.11-venv
+    git clone git@github.com:WiseLabCMU/red-rover.git
+    cd red-rover/processing
+    make env
     ```
-- Pip
-- Helpful: htop, zellij, openssh-server, git
 
 ## Radar
 

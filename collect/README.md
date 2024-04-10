@@ -4,9 +4,11 @@ See the [setup instructions](/docs/setup.md).
 
 ## UI Operation
 
-1. Specify configuration file and start server:
+1. Specify configuration file, configure system, and start server:
     ```sh
-    ROVER_CFG=`dart.yaml` make server
+    export ROVER_CFG=dart.yaml
+    sudo -E make config
+    make
     ```
 
 2. Connect to the web server; the server address should be `{computer_name}.local:5000`.
