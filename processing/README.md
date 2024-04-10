@@ -49,6 +49,7 @@ Run `roverp <command> -h` for more information.
 | Command | Description | Inputs | Outputs |
 | ------- | ----------- | ------ | ------- |
 | `as_rover1` | Convert to legacy DART format. | `radar/`, `_radar/pose.npz`, `_radar/rover1`  | `_rover1/*`  |
+| `align` | Get sensor timestamp alignments as indices. | any set of sensors  | `_fusion/indices.npz` unless overridden.  |
 | `compare` | Create simulation (novel view synthesis) comparison video. | any set of radar-like data in `_radar`, or elsewhere so long as they match the format of `_radar/rda`.  | `_report/compare.mp4` unless overridden.  |
 | `export` | Export dataset to another location. | an entire dataset.  | the dataset is copied into the `dst` directory (e.g. on an external drive or file server), except for easily recreated processed output files.  |
 | `fft` | Generate range-doppler-azimuth images. | `_radar/pose.npz`, `radar/*`  | `_radar/{mode}` depending on the selected mode.  |

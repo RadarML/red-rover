@@ -121,23 +121,28 @@ class LidarData(SensorData):
         with open(os.path.join(self.path, "lidar.json")) as f:
             return client.SensorInfo(f.read())
 
+    @cached_property
+    def xyzlut(self):
+        """Point cloud LUT."""
+        return client.XYZLut(self.lidar_metadata)
+
+    def pointcloud(self, arr):
+        """Convert to pointcloud."""
+        return self.xyzlut(arr).astype(np.float32)
+
     def pointcloud_stream(self) -> Iterator[Float32[np.ndarray, "..."]]:
         """Get an iterator which returns point clouds."""
-        lut = client.XYZLut(self.lidar_metadata)
+        return self.open("rng").stream_prefetch(transform=self.pointcloud)
 
-        def tf(x):
-            return lut(x).astype(np.float32)
-
-        return self.open("rng").stream_prefetch(transform=tf)
+    def destagger(self, arr):
+        """Destagger data."""
+        return client.destagger(self.lidar_metadata, arr)
 
     def destaggered_stream(
         self, key: str
     ) -> Iterator[UInt16[np.ndarray, "..."]]:
         """Get iterator which returns a destaggered range stream."""
-        def destagger(x):
-            return client.destagger(self.lidar_metadata, x)
-
-        return self.open(key).stream_prefetch(destagger)
+        return self.open(key).stream_prefetch(self.destagger)
 
 
 class RadarData(SensorData):
@@ -171,6 +176,7 @@ class RadarData(SensorData):
 
 SENSOR_TYPES = {
     "lidar": LidarData,
+    "_lidar": LidarData,
     "radar": RadarData
 }
 

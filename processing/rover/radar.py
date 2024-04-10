@@ -85,7 +85,7 @@ def doppler_range_azimuth_elevation(
         iq.reshape(iq.shape[0], -1, iq.shape[-1]), -2, -1)
 
     iqa: Complex64[Array, "doppler range 8 2"] = jnp.zeros(
-        iq.shape[0], iq.shape[-1], 8, 2, dtype=jnp.complex64
+        (iq.shape[0], iq.shape[-1], 8, 2), dtype=jnp.complex64
     ).at[:, :, 2:6, 0].set(iqa_raw[:, :, 0:4]
     ).at[:, :, 0:4, 1].set(iqa_raw[:, :, 4:8]
     ).at[:, :, 4:8, 1].set(iqa_raw[:, :, 8:12])

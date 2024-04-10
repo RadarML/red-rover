@@ -86,16 +86,14 @@ class BaseChannel:
         """Read all data."""
         raise NotImplementedError()
 
+    def index(self, idx: int) -> Shaped[np.ndarray, "..."]:
+        """Index into data."""
+        raise NotImplementedError()
+
     def write(self, data: Shaped[Union[np.ndarray, Array], "..."]) -> None:
         """Write all data."""
         with open(self.path, 'wb') as f:
             f.write(data.tobytes())
-
-    def memmap(self) -> np.memmap:
-        """Open memory mapped array."""
-        return np.memmap(
-            self.path, dtype=self.type, mode='r',
-            shape=(self.filesize // self.size, *self.shape))
 
     def stream(self, transform=None, batch: int = 0) -> Iterator[np.ndarray]:
         """Get iterable data stream."""
@@ -162,11 +160,25 @@ class RawChannel(BaseChannel):
                 yield transform(
                     np.frombuffer(data, dtype=self.type).reshape(shape))
 
+    def memmap(self) -> np.memmap:
+        """Open memory mapped array."""
+        return np.memmap(
+            self.path, dtype=self.type, mode='r',
+            shape=(self.filesize // self.size, *self.shape))
+
+    def index(self, idx: int) -> Shaped[np.ndarray, "..."]:
+        """Index into data."""
+        return self.memmap()[idx]
+
 
 class LzmaChannel(RawChannel):
     """LZMA-compressed binary data."""
 
     _READ = staticmethod(lzma.open)  # type: ignore
+
+    def memmap(self) -> np.memmap:
+        """Open memory mapped array."""
+        raise Exception("Cannot mem-map a compressed channel.")
 
 
 class VideoChannel(BaseChannel):
@@ -203,6 +215,18 @@ class VideoChannel(BaseChannel):
                 break
         cap.release()
         return
+
+    def index(self, idx: int) -> Shaped[np.ndarray, "..."]:
+        """Index into data."""
+        cap = cv2.VideoCapture(self.path)
+        if not cap.isOpened():
+            raise Exception("Could not open video.")
+
+        cap.set(cv2.CAP_PROP_POS_FRAMES, idx - 1)
+        ret, frame = cap.read()
+        if not ret:
+            raise Exception("Could not read frame.")
+        return frame
 
 
 CHANNEL_TYPES = {

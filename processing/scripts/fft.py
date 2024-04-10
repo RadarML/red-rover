@@ -1,6 +1,6 @@
 """Generate range-doppler-azimuth images.
 
-Inputs: `_radar/pose.npz`, `radar/*`
+Inputs: `radar/*`, `_radar/pose.npz` (optional)
 Outputs: `_radar/{mode}` depending on the selected mode.
 """
 
@@ -52,8 +52,12 @@ def _main(args):
         total=math.ceil(len(ds["radar"]) / args.batch))
 
     # Grab the first sample
+    sample = None
     for sample in radar.iq_stream(batch=args.artifact_window):
         break
+    if sample is None:
+        print("IQ stream seems to be empty.")
+        exit(1)
 
     if args.mode == "hybrid" or args.mode == "rover1":
         sample = jnp.array(sample)
@@ -66,7 +70,7 @@ def _main(args):
         def _process(frame):
             return jnp.minimum(proc_hann(frame), proc_raw(frame))
 
-    elif args.mode == "hybrid" or args.mode == "hann":
+    elif args.mode == "raw" or args.mode == "hann":
         process = RadarProcessing(
             jnp.array(sample), hanning=(args.mode == "hann"))
         shape = process.shape
@@ -95,15 +99,15 @@ def _main(args):
         "desc": "Doppler-range-azimuth image (mode={}).".format(args.mode)})
     ts_out = radar.create("ts", {
         "format": "raw", "type": "f64", "shape": [],
-        "desc": "Smoothed timestamp, in seconds."})
+        "desc": "Smoothed timestamp, in seconds (only for clipped modes)."})
 
     # Writeout
     ts = ds["radar"]["ts"].read()
-    if args.mode == "rover1" or args.mode == "raw":
-        rda_out.consume(_process(frame) for frame in stream)
-    else:
+    if args.mode in {"hann", "hybrid"}:
         mask = np.load(os.path.join(args.path, "_radar", "pose.npz"))["mask"]
         ts_out.write(ts[mask])
         rda_out.consume(
             _process(frame)[mask[i * args.batch:(i + 1) * args.batch]]
             for i, frame in enumerate(stream))
+    else:
+        rda_out.consume(_process(frame) for frame in stream)
