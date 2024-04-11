@@ -17,16 +17,16 @@ class RadarCapture(BaseCapture):
         self.valid = open(os.path.join(path, "valid"), mode='wb')
         return {
             "iq": {
-                "format": "raw", "type": "i16", "shape": shape,
+                "format": "raw", "type": "i2", "shape": shape,
                 "desc": "Raw I/Q stream."},
             "valid": {
-                "format": "raw", "type": "u8", "shape": [],
+                "format": "raw", "type": "u1", "shape": [],
                 "desc": "True if this frame is complete (no zero-fill)."}}
 
-    def write(self, scan: dca_types.RadarFrame) -> None:
+    def write(self, data: dca_types.RadarFrame) -> None:
         """Write a single frame."""
-        self.iq.write(scan.data)
-        self.valid.write(b'\x01' if scan.complete else b'\x00')
+        self.iq.write(data.data)
+        self.valid.write(b'\x01' if data.complete else b'\x00')
 
     def close(self) -> None:
         """Close files and clean up."""

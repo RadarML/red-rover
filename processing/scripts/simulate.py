@@ -48,7 +48,7 @@ def _main(args):
         return _render(seeds[i], params, pose[i:i+1])
 
     out = Dataset(args.path).get("_radar").create("sim_lidar", {
-        "format": "raw", "type": "f32",
+        "format": "raw", "type": "f4",
         "shape": [intrinsics.doppler.shape[0], intrinsics.range.shape[0], 8],
         "desc": "Simulated doppler-range-azimuth image using lidar data."})
     out.consume((render(i) for i in tqdm(range(pose.x.shape[0]))))

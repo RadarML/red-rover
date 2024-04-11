@@ -60,7 +60,7 @@ def _main(args):
         proc_hann = RadarProcessing(sample, hanning=True, pad=args.pad)
         proc_raw = RadarProcessing(sample, hanning=False, pad=args.pad)
         shape = proc_raw.shape
-        dtype = "f32"
+        dtype = "f4"
 
         @jax.jit
         def _process(frame):
@@ -70,7 +70,7 @@ def _main(args):
         process = RadarProcessing(
             jnp.array(sample), hanning=(args.mode == "hann"))
         shape = process.shape
-        dtype = "f32"
+        dtype = "f4"
 
         _process = jax.jit(process)
 
@@ -80,7 +80,7 @@ def _main(args):
             print("Must be running in 3x4 mode.")
             exit(1)
         shape = [doppler, num_range, 8, 2]
-        dtype = "c64"
+        dtype = "c8"
 
         _process = jax.jit(doppler_range_azimuth_elevation)
 
@@ -98,7 +98,7 @@ def _main(args):
     if args.mode in {"hann", "hybrid"}:
         ts = ds["radar"]["ts"].read()
         ts_out = radar.create("ts", {
-            "format": "raw", "type": "f64", "shape": [],
+            "format": "raw", "type": "f8", "shape": [],
             "desc": "Smoothed timestamp, in seconds (only for clipped modes)."})
 
         mask = np.load(os.path.join(args.path, "_radar", "pose.npz"))["mask"]

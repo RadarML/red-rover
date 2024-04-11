@@ -18,13 +18,13 @@ class CameraCapture(BaseCapture):
             os.path.join(path, "video.avi"), fourcc, self.fps, (width, height))
         return {
             "video.avi": {
-                "format": "mjpg", "type": "u8", "shape": (height, width, 3),
+                "format": "mjpg", "type": "u1", "shape": (height, width, 3),
                 "desc": "Ordinary camera video"}
         }
 
-    def write(self, frame: np.ndarray) -> None:
+    def write(self, data: np.ndarray) -> None:
         """Write MJPG stream."""
-        self.video.write(frame)
+        self.video.write(data)
 
     def close(self) -> None:
         """Close files and clean up."""

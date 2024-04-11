@@ -13,14 +13,6 @@ from jaxtyping import Shaped, Array
 from beartype.typing import Union, cast, Iterator, List
 
 
-DATA_TYPES = {
-    "c128": np.complex128, "c64": np.complex64,
-    "f64": np.float64, "f32": np.float32,
-    "i64": np.int64, "i32": np.int32, "i16": np.int16, "i8": np.int8,
-    "u64": np.uint64, "u32": np.uint32, "u16": np.uint16, "u8": np.uint8
-}
-
-
 class Prefetch:
     """Simple prefetch queue wrapper.
 
@@ -73,7 +65,7 @@ class BaseChannel:
         self, path: str, dtype: Union[str, type], shape: list[int]
     ) -> None:
         self.path = path
-        self.type = DATA_TYPES.get(dtype, dtype)  # type: ignore
+        self.type = np.dtype(dtype)
         self.shape = shape
         self.size = int(np.prod(shape) * np.dtype(self.type).itemsize)
 
@@ -115,7 +107,7 @@ class BaseChannel:
     def __repr__(self):
         """Get string representation."""
         return "{}({}: {} x {})".format(
-            self.__class__.__name__, self.path, self.type.__name__, self.shape)
+            self.__class__.__name__, self.path, str(self.type), self.shape)
 
 
 class RawChannel(BaseChannel):

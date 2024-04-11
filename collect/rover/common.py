@@ -36,7 +36,7 @@ class BaseCapture:
 
     _COMMON: SensorMetadata = {
         "ts": {
-            "format": "raw", "type": "f64", "shape": (),
+            "format": "raw", "type": "f8", "shape": (),
             "description": "Timestamp, in seconds."},
     }
 
@@ -98,7 +98,7 @@ class BaseCapture:
             self._first_loop = False
             self.log.info("Receiving data.")
 
-    def write(self, arg: Any) -> None:
+    def write(self, data: Any) -> None:
         """Write data."""
         raise NotImplementedError()
 
@@ -165,21 +165,21 @@ class BaseSensor:
 
     def _start_capture(self, path: Optional[str]) -> None:
         """Start capture."""
-        def _capture_wrapped():
-            self.frame_count = 0
-            try:
-                self.capture(path)
-            except Exception as e:
-                self.log.critical(repr(e))
-                self.log.debug(''.join(traceback.format_exception(e)))
-            finally:
-                self.active = False
-
         if self.active:
             self.log.error("Tried to start capture when another is active.")
         elif path is None:
             self.log.error("A valid path must be provided to start.")
         else:
+            def _capture_wrapped():
+                self.frame_count = 0
+                try:
+                    self.capture(path)
+                except Exception as e:
+                    self.log.critical(repr(e))
+                    self.log.debug(''.join(traceback.format_exception(e)))
+                finally:
+                    self.active = False
+
             self.log.info("Starting capture: {}".format(path))
             self.active = True
             self._thread = threading.Thread(target=_capture_wrapped)

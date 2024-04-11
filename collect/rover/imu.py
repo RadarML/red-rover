@@ -12,13 +12,13 @@ class IMUCapture(BaseCapture):
     def _init(self, path: str, **_) -> SensorMetadata:
         _meta = {
             "rot": {
-                "format": "raw", "type": "f32", "shape": (3,),
+                "format": "raw", "type": "f4", "shape": (3,),
                 "desc": "Orientation (Euler Angles)"},
             "acc": {
-                "format": "raw", "type": "f32", "shape": (3,),
+                "format": "raw", "type": "f4", "shape": (3,),
                 "desc": "Linear acceleration"},
             "avel": {
-                "format": "raw", "type": "f32", "shape": (3,),
+                "format": "raw", "type": "f4", "shape": (3,),
                 "desc": "Angular velocity"}
         }
         self.outputs = {

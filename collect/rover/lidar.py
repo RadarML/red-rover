@@ -21,13 +21,13 @@ class LidarCapture(BaseCapture):
     ) -> SensorMetadata:
         _meta = {
             "rfl": {
-                "format": "lzma", "type": "u8", "shape": shape,
+                "format": "lzma", "type": "u1", "shape": shape,
                 "desc": "Object NIR reflectivity"},
             "nir": {
-                "format": "lzma", "type": "u16", "shape": shape,
+                "format": "lzma", "type": "u2", "shape": shape,
                 "desc": "Near infrared ambient photons"},
             "rng": {
-                "format": "lzma", "type": "u16", "shape": shape,
+                "format": "lzma", "type": "u2", "shape": shape,
                 "desc": "Range, in millimeters"}}
 
         self.outputs = {
