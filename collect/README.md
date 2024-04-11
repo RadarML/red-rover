@@ -1,6 +1,6 @@
 # Red Rover Data Collection System
 
-See the [setup instructions](/docs/setup.md).
+See the [physical assembly](/docs/components.md) and [setup instructions](/docs/setup.md).
 
 ## UI Operation
 
@@ -48,7 +48,6 @@ See the [setup instructions](/docs/setup.md).
 
 4. Clean up and kill data collection processes by quitting zellij (`ctrl` + `q`).
 
-
 ## Manual Operation
 
 1. Configure interfaces:
@@ -88,3 +87,9 @@ See the [setup instructions](/docs/setup.md).
     ```
     ./env/bin/python collect.py exit -c [config.yaml]
     ```
+
+## Troubleshooting
+
+If some data types (especially Lidar) are not being collected as expected:
+- Reboot the data collection computer.
+- Reboot the rig (by turning off the computer, and unpowering all sensors, e.g. by unplugging the root power strip).

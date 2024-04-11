@@ -19,12 +19,12 @@ The data collection computer uses a linux installation; we use ubuntu 22.04, tho
     sudo add-apt-repository ppa:deadsnakes/ppa
     sudo apt install -y python3.11 python3.11-venv build-essential net-tools
     ```
-    - Python 3.11 is required, since `ouster-dsk` does not support `python3.12` as of April 2024.
+    - Python 3.11 is required, since `ouster-sdk` does not work on `python3.12` as of April 2024.
 
 2. Install `red-rover`:
     ```sh
     git clone git@github.com:WiseLabCMU/red-rover.git
-    cd red-rover/processing
+    cd red-rover/collect
     make env
     ```
 
@@ -36,7 +36,7 @@ A new radar needs to be configured with the following:
 
 ### System overview
 
-*Red Rover* is based on the TI AWR1843Boost mmWave radar and the DCA1000EVM capture card. The AWR1843Boost
+*Red Rover* is based on the TI AWR1843Boost mmWave radar ("red board") and the DCA1000EVM capture card ("green board"). The AWR1843Boost
 has a LVDS (Low Voltage Differential Signaling) "debug" port which outputs data being sent from the radar back-end to an onboard DSP processor, which can be sent to the capture card; the capture card contains a FPGA, which buffers this data and translates it into ethernet packets.
 
 The AWR1843Boost device firmware has three code sections:
@@ -69,7 +69,7 @@ Ensure that the following DIP switches are set:
 - SW2.6: `USER_SW1` (the marked right side), unless the EEPROM is messed up from
     a misconfigured `configure_eeprom(...)` call.
 
-The following are configured by the `configure_fpga(...)` call under normal operation, but can be manually set in case that isn't working:
+The following are configured by `configure_fpga(...)` under normal operation, but can be manually set in case that isn't working:
 - SW1: 16-bit mode (`16BIT_ON`, `14BIT_OFF`, `12BIT_OFF`).
 - SW2.1: `LVDS_CAPTURE`
 - SW2.2: `ETH_STREAM`
@@ -89,10 +89,10 @@ Possible faults:
 
 Plug a HDMI cable into a monitor in order to change the settings. Select the following using the buttons on the front:
 - Focus: set to "optimum focus" - move the focus lever into the detent at the bottom.
-- Gain: 18db (change based on lighting conditions).
-- Output: clean output, 60Hz.
+- Gain: 18db (for typical indoors lighting; change based on lighting conditions).
+- SDI output: 1080p60
 
-After closing the menu, the HDMI output should be "clean," and not show any menu items.
+Note that the HDMI menu overlay is not shown on the SDI output.
 
 ## IMU
 
@@ -102,4 +102,4 @@ Install [MT Manager](https://www.movella.com/support/software-documentation), an
 
 ## Lidar
 
-Should work out-of-the-box.
+Should work out-of-the-box. Make sure that an IP is assigned to the lidar in the management page.

@@ -6,8 +6,9 @@ Outputs: `_radar/sim_nearest`
 
 import os
 import numpy as np
+from beartype.typing import cast
 
-from rover import Dataset
+from rover import Dataset, RawChannel
 
 
 def _parse(p):
@@ -19,7 +20,7 @@ def _parse(p):
 
 def _main(args):
     radar = Dataset(args.path).get("_radar")
-    gt = radar["rda"].memmap()
+    gt = cast(RawChannel, radar["rda"]).memmap()
 
     nval = int(gt.shape[0] * args.val)
     poses = np.load(os.path.join(args.path, "_radar", "pose.npz"))

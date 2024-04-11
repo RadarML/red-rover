@@ -11,8 +11,8 @@ from tqdm import tqdm
 
 
 def _parse(p):
-    p.add_argument("src", help="Dataset to copy.")
-    p.add_argument("dst", help="Destination directory.")
+    p.add_argument("-p", "--path", help="Dataset to copy.")
+    p.add_argument("-o", "--out", help="Destination directory.")
     p.add_argument(
         "--metadata", default=False, action='store_true',
         help="Copy metadata only.")
@@ -32,8 +32,6 @@ def _main(args):
             else:
                 return True
 
-    out = os.path.join(args.dst, os.path.basename(os.path.normpath(args.src)))
-
     pairs = []
     for root, _, files in os.walk(args.src):
         for file in files:
@@ -42,7 +40,7 @@ def _main(args):
             if should_copy(relpath):
                 pairs.append((
                     os.stat(abspath).st_size, abspath,
-                    os.path.join(out, relpath)))
+                    os.path.join(args.dst, relpath)))
 
     pairs.sort(key=lambda x: x[0])
     totalsize = sum([s for s, _, _ in pairs])

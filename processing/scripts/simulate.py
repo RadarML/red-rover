@@ -11,7 +11,6 @@ from functools import partial
 import jax
 from jax import numpy as jnp
 
-from arrow import ReflectanceGrid, Arrow, rover_intrinsics, types
 from rover import Dataset
 
 
@@ -21,6 +20,12 @@ def _parse(p):
 
 
 def _main(args):
+
+    try:
+        from arrow import ReflectanceGrid, Arrow, rover_intrinsics, types
+    except ImportError:
+        print("Must have arrow installed to run simulation.")
+        exit(1)
 
     intrinsics = rover_intrinsics(path=args.path, backend=jnp)
     num_doppler = intrinsics.doppler.shape[0]

@@ -38,7 +38,7 @@ class Prefetch:
         self.thread = Thread(target=self._prefetch)
         self.thread.daemon = True
         self.thread.start()
-    
+
     def _prefetch(self):
         for item in self.iterator:
             self.queue.put(item)

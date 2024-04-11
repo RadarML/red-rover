@@ -36,18 +36,66 @@ make env
     pip install -r requirements.txt
     ```
 
+    **NOTE**: if not using a GPU, set `JAX_CUDA=cpu`, e.g.
+    ```sh
+    JAX_CUDA=cpu make env
+    # or
+    pip install --upgrade "jax[cpu]" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
+    ```
+
 3. (Optional) Set up aliases (requires `venv`):
     ```sh
     source rover.sh
-    roverp <command> <args...>
     ```
-    This will also assign `export $ROVERP=...` to allow calling `roverp` in scripts, nq, and makefiles as `$(ROVERP)`.
+    This will also assign `export $ROVERP=...` to allow calling `roverp` in scripts, nq, and makefiles as `$(ROVERP)`:
+    ```sh
+    roverp <command> <args...>
+    nq $ROVERP <command> <args...>
+    ```
+
+4. (Optional) Set up [Cartographer/Ros/Docker stack](/docs/docker.md).
 
 
 ## Common Recipes
 
-Prepare radarhd data:
+Upload data to storage server or external drive:
+```sh
+roverp export -p {path/to/dataset} -o {path/to/destination}
+```
 
+Prepare radarhd data:
+```sh
+export SRC=path/to/dataset
+export DST=path/to/destination
+
+roverp export -p $SRC -o $DST --metadata
+roverp decompress -p $SRC -o $DST
+cp $SRC/radar/iq $DST/radar/iq
+```
+
+Prepare DART data:
+```sh
+export DATASET=path/to/dataset
+roverp rosbag -p $DATASET
+make lidar
+roverp sensorpose -p $DATASET -s radar
+roverp fft -p $DATASET --mode hybrid
+```
+
+Generate reports (requires DART data):
+```sh
+export DATASET=path/to/dataset
+roverp report -p $DATASET
+roverp video -p $DATASET
+```
+
+Generate simulations (requires DART data):
+```sh
+export DATASET=path/to/dataset
+roverp nearest -p $DATASET
+roverp lidarmap -p $DATASET
+roverp simulate -p $DATASET
+```
 
 ## Commands
 
