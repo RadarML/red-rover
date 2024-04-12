@@ -17,7 +17,7 @@ def _parse(p):
         "-o", "--out", default=None,
         help="Output dataset; defaults to the input dataset.")
     p.add_argument(
-        "-s", "--sensors", nargs='+', default=['radar', 'lidar'],
+        "-s", "--sensors", nargs='+', default=['lidar', 'radar'],
         help="Sensors to align.")
     p.add_argument(
         "-m", "--mode", default="left", help="Alignment mode. `left`: align "

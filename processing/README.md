@@ -68,8 +68,8 @@ Prepare radarhd data:
 export SRC=path/to/dataset
 export DST=path/to/destination
 
-roverp align -p $SRC --mode left
 roverp export -p $SRC -o $DST --metadata
+roverp align -p $DST --mode left
 roverp decompress -p $SRC -o $DST
 cp $SRC/radar/iq $DST/radar/iq
 cp -r $SRC/_fusion $DST/_fusion
