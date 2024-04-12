@@ -17,7 +17,7 @@ class LidarCapture(BaseCapture):
 
     def _init(
         self, path: str, shape: tuple[int, int] = (64, 2048),
-        compression: int = 1, **_
+        compression: int = 0, **_
     ) -> SensorMetadata:
         _meta = {
             "rfl": {
@@ -111,7 +111,7 @@ class Lidar(BaseSensor):
         """Create capture (while `active` is set)."""
         out = LidarCapture(
             os.path.join(path, self.name), log=self.log,
-            fps=self.fps, shape=self.shape, compression=1)
+            fps=self.fps, shape=self.shape, compression=0)
 
         stream = client.Scans.stream(
             hostname=self.addr, lidar_port=7502, complete=True, timeout=1.0)

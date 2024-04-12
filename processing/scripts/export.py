@@ -33,14 +33,14 @@ def _main(args):
                 return True
 
     pairs = []
-    for root, _, files in os.walk(args.src):
+    for root, _, files in os.walk(args.path):
         for file in files:
             abspath = os.path.join(root, file)
-            relpath = os.path.relpath(abspath, args.src)
+            relpath = os.path.relpath(abspath, args.path)
             if should_copy(relpath):
                 pairs.append((
                     os.stat(abspath).st_size, abspath,
-                    os.path.join(args.dst, relpath)))
+                    os.path.join(args.out, relpath)))
 
     pairs.sort(key=lambda x: x[0])
     totalsize = sum([s for s, _, _ in pairs])

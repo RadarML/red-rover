@@ -195,7 +195,7 @@ class RadarFrame(NamedTuple):
     Interpreting the `data`::
 
         shape = [64, 4, 2, 128]  # shape: (chirps, tx, rx, samples)
-        raw = np.frombuffer(
+        iiqq = np.frombuffer(
             frame.data, dtype=np.int16).reshape([*shape[:-1], shape[-1] * 2])
         iq = np.zeros(shape, dtype=np.complex64)
         iq[..., 0::2] = 1j * iiqq[..., 0::4] + iiqq[..., 2::4]

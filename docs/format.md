@@ -27,19 +27,20 @@ tar --exclude '*/_*' -cf data.tar data
     ```json
     {
         "iq": {
-            "format": "raw", "type": "i16", "shape": [64, 3, 4, 512],
+            "format": "raw", "type": "i2", "shape": [64, 3, 4, 512],
             "desc": "Raw I/Q stream."
         },
         "valid": {
-            "format": "raw", "type": "u8", "shape": [],
+            "format": "raw", "type": "u1", "shape": [],
             "desc": "True if this frame is complete (no zero-fill)."
         },
         "ts": {
-            "format": "raw", "type": "f64", "shape": [],
+            "format": "raw", "type": "f8", "shape": [],
             "description": "Timestamp, in seconds."
         }
     }
     ```
+- Data types are specified according to [numpy size-in-bytes convention](https://numpy.org/doc/stable/reference/arrays.dtypes.html).
 
 **Dataset**: a directory containing a collection of sensors.
 - A copy of the active `config.yaml` is placed in the root dataset folder.
