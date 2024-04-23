@@ -27,7 +27,7 @@ def doppler_range_azimuth(
     - When applying a hanning window, we also normalize so that the total
       measure is preserved (e.g. fft(x) and fft(x * hann) have the same
       magnitude).
- 
+
     Parameters
     ----------
     iq: input IQ array, in doppler-tx-rx-range order.
@@ -113,7 +113,7 @@ def doppler_range_azimuth_elevation(
 
 class RadarProcessing:
     """Doppler-range-azimuth FFT with zero-doppler artifact removal.
-    
+
     Parameters
     ----------
     sample: sample IQ data for one-time artifact computation.
@@ -141,7 +141,7 @@ class RadarProcessing:
 
         if hanning:
             start -= 1
-            stop -= 1
+            stop += 1
         if len(pad) > 0:
             start -= 4
             stop += 4
@@ -154,7 +154,7 @@ class RadarProcessing:
         self, iq: Complex64[Array, "batch doppler tx rx range"]
     ) -> Float32[Array, "batch doppler range antenna"]:
         """Run radar processing pipeline.
-        
+
         Parameters
         ----------
         iq: batch of IQ data to run.
@@ -172,7 +172,7 @@ class RadarProcessing:
 
 class CFAR:
     """Cell-averaging CFAR.
-    
+
     Structured as a class to create averaging masks, etc outside of jax, then
     call again to use as a pure function.
     """

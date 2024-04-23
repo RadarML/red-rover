@@ -31,7 +31,8 @@ def _parse(p):
     p.add_argument(
         "-s", "--timescale", type=float, default=1.0,
         help="Real time to video time scale factor (larger = faster)")
-    p.add_argument("-r", "--radar", default="rda", help="Radar stream to use.")
+    p.add_argument(
+        "-r", "--radar", default="hybrid", help="Radar stream to use.")
 
 
 def _load(path: str, radar: str):

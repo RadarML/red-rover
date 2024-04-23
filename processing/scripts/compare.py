@@ -31,7 +31,7 @@ def _parse(p):
 
 
 DEFAULT_NAMES = {
-    "rda": "Measured / Hybrid Window",
+    "hybrid": "Measured / Hybrid Window",
     "hann": "Measured / Hanning Window",
     "raw": "Measured / Raw FFT",
     "sim_lidar": "Lidar Simulation",
@@ -80,7 +80,10 @@ def _renderer(dataset_path, font_path, channel_names, n_frames):
             (1940, 10): "f+{:06d}/{:06d}".format(i, n_frames)
         }
         for i, cn in enumerate(channel_names):
-            n = DEFAULT_NAMES.get(cn, cn.replace('/rda', '').split('/')[-1])
+            if cn in DEFAULT_NAMES:
+                n = DEFAULT_NAMES[cn]
+            else:
+                n = cn.split('/')[-2]
             text[(20, 10 + 96 + 480 * i)] = n  # type: ignore
         return np.array(_render_frame(
             frames, {k: font.encode(v) for k, v in text.items()}))
