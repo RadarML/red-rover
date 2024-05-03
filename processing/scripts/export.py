@@ -48,5 +48,5 @@ def _main(args):
     for (size, src, dst) in pairs:
         os.makedirs(os.path.dirname(dst), exist_ok=True)
         if not os.path.exists(dst):
-            shutil.copy(src, dst)
+            shutil.copyfile(src, dst)
         pbar.update(size)

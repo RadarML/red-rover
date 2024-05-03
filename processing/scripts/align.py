@@ -32,7 +32,7 @@ def _main(args):
     os.makedirs(os.path.dirname(out), exist_ok=True)
 
     ds = Dataset(args.path)
-    timestamps = [ds.get(s).timestamps() for s in args.sensors]
+    timestamps = [ds.get(s).timestamps(smooth=False) for s in args.sensors]
 
     if args.mode == 'left':
         ref = timestamps[0]

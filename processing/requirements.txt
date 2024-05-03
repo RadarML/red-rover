@@ -6,6 +6,7 @@ pyyaml
 pandas
 matplotlib
 imageio[ffmpeg]
+einops
 
 # Type checking
 beartype
@@ -20,3 +21,4 @@ ouster-sdk              # Interpreting Lidar data (destagger, range lut)
 rosbags==0.9.19         # Writing bags for the ROS converter
 plyfile                 # Cartographer point clouds
 h5py                    # Legacy Rover 1 data format
+pypcd4                  # PCD output point clouds

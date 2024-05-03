@@ -17,6 +17,7 @@ from .radar import (
     RadarProcessing, CFAR)
 from .metrics import mse, ssim
 from . import graphics
+from .voxelgrid import VoxelGrid
 
 __all__ = [
     "Prefetch", "BaseChannel", "RawChannel", "LzmaChannel", "CHANNEL_TYPES",
@@ -25,5 +26,6 @@ __all__ = [
     "doppler_range_azimuth", "doppler_range_azimuth_elevation",
     "RadarProcessing", "CFAR",
     "mse", "ssim",
-    "graphics"
+    "graphics",
+    "VoxelGrid"
 ]

@@ -94,9 +94,14 @@ class SensorData:
             json.dump(self.config, f, indent=4)
         return self.channels[channel]
 
-    def timestamps(self, interval: float = 60.0) -> Float64[np.ndarray, "n"]:
+    def timestamps(
+        self, interval: float = 60.0, smooth: bool = True
+    ) -> Float64[np.ndarray, "n"]:
         """Get smoothed timestamps."""
-        return smooth_timestamps(self.open("ts").read(), interval)
+        if smooth:
+            return smooth_timestamps(self.open("ts").read(), interval)
+        else:
+            return self.open("ts").read()
 
     def __getitem__(self, key: str) -> BaseChannel:
         """Alias for open channel."""

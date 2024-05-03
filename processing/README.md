@@ -9,7 +9,6 @@ Assuming you have `python3.11`, `python3.11-venv`, and `python3-pip` installed:
 make env
 ```
 
-
 ## Setup
 
 1. Install Python 3.11 (`ouster-sdk` does not support `python>=3.12` at present):
@@ -32,7 +31,7 @@ make env
 
     If using `conda`:
     ```sh
-    pip install --upgrade "jax[cuda11_pip]" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
+    pip install --upgrade "jax[cuda12_pip]" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
     pip install -r requirements.txt
     ```
 
@@ -72,7 +71,6 @@ roverp export -p $SRC -o $DST --metadata
 roverp align -p $DST --mode left
 roverp decompress -p $SRC -o $DST
 cp $SRC/radar/iq $DST/radar/iq
-cp -r $SRC/_fusion $DST/_fusion
 ```
 
 Prepare DART data:
