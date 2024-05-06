@@ -82,9 +82,11 @@ class BaseChannel:
         """Index into data."""
         raise NotImplementedError()
 
-    def write(self, data: Shaped[Union[np.ndarray, Array], "..."]) -> None:
-        """Write all data."""
-        with open(self.path, 'wb') as f:
+    def write(
+        self, data: Shaped[Union[np.ndarray, Array], "..."], mode: str = 'wb'
+    ) -> None:
+        """Write data."""
+        with open(self.path, mode) as f:
             f.write(data.tobytes())
 
     def stream(self, transform=None, batch: int = 0) -> Iterator[np.ndarray]:

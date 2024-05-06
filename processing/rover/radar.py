@@ -11,8 +11,8 @@ import jax
 from jax.scipy.signal import convolve2d
 from jax import numpy as jnp
 
-from jaxtyping import Float32, Array, Complex64, Bool
-from beartype.typing import Union
+from jaxtyping import Float32, Array, Complex64, Float
+from beartype.typing import Union, Optional
 
 
 def doppler_range_azimuth(
@@ -119,14 +119,20 @@ class RadarProcessing:
     sample: sample IQ data for one-time artifact computation.
     hanning: whether to apply a hanning window in the range-doppler axes.
     pad: (doppler, range, azimuth) padding.
+    antenna: only use a subset of TX antenna if specified.
     """
 
     def __init__(
         self, sample: Complex64[Array, "batch doppler tx rx range"],
-        hanning: bool = False, pad: list[int] = []
+        hanning: bool = False, pad: list[int] = [],
+        antenna: Optional[list[int]] = None
     ) -> None:
         self.hanning = hanning
         self.pad = pad
+        self.antenna = antenna
+
+        if self.antenna is not None:
+            sample = sample[:, :, self.antenna, :, :]
 
         # Not batched to make sure this always succeeds.
         @jax.jit
@@ -163,6 +169,9 @@ class RadarProcessing:
         -------
         Doppler-range-antenna batch, with zero doppler correction applied.
         """
+        if self.antenna is not None:
+            iq = iq[:, :, self.antenna, :, :]
+
         rda = jax.vmap(partial(
             doppler_range_azimuth, hanning=self.hanning, pad=self.pad))(iq)
         corrected = rda.at[self.patch].set(
@@ -173,24 +182,93 @@ class RadarProcessing:
 class CFAR:
     """Cell-averaging CFAR.
 
-    Structured as a class to create averaging masks, etc outside of jax, then
-    call again to use as a pure function.
+    Expects a 2d input, with the `guard` and `window` sizes corresponding to
+    the respective input axes.
+    
+    Parameters
+    ----------
+    guard: size of guard cells (excluded from noise estimation).
+    window: CFAR window size.
+
+    Usage
+    -----
+    The user is responsible for applying the desired thresholding::
+    
+        cfar = CFAR(guard=(2, 2), window=(4, 4))
+        thresholds = cfar(image)
+        mask = (thresholds > scipy.stats.norm.isf(0.01))
     """
 
     def __init__(
-        self, guard_band: tuple[int, int] = (2, 2),
-        window_size: tuple[int, int] = (4, 4)
+        self, guard: tuple[int, int] = (2, 2),
+        window: tuple[int, int] = (4, 4)
     ) -> None:
-        w0, w1 = window_size
-        g0, g1 = guard_band
+        w0, w1 = window
+        g0, g1 = guard
+
         mask = np.ones((2 * w0 + 1, 2 * w1 + 1), dtype=np.float32)
         mask[w0 - g0: w0 + g0 + 1, w1 - g1: w1 + g1 + 1] = 0.0
         self.mask = jnp.array(mask)
 
-    def __call__(self, rd: Float32[Array, "d r"]) -> Bool[Array, "d r"]:
-        """Find CFAR values; the caller can then threshold as they see fit."""
+    def __call__(self, x: Float[Array, "d r ..."]) -> Float[Array, "d r"]:
+        """Get CFAR mask.
+        
+        Parameters
+        ----------
+        x: input. If more than 2 axes are present, the additional axes
+            are averaged before running CFAR.
+
+        Returns
+        -------
+        Mask of which points are valid for this CFAR mask.
+        """
+        # Collapse additional axes if required
+        while len(x.shape) > 2:
+            x = jnp.mean(x, axis=-1)
+
         # Jax currently only supports 'fill', but this should be changed to
         # 'wrap' if they ever decide to add support.
-        denom = convolve2d(jnp.ones_like(rd), self.mask, mode='same')
-        cell_sum = convolve2d(rd, self.mask, mode='same')
-        return rd / (cell_sum / denom)
+        valid = convolve2d(jnp.ones_like(x), self.mask, mode='same')
+        mu = convolve2d(x, self.mask, mode='same') / valid
+        second_moment = convolve2d(x**2, self.mask, mode='same') / valid
+        sigma = jnp.sqrt(second_moment - mu**2)
+
+        return (x - mu) / sigma
+
+
+class AOAEstimation:
+    """Angle of arrival estimation.
+    
+    Parameters
+    ----------
+    bins: number of angular bins to span (-pi, pi) during AOA estimation.
+    """
+
+    def __init__(self, bins: int = 128) -> None:
+        self.bins = bins
+
+    def __call__(self, x: Float[Array, "a"]) -> Float[Array, ""]:
+        """Estimate angle of arrival for a planar antenna array.
+        
+        Parameters
+        ----------
+        x: planar array receive values. Should already have any relevant FFTs
+            applied.
+        
+        Returns
+        -------
+        Estimated AOA in (-pi, pi).
+        """
+        assert self.bins % x.shape[0] == 0
+
+        n = jnp.arange(x.shape[0])
+        bin = (jnp.arange(self.bins) / self.bins * 2 - 1) * np.pi
+        lobes = jnp.abs(jnp.sum(
+            jnp.exp(-1j * n[:, None] * bin[None, :]), axis=0))
+
+        upsampled = jnp.zeros(self.bins).at[::self.bins // x.shape[0]].set(x)
+        # FFT-based cirular convolution
+        aoavec = jnp.abs(jnp.fft.fftshift(
+            jnp.fft.ifft(jnp.fft.fft(upsampled) * jnp.fft.fft(lobes))))
+
+        return (jnp.argmax(aoavec) / self.bins - 0.5) * np.pi

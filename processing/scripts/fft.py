@@ -11,17 +11,16 @@ from tqdm import tqdm
 import numpy as np
 import jax
 from jax import numpy as jnp
-from rover import (
-    Dataset, RadarData, RadarProcessing, doppler_range_azimuth_elevation)
-
 from beartype.typing import cast
+
+from rover import Dataset, RadarData, RadarProcessing
 
 
 def _parse(p):
     p.add_argument("-p", "--path", help="Dataset path.")
     p.add_argument(
         "-o", "--out",
-        help="Output dataset path; should be a clone of the first dataset.")
+        help="Output dataset path; can be a clone of the first dataset.")
     p.add_argument("-b", "--batch", type=int, default=128, help="Batch size.")
     p.add_argument(
         "-w", "--artifact_window", type=int, default=2048,
@@ -54,6 +53,10 @@ def _main(args):
     if sample is None:
         print("IQ stream seems to be empty.")
         exit(1)
+    _, _, tx, rx, _ = sample.shape
+    if tx != 2 or rx != 4:
+        print("This script only supports 2x4 mode.")
+        exit(1)
 
     if args.mode == "hybrid" or args.mode == "rover1":
         sample = jnp.array(sample)
@@ -73,16 +76,6 @@ def _main(args):
         dtype = "f4"
 
         _process = jax.jit(process)
-
-    elif args.mode == "radarhd":
-        _, doppler, tx, rx, num_range = sample.shape
-        if tx != 3 or rx != 4:
-            print("Must be running in 3x4 mode.")
-            exit(1)
-        shape = [doppler, num_range, 8, 2]
-        dtype = "c8"
-
-        _process = jax.jit(doppler_range_azimuth_elevation)
 
     else:
         print("Unknown mode: {}".format(args.mode))
