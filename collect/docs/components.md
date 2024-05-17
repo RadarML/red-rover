@@ -1,6 +1,6 @@
-# Data Collection Setup Physical Assembly
+# Physical Assembly
 
-![Wiring diagram](/docs/wiring.svg)
+![Wiring diagram](wiring.svg)
 
 ## BOM
 

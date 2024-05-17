@@ -6,12 +6,10 @@ import importlib
 from typing import cast
 
 
-def dispatch(target: str) -> None:
-    """Dispatch scripts to the specified module.
-    
-    The module should have a `_scripts` attribute with the list of valid
-    scripts; the `__doc__` is used as the script description.
-    """
+target = "scripts"
+
+
+def _parser():
     target_module = importlib.import_module(target)
     commands = {
         cmd: importlib.import_module("{}.{}".format(target, cmd))
@@ -30,6 +28,17 @@ def dispatch(target: str) -> None:
         command._parse(p)
         p.set_defaults(_func=command._main)
 
+    return parser
+
+
+def dispatch() -> None:
+    """Dispatch scripts to the specified module.
+    
+    The module should have a `_scripts` attribute with the list of valid
+    scripts; the `__doc__` is used as the script description.
+    """
+
+    parser = _parser()
     if len(sys.argv) == 1:
         parser.print_help(sys.stderr)
         sys.exit(1)
@@ -39,4 +48,4 @@ def dispatch(target: str) -> None:
 
 
 if __name__ == '__main__':
-    dispatch("scripts")
+    dispatch()

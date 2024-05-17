@@ -22,19 +22,18 @@ RADAR_INTRINSICS = [
 class RadarConfig(NamedTuple):
     """Radar configuration.
     
-    Parameters
-    ----------
-    port: Control serial port (usually `/dev/ttyACM0`).
-    frequency: base frequency, in GHz.
-    idle_time, adc_start_time, ramp_end_time, tx_start_time: radar timing
-        parameters, in us.
-    freq_slope: chirp slope, in MHz/us.
-    adc_samples: number of samples per chirp.
-    sample_rate: ADC sampling rate, in KHz.
-    frame_length: number of chirps per TX antenna per frame.
-    frame_period: periodicity of frames, in ms.
-    num_tx: number of TX antenna; 3 for the AWR1843.
-    num_rx: number of RX antenna; 4 for the AWR1843.
+    Attributes:
+        port: Control serial port (usually `/dev/ttyACM0`).
+        frequency: base frequency, in GHz.
+        idle_time, adc_start_time, ramp_end_time, tx_start_time: radar timing
+            parameters, in us.
+        freq_slope: chirp slope, in MHz/us.
+        adc_samples: number of samples per chirp.
+        sample_rate: ADC sampling rate, in KHz.
+        frame_length: number of chirps per TX antenna per frame.
+        frame_period: periodicity of frames, in ms.
+        num_tx: number of TX antenna; 3 for the AWR1843.
+        num_rx: number of RX antenna; 4 for the AWR1843.
     """
 
     frequency: float
@@ -150,15 +149,14 @@ DCA_BITRATE = 1e9
 class CaptureConfig(NamedTuple):
     """Capture card configuration.
     
-    Attributes
-    ----------
-    sys_ip: system IP; should be manually configured with a subnet mask of
-        `255.255.255.0`.
-    fpga_ip: FPGA IP address; either hard-coded or configured.
-    data_port, config_port: data, configuration network ports.
-    timeout: Socket read timeout, in seconds.
-    socket_buffer: Network read buffer size; should be less than `rmem_max`.
-    delay: Packet delay for the capture card, in microseconds.
+    Attributes:
+        sys_ip: system IP; should be manually configured with a subnet mask of
+            `255.255.255.0`.
+        fpga_ip: FPGA IP address; either hard-coded or configured.
+        data_port, config_port: data, configuration network ports.
+        timeout: Socket read timeout, in seconds.
+        socket_buffer: Network read buffer size; should be less than `rmem_max`.
+        delay: Packet delay for the capture card, in microseconds.
     """
 
     sys_ip: str = "192.168.33.30"

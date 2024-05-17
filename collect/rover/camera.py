@@ -35,13 +35,12 @@ class CameraCapture(BaseCapture):
 class Camera(BaseSensor):
     """Video camera.
     
-    Parameters
-    ----------
-    idx: camera index in `/dev`, i.e. `/dev/video0`.
-    width, height: frame size, in pixels.
-    fps: camera framerate. Make sure the camera/capture card supports this
-        exact framerate!
-    name: sensor name, i.e. "camera".
+    Args:
+        idx: camera index in `/dev`, i.e. `/dev/video0`.
+        width, height: frame size, in pixels.
+        fps: camera framerate. Make sure the camera/capture card supports this
+            exact framerate!
+        name: sensor name, i.e. "camera".
     """
 
     def __init__(

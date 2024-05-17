@@ -1,4 +1,4 @@
-"""AWR1843 TI Demo API [3]."""
+"""AWR1843 TI Demo API."""
 
 import time
 import serial
@@ -11,28 +11,27 @@ from .awr_boilerplate import AWR1843_Mixins
 class AWR1843(AWR1843_Mixins):
     """AWR1843 Interface for the TI `demo/xwr18xx` MSS firmware.
 
-    Documented by [3-6]; based on a UART ASCII CLI.
+    Documented by [R3]_, [R4]_, [R5]_, [R6]_; based on a UART ASCII CLI.
 
     NOTE: only a partial API is implemented. Non-mandatory calls which do not
     affect the LVDS raw I/Q stream are not implemented.
 
-    Parameters
-    ----------
-    port: radar control serial port; typically the lower numbered one.
-    baudrate: baudrate of control port.
-    name: human-readable name.
+    Usage:
+        (1) Initialization parameters can be defaults. The `port` may need to
+            be changed if multiple radars are being used, or another device
+            uses the `/dev/ttyACM0` default name. The baudrate should not be
+            changed.
+        (2) Setup with `.setup(...)` with the desired radar configuration.
+        (3) Start the radar with `.start()`.
+            NOTE: if the configuration is invalid, `.start()` may return an
+            error, or cause the radar to freeze. This may require the radar to
+            be rebooted via manually disconnecting the power supply.
+        (4) Stop the radar with `.stop()`.
 
-    Usage
-    -----
-    (1) Initialization parameters can be defaults. The `port` may need to be
-        changed if multiple radars are being used, or another device uses the
-        `/dev/ttyACM0` default name. The baudrate should not be changed.
-    (2) Setup with `.setup(...)` with the desired radar configuration.
-    (3) Start the radar with `.start()`.
-        NOTE: if the configuration is invalid, `.start()` may return an error,
-        or cause the radar to freeze. This may require the radar to be rebooted
-        via manually disconnecting the power supply.
-    (4) Stop the radar with `.stop()`.
+    Args:
+        port: radar control serial port; typically the lower numbered one.
+        baudrate: baudrate of control port.
+        name: human-readable name.
     """
 
     _CMD_PROMPT = "\rmmwDemo:/>"
@@ -62,17 +61,16 @@ class AWR1843(AWR1843_Mixins):
     ) -> None:
         """Configure radar.
 
-        Parameters
-        ----------
-        num_tx: TX antenna config (2 or 3).
-        frequency: frequency band, in GHz; 77.0 or 76.0.
-        idle_time, adc_start_time, ramp_end_time, tx_start_time: see TI chirp
-            timing documentation; in us.
-        freq_slope: chirp frequency slope; in MHz/us.
-        adc_samples: number of samples per chirp.
-        sample_rate: ADC sampling rate; in ksps.
-        frame_length: chirps per frame per TX antenna. Must be a power of 2.
-        frame_period: time between the start of each frame; in ms.
+        Args:
+            num_tx: TX antenna config (2 or 3).
+            frequency: frequency band, in GHz; 77.0 or 76.0.
+            idle_time, adc_start_time, ramp_end_time, tx_start_time: see TI
+                chirp timing documentation; in us.
+            freq_slope: chirp frequency slope; in MHz/us.
+            adc_samples: number of samples per chirp.
+            sample_rate: ADC sampling rate; in ksps.
+            frame_length: chirps per frame per TX antenna. Must be a power of 2.
+            frame_period: time between the start of each frame; in ms.
         """
         assert frame_length & (frame_length - 1) == 0
         assert num_tx in {2, 3}
@@ -109,11 +107,10 @@ class AWR1843(AWR1843_Mixins):
     def send(self, cmd: str, timeout: float = 10.0) -> None:
         """Send message, and wait for a response.
 
-        Parameters
-        ----------
-        cmd: command to send.
-        timeout: raises `TimeoutError` if the expected response is not
-            received by this time.
+        Args:
+            cmd: command to send.
+            timeout: raises `TimeoutError` if the expected response is not
+                received by this time.
         """
         self.log.info("Send: {}".format(cmd))
         self.port.write((cmd + '\n').encode('ascii'))
@@ -152,9 +149,8 @@ class AWR1843(AWR1843_Mixins):
     def start(self, reconfigure: bool = True) -> None:
         """Start radar.
 
-        Parameters
-        ----------
-        reconfigure: Whether the radar needs to be configured.
+        Args:
+            reconfigure: Whether the radar needs to be configured.
         """
         if reconfigure:
             self.send("sensorStart")
@@ -182,10 +178,9 @@ class AWR1843(AWR1843_Mixins):
     ) -> None:
         """Channel configuration for the radar subsystem.
 
-        Parameters
-        ----------
-        rxChannelEn, txChannelEn: bit-masked rx/tx channels to enable.
-        cascading: must always be set to 0.
+        Args:
+            rxChannelEn, txChannelEn: bit-masked rx/tx channels to enable.
+            cascading: must always be set to 0.
         """
         cmd = "channelCfg {} {} {}".format(rxChannelEn, txChannelEn, cascading)
         self.send(cmd)
@@ -196,10 +191,9 @@ class AWR1843(AWR1843_Mixins):
     ) -> None:
         """Configure radar subsystem ADC.
 
-        Parameters
-        ----------
-        numADCBits: ADC bit depth
-        adcOutputFmt: real, complex, and whether to filter the image band.
+        Args:
+            numADCBits: ADC bit depth
+            adcOutputFmt: real, complex, and whether to filter the image band.
         """
         cmd = "adcCfg {} {}".format(numADCBits.value, adcOutputFmt.value)
         self.send(cmd)
@@ -212,15 +206,14 @@ class AWR1843(AWR1843_Mixins):
     ) -> None:
         """ADC Buffer hardware configuration.
 
-        Parameters
-        ----------
-        subFrameIdx: subframe to apply to. If `-1`, applies to all subframes.
-        adcOutputFmt: real/complex ADC format.
-        sampleSwap: write samples in IQ or QI order. We assume `MSB_LSB_IQ`.
-            NOTE: the output is an interleaved complex-int-32 format; see
-            `RadarFrame` for details. `MSB_LSB_QI` doesn't seem to work.
-        chanInterleave: only non-interleaved (1) is supported.
-        chirpThreshold: some kind of "ping-pong" demo parameter.
+        Args:
+            subFrameIdx: subframe to apply to; if `-1`, applies to all.
+            adcOutputFmt: real/complex ADC format.
+            sampleSwap: write samples in IQ or QI order. We assume `MSB_LSB_IQ`.
+                NOTE: the output is an interleaved complex-int-32 format; see
+                `RadarFrame` for details. `MSB_LSB_QI` doesn't seem to work.
+            chanInterleave: only non-interleaved (1) is supported.
+            chirpThreshold: some kind of "ping-pong" demo parameter.
         """
         cmd = "adcbufCfg {} {} {} {} {}".format(
             subFrameIdx, 1 if adcOutputFmt == types.ADCFormat.REAL else 0,
@@ -240,19 +233,20 @@ class AWR1843(AWR1843_Mixins):
     ) -> None:
         """Configure chirp profile(s).
 
-        Parameters
-        ----------
-        profileId: profile to configure. Can only have one in `DFEMode.LEGACY`.
-        startFreq: chirp start frequency, in GHz. Can be 76 or 77 [6].
-        idleTime, adcStartTime, rampEndTime, txStartTime: chirp timing; see the
-            "RampTimingCalculator" [5].
-        txOutPower, txPhaseShifter: not entirely clear what this does. The
-            demo claims that only '0' is tested / should be used.
-        freqSlopeConst: frequency slope ("ramp rate") in MHz/us; <100MHz/us.
-        numAdcSamples: Number of ADC samples per chirp.
-        digOutSampleRate: ADC sample rate in ksps (<12500); see Table 8-4 [6].
-        hpfCornerFreq1, hpfCornerFreq2: high pass filter corner frequencies.
-        rxGain: RX gain in dB. The meaning of this value is not clear.
+        Args:
+            profileId: profile to configure. Can only have one in
+                `DFEMode.LEGACY`.
+            startFreq: chirp start frequency, in GHz. Can be 76 or 77 [R6]_.
+            idleTime, adcStartTime, rampEndTime, txStartTime: chirp timing; see
+                the "RampTimingCalculator" [R5]_.
+            txOutPower, txPhaseShifter: not entirely clear what this does. The
+                demo claims that only '0' is tested / should be used.
+            freqSlopeConst: frequency slope ("ramp rate") in MHz/us; <100MHz/us.
+            numAdcSamples: Number of ADC samples per chirp.
+            digOutSampleRate: ADC sample rate in ksps (<12500); see
+                Table 8-4 [R6_].
+            hpfCornerFreq1, hpfCornerFreq2: high pass filter corner frequencies.
+            rxGain: RX gain in dB. The meaning of this value is not clear.
         """
         assert startFreq in {76.0, 77.0}
         assert freqSlopeConst < 100.0
@@ -273,14 +267,15 @@ class AWR1843(AWR1843_Mixins):
     ) -> None:
         """Radar chirp configuration.
 
-        Parameters
-        ----------
-        chirpIdx: Antenna index. Sets `chirpStartIdx`, `chirpEndIdx` [4] to
-            `chirpIdx`, and `txEnable` (antenna bitmask) to `1 << chirpIdx`.
-        profileId: chirp profile to use.
-        startFreqVar, freqSlopeVar, idleTimeVar, adcStartTimeVar: allowed
-            freq/slope/time tolerances; documentation states only 0 is tested.
-        txEnable: antenna to enable; is converted to a bit mask.
+        Args:
+            chirpIdx: Antenna index. Sets `chirpStartIdx`, `chirpEndIdx` [R4]_
+                to `chirpIdx`, and `txEnable` (antenna bitmask) to
+                `1 << chirpIdx`.
+            profileId: chirp profile to use.
+            startFreqVar, freqSlopeVar, idleTimeVar, adcStartTimeVar: allowed
+                freq/slope/time tolerances; documentation states only 0 is
+                tested.
+            txEnable: antenna to enable; is converted to a bit mask.
         """
         cmd = "chirpCfg {} {} {} {} {} {} {} {}".format(
             chirpIdx, chirpIdx, profileId, startFreqVar, freqSlopeVar,
@@ -295,16 +290,16 @@ class AWR1843(AWR1843_Mixins):
         """Radar frame configuration.
 
         NOTE: the frame should not have more than a 50% duty cycle according to
-        the mmWave SDK documentation [4].
+        the mmWave SDK documentation [R4]_.
 
-        Parameters
-        ----------
-        chirpStartIdx, chirpEndIdx: chirps to use in the frame.
-        numLoops: number of chirps per frame; must be >= 16 based on trial/error.
-        numFrames: how many frames to run before stopping; infinite if 0.
-        framePeriodicity: period between frames, in ms.
-        triggerSelect: only software trigger (1) is supported.
-        frameTriggerDelay: does not appear to be documented.
+        Args:
+            chirpStartIdx, chirpEndIdx: chirps to use in the frame.
+            numLoops: number of chirps per frame; must be >= 16 based on
+                trial/error.
+            numFrames: how many frames to run before stopping; infinite if 0.
+            framePeriodicity: period between frames, in ms.
+            triggerSelect: only software trigger (1) is supported.
+            frameTriggerDelay: does not appear to be documented.
         """
         cmd = "frameCfg {} {} {} {} {} {} {}".format(
             chirpStartIdx, chirpEndIdx, numLoops, numFrames, framePeriodicity,
@@ -330,15 +325,14 @@ class AWR1843(AWR1843_Mixins):
     ) -> None:
         """Configure LVDS stream (to the DCA1000EVM); `LvdsStreamCfg`.
 
-        Parameters
-        ----------
-        subframe: subframe to apply to. If `-1`, applies to all subframes.
-        enableHeader: HSI (High speed interface; refers to LVDS) Header
-            enabled/disabled flag; disabled for raw mode.
-        dataFmt: LVDS format; we assume `LVDSFormat.ADC`.
-        enableSW: Use software (SW) instead of hardware streaming; causes
-            chirps to be streamed during the inter-frame time after processing.
-            We assume HW streaming.
+        Args:
+            subframe: subframe to apply to. If `-1`, applies to all subframes.
+            enableHeader: HSI (High speed interface; refers to LVDS) Header
+                enabled/disabled flag; disabled for raw mode.
+            dataFmt: LVDS format; we assume `LVDSFormat.ADC`.
+            enableSW: Use software (SW) instead of hardware streaming; causes
+                chirps to be streamed during the inter-frame time after
+                processing. We assume HW streaming.
         """
         cmd = "lvdsStreamCfg {} {} {} {}".format(
             subFrameIdx, 1 if enableHeader else 0, dataFmt.value,

@@ -80,7 +80,7 @@ class AWR1843_Mixins:
     ) -> None:
         """DC range calibration at radar start.
 
-        TI's note [4]:
+        TI's note [R4]_:
 
             Antenna coupling signature dominates the range bins close to
             the radar. These are the bins in the range FFT output located

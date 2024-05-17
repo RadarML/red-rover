@@ -1,4 +1,4 @@
-"""DCA1000EVM API [1,2]."""
+"""DCA1000EVM API."""
 
 import socket
 import logging
@@ -14,37 +14,35 @@ from . import dca_types as types
 class DCA1000EVM:
     """DCA1000EVM Interface.
     
-    Documented by [1]; based on a (little-endian) UDP protocol (Sec 5).
+    Documented by [R1]_; based on a (little-endian) UDP protocol (Sec 5).
     Included C++ source code exerpts from the mmWave API are used as a
-    secondary reference [2].
+    secondary reference [R2]_.
 
-    Parameters
-    ----------
-    sys_ip: IP of this computer associated with the desired ethernet interface.
-    fpga_ip: Static IP of the DCA1000EVM FPGA.
-    data_port: Port used for recording data.
-    config_port: Port used for configuration.
-    timeout: Config socket read timeout.
-    socket_buffer: Receive socket buffer size. Ensure that `socket_buffer` is
-        less than `/proc/sys/net/core/rmem_max`.
-    name: Human-readable name.
+    Args:
+        sys_ip: IP of this computer associated with the desired ethernet
+            interface.
+        fpga_ip: Static IP of the DCA1000EVM FPGA.
+        data_port: Port used for recording data.
+        config_port: Port used for configuration.
+        timeout: Config socket read timeout.
+        socket_buffer: Receive socket buffer size. Ensure that `socket_buffer`
+            is less than `/proc/sys/net/core/rmem_max`.
+        name: Human-readable name.
 
-    Raises
-    ------
-    TimeoutError: request timed out (is the device connected?).
-    DCAException: exception raised by the FPGA.
+    Raises:
+        TimeoutError: request timed out (is the device connected?).
+        DCAException: exception raised by the FPGA.
 
-    Usage
-    -----
-    (1) Initialization parameters can be defaults.
-    (2) Setup with `.setup(...)` with the appropriate `LVDS.TWO_LANE`
-        (1843, 1642) or `LVDS.FOUR_LANE` (1243, 1443).
-    (3) Start recording with `.start(...)`.
-    (4) Start the radar.
-        NOTE: the radar should be started afer `DCA1000EVM.start` to ensure
-        that the data are correctly aligned with respect to the byte count.
-    (5) Stop recording with `.stop()`.
-    (6) Stop the radar.
+    Usage:
+        (1) Initialization parameters can be defaults.
+        (2) Setup with `.setup(...)` with the appropriate `LVDS.TWO_LANE`
+            (1843, 1642) or `LVDS.FOUR_LANE` (1243, 1443).
+        (3) Start recording with `.start(...)`.
+        (4) Start the radar.
+            NOTE: the radar should be started afer `DCA1000EVM.start` to ensure
+            that the data are correctly aligned with respect to the byte count.
+        (5) Stop recording with `.stop()`.
+        (6) Stop the radar.
     """
 
     _MAX_PACKET_SIZE = 2048
@@ -102,10 +100,9 @@ class DCA1000EVM:
     ) -> None:
         """Configure DCA1000EVM capture card.
 
-        Parameters
-        ----------
-        delay: packet delay in microseconds.
-        lvds: `FOUR_LANE` or `TWO_LANE`; select based on radar.
+        Args:
+            delay: packet delay in microseconds.
+            lvds: `FOUR_LANE` or `TWO_LANE`; select based on radar.
         """
         self.system_aliveness()
         self.read_fpga_version()
@@ -205,13 +202,12 @@ class DCA1000EVM:
         after. Sending `system_aliveness` pings until it responds seems to be
         the best way to check when it's ready again.
 
-        Parameters
-        ----------
-        lvds: `FOUR_LANE` or `TWO_LANE`; select based on radar.
-        log: raw or data separated mode; we assume `RAW_MODE`.
-        transfer: capture or playback; we assume `CAPTURE`.
-        format: ADC bit depth; we assume `BIT16`.
-        capture: data capture mode; we assume `ETH_STREAM`.
+        Args:
+            lvds: `FOUR_LANE` or `TWO_LANE`; select based on radar.
+            log: raw or data separated mode; we assume `RAW_MODE`.
+            transfer: capture or playback; we assume `CAPTURE`.
+            format: ADC bit depth; we assume `BIT16`.
+            capture: data capture mode; we assume `ETH_STREAM`.
         """
         self.log.info("Configuring FPGA: {}, {}, {}, {}, {}".format(
             log, lvds, transfer, capture, format))

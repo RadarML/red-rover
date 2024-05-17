@@ -1,4 +1,4 @@
-"""DCA1000EVM API Defines [2]."""
+"""DCA1000EVM API Defines [R2]_."""
 
 import struct
 import numpy as np
@@ -41,6 +41,7 @@ class LVDS(Enum):
     """LVDS mode (number of lanes); see `rf_api.h:enum CONFIG_LVDS_MODE`.
     
     TI Notes:
+
     - AR1243 - 4 lane
     - AR1642 - 2 lane
     """
@@ -112,14 +113,16 @@ class Request(NamedTuple):
     def to_bytes(self) -> bytes:
         """Form into a single packet.
         
-        < : assumed to be little endian. Not documented anywhere, but implied
+        Data format: `<HHH{}sH`.
+
+        - < : assumed to be little endian. Not documented anywhere, but implied
             since mmWave API uses native linux/x86 structs, which are little
             endian.
-        H : Header is always `0xA55A` (Table 13, [1]).
-        H : Command code (Table 12, [1]).
-        H : Data size; must be between 0 and 504 (Section 5.1, [1]).
-        {}s : Payload; can be empty.
-        H : Footer is always `0xEEAA` (Table 13, [1]).
+        - H : Header is always `0xA55A` (Table 13, [1]).
+        - H : Command code (Table 12, [1]).
+        - H : Data size; must be between 0 and 504 (Section 5.1, [1]).
+        - {}s : Payload; can be empty.
+        - H : Footer is always `0xEEAA` (Table 13, [1]).
         """
         assert len(self.data) < 504
         return struct.pack(
@@ -153,53 +156,53 @@ class DataPacket(NamedTuple):
     def from_bytes(cls, packet: bytes) -> "DataPacket":
         """Read packet.
         
-        Packet format (Sec. 5.2, [1]):
-        < : assumed to be little endian.
-        L : 4-byte sequence number (packet number).
-        Q : 6-byte byte count index; appended with x0000 to make a uint64.
+        Packet format (Sec. 5.2, [R1]_):
+
+        - < : assumed to be little endian.
+        - L : 4-byte sequence number (packet number).
+        - Q : 6-byte byte count index; appended with x0000 to make a uint64.
         """
         sn, bc = struct.unpack('<LQ', packet[:10] + b'\x00\x00')
         return cls(sequence_number=sn, byte_count=bc, data=packet[10:])
 
 
 class RadarFrame(NamedTuple):
-    """Radar frame, in IIQQ format (Fig 11, [7]).
+    """Radar frame, in IIQQ format (Fig 11, [R7]_).
     
-    Attributes
-    ----------
-    timestamp: system timestamp of the first packet received for this frame.
-    data: radar frame data.
-    complete: whether the frame is "complete"; if `False`, this frame includes
-        zero-filled data.
+    Attributes:
+        timestamp: system timestamp of the first packet received for this frame.
+        data: radar frame data.
+        complete: whether the frame is "complete"; if `False`, this frame
+            includes zero-filled data.
 
-    Notes
-    -----
-    Assuming the radar/capture card are configured for 16-bit capture and
-    `SampleSwap.MSB_LSB_IQ` order (see `awr_types.py`), the output data use an
-    interleaved Complex32 format consisting of real (I: in-phase) and complex
-    (Q: quadrature) `i16` parts.
+    Notes:
+        Assuming the radar/capture card are configured for 16-bit capture and
+        `SampleSwap.MSB_LSB_IQ` order (see `awr_types.py`), the output data use an
+        interleaved Complex32 format consisting of real (I: in-phase) and complex
+        (Q: quadrature) `i16` parts.
 
-    NOTE: since the output is litte-endian, `MSB_LSB_IQ` indicates that `I`
+    NOTE: since the output is little-endian, `MSB_LSB_IQ` indicates that `I`
     is in the MSB, i.e. comes last, and the `Q` in the LSB comes first.
 
     For example, if there are two LVDS lanes, each lane takes the following
     structure::
+
         Lane 0  | Q[0] | I[0] | Q[2] | I[2] | ...
         Lane 1  | Q[1] | I[1] | Q[3] | I[3] | ...
 
     These lanes are then interleaved by the capture card::
+
         Output  | Q[0] | Q[1] | I[0] | I[1] | Q[2] | Q[3] | I[2] | I[3] | ...
 
-    Example
-    -------
-    Interpreting the `data`::
+    Example:
+        Interpreting the `data`::
 
-        shape = [64, 4, 2, 128]  # shape: (chirps, tx, rx, samples)
-        iiqq = np.frombuffer(
-            frame.data, dtype=np.int16).reshape([*shape[:-1], shape[-1] * 2])
-        iq = np.zeros(shape, dtype=np.complex64)
-        iq[..., 0::2] = 1j * iiqq[..., 0::4] + iiqq[..., 2::4]
-        iq[..., 1::2] = 1j * iiqq[..., 1::4] + iiqq[..., 3::4]
+            shape = [64, 4, 2, 128]  # shape: (chirps, tx, rx, samples)
+            iiqq = np.frombuffer(
+                frame.data, dtype=np.int16).reshape([*shape[:-1], shape[-1] * 2])
+            iq = np.zeros(shape, dtype=np.complex64)
+            iq[..., 0::2] = 1j * iiqq[..., 0::4] + iiqq[..., 2::4]
+            iq[..., 1::2] = 1j * iiqq[..., 1::4] + iiqq[..., 3::4]
     """
 
     timestamp: float

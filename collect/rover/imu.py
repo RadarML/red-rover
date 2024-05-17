@@ -40,13 +40,12 @@ class IMUCapture(BaseCapture):
 class IMU(BaseSensor):
     """Xsens IMU Sensor.
     
-    Parameters
-    ----------
-    port: serial port to use. Must have read/write permissions, e.g.
-        `sudo chmod 666 /dev/ttyUSB0`.
-    baudrate: serial baudrate.
-    fps: imu reading rate (Hz).
-    name: sensor name, i.e. "imu".
+    Args:
+        port: serial port to use. Must have read/write permissions, e.g.
+            `sudo chmod 666 /dev/ttyUSB0`.
+        baudrate: serial baudrate.
+        fps: imu reading rate (Hz).
+        name: sensor name, i.e. "imu".
     """
 
     def __init__(

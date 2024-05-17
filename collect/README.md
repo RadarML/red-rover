@@ -1,6 +1,4 @@
-# Red Rover Data Collection System
-
-See the [physical assembly](/docs/components.md) and [setup instructions](/docs/setup.md).
+# Red Rover: Data Collection System
 
 ## UI Operation
 

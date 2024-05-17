@@ -1,4 +1,4 @@
-"""AWR1843 API Defines [4]."""
+"""AWR1843 API Defines [R4]_."""
 
 from enum import Enum
 
@@ -27,7 +27,7 @@ class DFEMode(Enum):
 
 
 class ADCDepth(Enum):
-    """ADC bith depth."""
+    """ADC bit depth."""
 
     BIT12 = 0
     BIT14 = 1

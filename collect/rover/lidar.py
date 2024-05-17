@@ -53,15 +53,14 @@ class LidarCapture(BaseCapture):
 class Lidar(BaseSensor):
     """Ouster Lidar sensor.
     
-    Parameters
-    ----------
-    addr: lidar IP address; found automatically via
-        `avahi-browse -lrt _roger._tcp` if not manually specified.
-    port_lidar: lidar port; default 7502.
-    port_imu: integrated imu port; default 7503.
-    mode: lidar mode `{columns}x{fps}`.
-    beams: number of lidar beams.
-    name: sensor name, i.e. "lidar".
+    Args:
+        addr: lidar IP address; found automatically via
+            `avahi-browse -lrt _roger._tcp` if not manually specified.
+        port_lidar: lidar port; default 7502.
+        port_imu: integrated imu port; default 7503.
+        mode: lidar mode `{columns}x{fps}`.
+        beams: number of lidar beams.
+        name: sensor name, i.e. "lidar".
     """
 
     def __init__(

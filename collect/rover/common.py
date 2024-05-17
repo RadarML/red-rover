@@ -25,13 +25,12 @@ class SensorException(Exception):
 class BaseCapture:
     """Capture data for a generic sensor stream.
     
-    Parameters
-    ----------
-    path: directory path to write data to.
-    fps: target framerate
-    report_interval: interval for reporting sensor statistics, in seconds
-    log: parent logger to use
-    kwargs: passthrough to sensor-specific initialization    
+    Args:
+        path: directory path to write data to.
+        fps: target framerate
+        report_interval: interval for reporting sensor statistics, in seconds
+        log: parent logger to use
+        kwargs: passthrough to sensor-specific initialization    
     """
 
     _COMMON: SensorMetadata = {
@@ -43,9 +42,8 @@ class BaseCapture:
     def _init(self, path: str, **kwargs) -> SensorMetadata:
         """Run sensor-specific initialization.
 
-        Returns
-        -------
-        Data channel metadata information.
+        Returns:
+            Data channel metadata information.
         """
         raise NotImplementedError()
 
@@ -125,11 +123,10 @@ class BaseSensor:
 
     NOTE: each sensor node should be initalized first.
 
-    Parameters
-    ----------
-    name: sensor name, e.g. lidar, camera, radar
-    addr: socket base address, i.e. `/tmp/rover`
-    report_interval: logging interval for statistics
+    Args:
+        name: sensor name, e.g. lidar, camera, radar
+        addr: socket base address, i.e. `/tmp/rover`
+        report_interval: logging interval for statistics
     """
 
     def __init__(

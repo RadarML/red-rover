@@ -1,8 +1,6 @@
 """Minimal implementation of the Xsens API.
 
-References
-----------
-[1] Xsens MT Low Level Documentation
+.. [I1] Xsens MT Low Level Documentation
     https://www.xsens.com/hubfs/Downloads/Manuals/MT_Low-Level_Documentation.pdf
 """
 
@@ -35,12 +33,11 @@ class XsensIMU:
     - Orientation: Euler Angles; Floating Point 32-bit; 100Hz
     - Inertial data: Rate of Turn, Acceleration; Floating Point 32-bit; 100Hz
 
-    Parameters
-    ----------
-    port: serial port to use. Must have read/write permissions, e.g.
-        `sudo chmod 666 /dev/ttyUSB0`.
-    baudrate: serial baudrate.
-    name: human readable name.
+    Args:
+        port: serial port to use. Must have read/write permissions, e.g.
+            `sudo chmod 666 /dev/ttyUSB0`.
+        baudrate: serial baudrate.
+        name: human readable name.
     """
 
     PRE = 0xfa
@@ -59,11 +56,10 @@ class XsensIMU:
     def read(self) -> Optional[IMUData]:
         """Read a single data packet.
 
-        NOTE: Only handles MTData2 messages [1, p. 45].
+        NOTE: Only handles MTData2 messages [I1]_ (p. 45).
 
-        Returns
-        -------
-        IMUData on success; otherwise, returns None.
+        Returns:
+            IMUData on success; otherwise, returns None.
         """
         # Fast forward until we get to the preamble start bytes `fa ff``
         prev, current = None, None
