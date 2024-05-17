@@ -1,4 +1,4 @@
-project = 'Rover - Collect'
+project = 'Rover - Processing'
 
 import os
 import sys

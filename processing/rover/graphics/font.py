@@ -15,19 +15,17 @@ class JaxFont:
     NOTE: `@cached_property` doesn't seem to play well with jax, so `JaxFont`
     pre-computes the font LUT. Don't intialize this class until needed!
     
-    Parameters
-    ----------
-    font: Font file; must be monospace (or will be treated like one!). If
-        `None`, load the included `roboto.ttf` file.
-    size: Font size; is static to allow pre-computing the font.
+    Args:
+        font: Font file; must be monospace (or will be treated like one!). If
+            `None`, load the included `roboto.ttf` file.
+        size: Font size; is static to allow pre-computing the font.
 
-    Usage
-    -----
-    1. Initialize: `font = JaxFont(font_name, size)`.
-    2. Convert text to array(s): `arr = font.encode("Hello World!")`.
-    3. Render onto canvas: `canvas = font.render(arr, canvas, color, x, y)`.
-    4. Wrap any `render` calls into a JIT-compiled function to guarantee
-        in-place editing.
+    Usage:
+        1. Initialize: `font = JaxFont(font_name, size)`.
+        2. Convert text to array(s): `arr = font.encode("Hello World!")`.
+        3. Render onto canvas: `canvas = font.render(arr, canvas, color, x, y)`.
+        4. Wrap any `render` calls into a JIT-compiled function to guarantee
+           in-place editing.
     """
 
     def __init__(self, font: Optional[str] = None, size: int = 18) -> None:
@@ -57,18 +55,16 @@ class JaxFont:
     ) -> UInt8[Array, "width height channels"]:
         """Render text on canvas.
 
-        Parameters
-        ----------
-        text: character bytes (ASCII-encoded)
-        canvas: array to write to. Must be a jax array.
-        color: color to apply, with the same number of channels as `canvas`.
-        x, y: position to write text at. Must be constant!
+        Args:
+            text: character bytes (ASCII-encoded)
+            canvas: array to write to. Must be a jax array.
+            color: color to apply, with the same number of channels as `canvas`.
+            x, y: position to write text at. Must be constant!
 
-        Returns
-        -------
-        Rendered canvas. If the original is no longer used (e.g. all subsequent
-            computation uses only the return here), `render` will not cause
-            a copy as long as it is jit-compiled.
+        Returns:
+            Rendered canvas. If the original is no longer used (e.g. all
+            subsequent computation uses only the return here), `render` will
+            not cause a copy as long as it is jit-compiled.
         """
 
         indices = jnp.clip(text - 32, 0, self.raster.shape[0] - 1)

@@ -1,17 +1,26 @@
-# Physical Assembly
+# Physical Assembly / BOM
 
 ![Wiring diagram](wiring.svg)
 
-## BOM
+## 3D Printed Parts
 
-### Core Components
+| Item | Qty | Description | 
+| ---- | --- | ----------- |
+| `top-plate.stl` | 1 | Mount for Lidar, IMU |
+| `front-plate.stl` | 1 | Primary vertical structure |
+| `mid-plate.stl` | 1 | Connects top plate to the NUC VESA mounting plate |
+| `bottom-plate.stl` | 1 | Provides structural support, and a tray to put cables in |
+| `handle-bracket.stl` | 2 | Joins vertical and horizontal handles |
+| `radar-cover.stl` | 1 | Protective cover for the radar; should be covered in ESD tape / other material |
+
+## Core Components
 | Cost | Qty | Description |
 | ---- | --- | ----------- |
-| ~$1,000 | 1 | NUC |
+| ~$1,000 | 1 | NUC, with included VESA mounting plate |
 | ~$8,000 | 1 | [Ouster OS0-64 or OS0-128](https://ouster.com/products/hardware/os0-lidar-sensor) |
 | $449.00 | 1 | [Xsens MTi-3](https://shop.movella.com/us/product-lines/sensor-modules/products/mti-3-ahrs-development-kit) |
 | $995.00 | 1 | [Black Magic Micro Studio Camera (BMMSC)](https://www.bhphotovideo.com/c/product/1787638-REG/blackmagic_design_micro_studio_camera_4k.html) |
-| $299.00 | 1 | [Magewell 1080p60 USD-SDI capture card](https://www.bhphotovideo.com/c/product/1350328-REG/magewell_32070_usb_3_0_sdi_capture.html) |
+| $299.00 | 1 | [Magewell 1080p60 USB-SDI capture card](https://www.bhphotovideo.com/c/product/1350328-REG/magewell_32070_usb_3_0_sdi_capture.html) |
 | $99.0 | 1 | [Olympus Fisheye Body Cap Lens](https://www.bhphotovideo.com/c/product/1026132-REG/olympus_v325040bw000_bcl_0980_fisheye_body_cap.html)
 | $28.00 | 1 | [Micro BNC to BNC cable](https://www.amazon.com/HangTon-Female-Adapter-Blackmagic-Monitor/dp/B09BJQNDNP) |
 | $6.29 | 1 | [BNC Coupler](https://www.amazon.com/TLS-eagle-Coaxial-Coupler-Straight-Connector/dp/B083LZ39HM/) |
@@ -23,7 +32,7 @@
 | ~$11,000 | | **Total** |
 
 
-### Rig Components
+## Rig Components
 
 | Cost | Qty | Description |
 | ---- | --- | ----------- |
@@ -31,14 +40,12 @@
 | $29.90 | 2 | [Side handles](https://www.bhphotovideo.com/c/product/1689008-REG/smallrig_3813_mini_nato_side_handle.html) |
 | $9.90 | 2 | [Mounting Rail](https://www.bhphotovideo.com/c/product/1502679-REG/smallrig_1195b_quick_release_safety_rail.html) |
 | $9.90 | 1 | [Cheese Plate](https://www.bhphotovideo.com/c/product/1726809-REG/camvate_c3101_universal_cheese_plate_extension.html) |
-| - | - | 1/4-20" socket cap screws |
-| - | - | 1/4-20" screws button head screws |
-| - | 9 | 1/4-20" nuts |
-| - | - | M3 standoffs, M3 socket cap screws |
-| - | - | M4 socket cap screws, M4 nuts |
+| - | - | 1/4-20" socket cap screws, nuts |
+| - | - | M3 standoffs, socket cap screws |
+| - | - | M4 socket cap screws, nuts |
 | ~$140 | | **Total** |
 
-### Optional Accessories
+## Optional Accessories
 
 | Cost | Qty | Description |
 | ---- | --- | ----------- |

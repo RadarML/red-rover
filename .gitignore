@@ -34,7 +34,6 @@ downloads/
 eggs/
 .eggs/
 lib64/
-parts/
 sdist/
 var/
 wheels/
@@ -87,7 +86,7 @@ instance/
 .scrapy
 
 # Sphinx documentation
-*/docs/_build/
+*docs/_build/
 
 # PyBuilder
 .pybuilder/

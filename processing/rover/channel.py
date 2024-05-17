@@ -16,10 +16,9 @@ from beartype.typing import Union, cast, Iterator, List
 class Prefetch:
     """Simple prefetch queue wrapper.
 
-    Parameters
-    ----------
-    iterator: any python iterator.
-    size: prefetch buffer size.
+    Args:
+        iterator: any python iterator.
+        size: prefetch buffer size.
     """
 
     def __init__(self, iterator, size: int = 64) -> None:
@@ -54,11 +53,10 @@ class Prefetch:
 class BaseChannel:
     """Sensor data channel.
     
-    Parameters
-    ----------
-    path: file path.
-    dtype: data type, or string name of dtype (e.g. u8, f32).
-    shape: data shape.
+    Args:
+        path: file path.
+        dtype: data type, or string name of dtype (e.g. u8, f32).
+        shape: data shape.
     """
 
     def __init__(
@@ -127,11 +125,10 @@ class RawChannel(BaseChannel):
     def stream(self, transform=None, batch: int = 0) -> Iterator[np.ndarray]:
         """Get iterable data stream.
         
-        Parameters
-        ----------
-        transform: callable to apply to the read data.
-        batch: batch size to read. If 0, load only a single sample and do not
-            append an empty axis.
+        Args:
+            transform: callable to apply to the read data.
+            batch: batch size to read. If 0, load only a single sample and do
+                not append an empty axis.
         """
         shape = self.shape if batch == 0 else [batch, *self.shape]
         size = self.size if batch == 0 else batch * self.size

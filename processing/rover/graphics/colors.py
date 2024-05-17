@@ -13,14 +13,12 @@ def hsv_to_rgb(
     https://matplotlib.org/3.1.1/_modules/matplotlib/colors.html#hsv_to_rgb
     and converted to jax.
 
-    Parameters
-    ----------
-    hsv: HSV colors.
+    Args:
+        hsv: HSV colors.
 
-    Returns
-    -------
-    RGB colors `float: (0, 1)`, using the array format corresponding to the
-    provided backend.
+    Returns:
+        RGB colors `float: (0, 1)`, using the array format corresponding to the
+        provided backend.
     """
     in_shape = hsv.shape
     h = hsv[..., 0]
@@ -46,15 +44,14 @@ def lut(
 ) -> Num[Array, "... 3"]:
     """Apply a discrete lookup table (e.g. colormap).
     
-    Parameters
-    ----------
-    colors: list of discrete colors to apply (e.g. 0-255 RGB values). Can be
-        an arbitrary number of channels, not just RGB.
-    data: input data to index (`0 <= data <= 1`).
+    Args:
+        colors: list of discrete colors to apply (e.g. 0-255 RGB values). Can
+            be an arbitrary number of channels, not just RGB.
+        data: input data to index (`0 <= data <= 1`).
 
-    Returns
-    -------
-    An array with the same shape as `data`, with an extra dimension appended.
+    Returns:
+        An array with the same shape as `data`, with an extra dimension
+        appended.
     """
     fidx = jnp.clip(data, 0.0, 1.0) * (colors.shape[0] - 1)
     return jnp.take(colors, fidx.astype(int), axis=0)

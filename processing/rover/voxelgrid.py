@@ -12,11 +12,10 @@ from beartype.typing import NamedTuple, Optional
 class VoxelGrid(NamedTuple):
     """Voxel grid of intensities.
 
-    Attributes
-    ----------
-    data: voxel grid values.
-    lower: coordinate of lower corner.
-    resolution: resolution in units/m for each axis.
+    Attributes:
+        data: voxel grid values.
+        lower: coordinate of lower corner.
+        resolution: resolution in units/m for each axis.
     """
 
     data: Float[np.ndarray, "Nx Ny Nz"]
@@ -29,12 +28,11 @@ class VoxelGrid(NamedTuple):
     ) -> "VoxelGrid":
         """Load voxel grid, applying decimation factor if specified.
         
-        Parameters
-        ----------
-        path: path to `.npz` file. Must have the specified `key`, as well as a
-            `lower` and `resolution` array.
-        key: field to load.
-        decimate: decimation factor to apply.
+        Args:
+            path: path to `.npz` file. Must have the specified `key`, as well as a
+                `lower` and `resolution` array.
+            key: field to load.
+            decimate: decimation factor to apply.
         """
         npz = np.load(path)       
         data = np.array(npz[key])
@@ -56,10 +54,9 @@ class VoxelGrid(NamedTuple):
     ) -> "VoxelGrid":
         """Crop voxel grid by integer lower and upper indices.
         
-        Parameters
-        ----------
-        left, right: lower and upper indices; `right` is interpreted as an
-            ordinary index limit, so can be negative.
+        Args:
+            left, right: lower and upper indices; `right` is interpreted as an
+                ordinary index limit, so can be negative.
         """
 
         lower = self.lower
@@ -80,10 +77,9 @@ class VoxelGrid(NamedTuple):
     ) -> "VoxelGrid":
         """Get CFAR conv comparison values.
         
-        Parameters
-        ----------
-        guard_band, window_size: CFAR window shape.
-        convolve_func: convolution backend to use.
+        Args:
+            guard_band, window_size: CFAR window shape.
+            convolve_func: convolution backend to use.
         """
         mask = np.ones([2 * window_size + 1] * 3)
         ax = slice(window_size - guard_band, window_size + guard_band + 1)
@@ -99,9 +95,8 @@ class VoxelGrid(NamedTuple):
     ) -> "VoxelGrid":
         """Normalize to (0, 1).
         
-        Parameters
-        ----------
-        left, right: left and right percentiles to clip to.
+        Args:
+            left, right: left and right percentiles to clip to.
         """
         ll, rr = np.percentile(self.data, [left, right])
         return VoxelGrid(
@@ -113,14 +108,12 @@ class VoxelGrid(NamedTuple):
     ) -> tuple[Float[np.ndarray, "3"], UInt8[np.ndarray, "3"]]:
         """Convert voxel grid to point cloud.
         
-        Parameters
-        ----------
-        mask: mask of voxels to include.
-        cmap: matplotlib colormap to use.
+        Args:
+            mask: mask of voxels to include.
+            cmap: matplotlib colormap to use.
 
-        Returns
-        -------
-        xyz, rgb: positions and colors.
+        Returns:
+            (xyz, rgb), where xyz are positions and rgb colors.
         """
         colors = matplotlib.colormaps.get(cmap)
 
@@ -136,10 +129,9 @@ class VoxelGrid(NamedTuple):
     ) -> None:
         """Save as a .pcd file.
         
-        Parameters
-        ----------
-        path: output path (ending with .pcd).
-        mask, cmap: pointcloud mask and colors.
+        Args:
+            path: output path (ending with .pcd).
+            mask, cmap: pointcloud mask and colors.
         """
         from pypcd4 import PointCloud
 
@@ -153,10 +145,9 @@ class VoxelGrid(NamedTuple):
     ) -> None:
         """Save as a .ply file.
         
-        Parameters
-        ----------
-        path: output path (ending with .ply).
-        mask, cmap: pointcloud mask and colors.
+        Args:
+            path: output path (ending with .ply).
+            mask, cmap: pointcloud mask and colors.
         """
         from plyfile import PlyData, PlyElement
 

@@ -21,26 +21,27 @@ def doppler_range_azimuth(
 ) -> Float32[Array, "doppler range antenna"]:
     """Compute doppler-range-azimuth FFTs with optional hanning window(s).
 
-    Notes
-    -----
     - The (virtual) antenna must be arranged in a line on the same elevation.
     - When applying a hanning window, we also normalize so that the total
-      measure is preserved (e.g. fft(x) and fft(x * hann) have the same
+      measure is preserved (e.g. `fft(x)` and `fft(x * hann)` have the same
       magnitude).
 
-    Parameters
-    ----------
-    iq: input IQ array, in doppler-tx-rx-range order.
-    hanning: list of indices to apply a Hanning window to; defaults to `[0, 2]`
-        (i.e. range-doppler). Must be closed on in order to jit-compile.
-    pad: padding to apply in the (doppler, range, azimuth) axes.
-
-    Notes
-    -----
     Axes are indexed as follows:
+
     - 0: doppler
     - 1: range
     - 2: azimuth (antenna)
+
+    Args:
+        iq: input IQ array, in doppler-tx-rx-range order.
+        hanning: list of indices to apply a Hanning window to; defaults to
+            `[0, 2]` (i.e. range-doppler). Must be closed on in order to
+            jit-compile.
+        pad: padding to apply in the (doppler, range, azimuth) axes.
+
+    Returns:
+        (doppler, range, antenna) post-FFT radar data cube, with the
+        appropriate fftshift.
     """
     iqa: Complex64[Array, "doppler range antenna"] = jnp.swapaxes(
         iq.reshape(iq.shape[0], -1, iq.shape[-1]), -2, -1)
@@ -74,12 +75,13 @@ def doppler_range_azimuth_elevation(
 
     See `doppler_range_azimuth` for additional documentation.
 
-    Parameters
-    ----------
-    iq: input IQ array, in doppler-tx-rx-range order.
-    hanning: list of indices to apply a Hanning window to; defaults to `[0, 2]`
-        (i.e. range-doppler). Must be closed on in order to jit-compile.
-    pad: padding to apply in the (doppler, range, azimuth, elevation) axes.
+    Args:
+        iq: input IQ array, in doppler-tx-rx-range order.
+        hanning: list of indices to apply a Hanning window to.
+        pad: padding to apply in the (doppler, range, azimuth, elevation) axes.
+
+    Returns:
+        (doppler, range, azimuth, elevation) radar data cube.
     """
     iqa_raw: Complex64[Array, "doppler range 12"] = jnp.swapaxes(
         iq.reshape(iq.shape[0], -1, iq.shape[-1]), -2, -1)
@@ -114,12 +116,11 @@ def doppler_range_azimuth_elevation(
 class RadarProcessing:
     """Doppler-range-azimuth FFT with zero-doppler artifact removal.
 
-    Parameters
-    ----------
-    sample: sample IQ data for one-time artifact computation.
-    hanning: whether to apply a hanning window in the range-doppler axes.
-    pad: (doppler, range, azimuth) padding.
-    antenna: only use a subset of TX antenna if specified.
+    Args:
+        sample: sample IQ data for one-time artifact computation.
+        hanning: whether to apply a hanning window in the range-doppler axes.
+        pad: (doppler, range, azimuth) padding.
+        antenna: only use a subset of TX antenna if specified.
     """
 
     def __init__(
@@ -161,13 +162,11 @@ class RadarProcessing:
     ) -> Float32[Array, "batch doppler range antenna"]:
         """Run radar processing pipeline.
 
-        Parameters
-        ----------
-        iq: batch of IQ data to run.
+        Args:
+            iq: batch of IQ data to run.
 
-        Returns
-        -------
-        Doppler-range-antenna batch, with zero doppler correction applied.
+        Returns:
+            Doppler-range-antenna batch, with zero doppler correction applied.
         """
         if self.antenna is not None:
             iq = iq[:, :, self.antenna, :, :]
@@ -185,18 +184,18 @@ class CFAR:
     Expects a 2d input, with the `guard` and `window` sizes corresponding to
     the respective input axes.
     
-    Parameters
-    ----------
-    guard: size of guard cells (excluded from noise estimation).
-    window: CFAR window size.
+    Args:
+        guard: size of guard cells (excluded from noise estimation).
+        window: CFAR window size.
 
-    Usage
-    -----
-    The user is responsible for applying the desired thresholding::
-    
-        cfar = CFAR(guard=(2, 2), window=(4, 4))
-        thresholds = cfar(image)
-        mask = (thresholds > scipy.stats.norm.isf(0.01))
+    Usage:
+        The user is responsible for applying the desired thresholding. For
+        example, when using a gaussian model, the threshold should be
+        calculated using an inverse normal CDF (e.g. `scipy.stats.norm.isf`)::
+
+            cfar = CFAR(guard=(2, 2), window=(4, 4))
+            thresholds = cfar(image)
+            mask = (thresholds > scipy.stats.norm.isf(0.01))
     """
 
     def __init__(
@@ -213,14 +212,12 @@ class CFAR:
     def __call__(self, x: Float[Array, "d r ..."]) -> Float[Array, "d r"]:
         """Get CFAR mask.
         
-        Parameters
-        ----------
-        x: input. If more than 2 axes are present, the additional axes
-            are averaged before running CFAR.
+        Args:
+            x: input. If more than 2 axes are present, the additional axes
+                are averaged before running CFAR.
 
-        Returns
-        -------
-        Mask of which points are valid for this CFAR mask.
+        Returns:
+            CFAR threshold values for this input.
         """
         # Collapse additional axes if required
         while len(x.shape) > 2:
@@ -239,9 +236,8 @@ class CFAR:
 class AOAEstimation:
     """Angle of arrival estimation.
     
-    Parameters
-    ----------
-    bins: number of angular bins to span (-pi, pi) during AOA estimation.
+    Args:
+        bins: number of angular bins to span `(-pi, pi)` during AOA estimation.
     """
 
     def __init__(self, bins: int = 128) -> None:
@@ -250,14 +246,12 @@ class AOAEstimation:
     def __call__(self, x: Float[Array, "a"]) -> Float[Array, ""]:
         """Estimate angle of arrival for a planar antenna array.
         
-        Parameters
-        ----------
-        x: planar array receive values. Should already have any relevant FFTs
-            applied.
+        Args:
+            x: planar array receive values. Should already have any relevant
+                FFTs applied.
         
-        Returns
-        -------
-        Estimated AOA in (-pi, pi).
+        Returns:
+            Estimated AOA in `(-pi, pi)`.
         """
         assert self.bins % x.shape[0] == 0
 

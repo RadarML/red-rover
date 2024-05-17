@@ -12,7 +12,15 @@ from scipy.signal import medfilt
 
 
 class Poses(NamedTuple):
-    """Discrete sampled poses."""
+    """Discrete sampled poses.
+    
+    Attributes:
+        t: timestamp
+        pos: position
+        vel: velocity
+        acc: acceleration
+        rot: rotation (as matrix)
+    """
 
     t: Float64[np.ndarray, "N"]
     pos: Float64[np.ndarray, "N 3"]
@@ -23,7 +31,13 @@ class Poses(NamedTuple):
 
 
 class RawTrajectory(NamedTuple):
-    """Raw trajectory from cartographer."""
+    """Raw trajectory from cartographer.
+    
+    Attributes:
+        xyz: position
+        quat: rotation (as quaternion)
+        t: timestamp
+    """
 
     xyz: Float64[np.ndarray, "3 N"]
     quat: Float64[np.ndarray, "4 N"]
@@ -52,13 +66,15 @@ class RawTrajectory(NamedTuple):
     ]:
         """Get grid bounds.
         
-        Parameters
-        ----------
-        margin_xy, margin_z: grid margin around trajectory bounds in the
-            horizontal plane and vertical axis, respectively.
-        resolution: resolution, in grid cells/m.
-        align: grid resolution alignment; the grid will be expanded from the
-            specified margin until the resolution is divisible by `align`.
+        Args:
+            margin_xy, margin_z: grid margin around trajectory bounds in the
+                horizontal plane and vertical axis, respectively.
+            resolution: resolution, in grid cells/m.
+            align: grid resolution alignment; the grid will be expanded from the
+                specified margin until the resolution is divisible by `align`.
+
+        Returns:
+            (lower bound, upper bound, grid size)        
         """
         margin = np.array([margin_xy, margin_xy, margin_z])
         lower = np.min(self.xyz, axis=1) - margin
@@ -74,23 +90,22 @@ class RawTrajectory(NamedTuple):
 class Trajectory:
     """Sensor trajectory.
 
-    Notes
-    -----
     The provided path should be the output of our cartographer processing
     pipeline, with the following columns:
+
     - `field.header.stamp` (in ns)
     - `field.transform.translation.{xyz}` (meters)
     - `field.transform.rotation.{xyzw}` (quaternion, in xyzw order)
 
-    Parameters
-    ----------
-    path: Path to cartographer output `trajectory.csv` file.
-    smoothing: Smoothing coefficient passed to `scipy.interpolate.splprep`; is
-        divided by the number of samples `N`.
-    start_threshold: Start threshold in meters; the trace is started when the
-        sensor moves more than `start_threshold` from the starting position.
-    filter_size: applies a median filter to the start distance to handle any
-        initalization jitter.
+    Args:
+        path: Path to cartographer output `trajectory.csv` file.
+        smoothing: Smoothing coefficient passed to `scipy.interpolate.splprep`;
+            is divided by the number of samples `N`.
+        start_threshold: Start threshold in meters; the trace is started when
+            the sensor moves more than `start_threshold` from the starting
+            position.
+        filter_size: applies a median filter to the start distance to handle
+            any initalization jitter.
     """
 
     def __init__(
@@ -118,14 +133,12 @@ class Trajectory:
     ) -> tuple[Poses, Bool[np.ndarray, "N"]]:
         """Interpolate trajectory to target timestamps.
         
-        Parameters
-        ----------
-        t: input timestamps; can be in an arbitrary order.
+        Args:
+            t: input timestamps; can be in an arbitrary order.
 
-        Returns
-        -------
-        poses: Poses; only valid timestamps are included.
-        mask: Mask of valid timestamp elements.
+        Returns:
+            (poses, mask). Only valid timestamps are included in `poses`;
+            these valid timestamps are specified in `mask`.
         """
 
         t_rel = t - self.base_time

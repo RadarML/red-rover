@@ -20,14 +20,12 @@ def smooth_timestamps(
 ) -> Float64[np.ndarray, "n"]:
     """Apply piecewise linear smoothing to system timestamps.
     
-    Parameters
-    ----------
-    x: input timestamp array.
-    interval: piecewise linear interpolation interval, in seconds.
+    Args:
+        x: input timestamp array.
+        interval: piecewise linear interpolation interval, in seconds.
 
-    Returns
-    -------
-    Smoothed timestamp array.
+    Returns:
+        Smoothed timestamp array.
     """
     blocksize = int(interval * (len(x) / (x[-1] - x[0])))
     start = 0
@@ -44,9 +42,8 @@ def smooth_timestamps(
 class SensorData:
     """A sensor with multiple channels.
     
-    Parameters
-    ----------
-    path: file path; should be a directory containing a `meta.json` file.
+    Args:
+        path: file path; should be a directory containing a `meta.json` file.
     """
 
     def __init__(self, path: str) -> None:
@@ -159,7 +156,7 @@ class RadarData(SensorData):
     ) -> Complex64[np.ndarray, "... iq"]:
         """Convert IIQQ int16 to float64 IQ.
         
-        NOTE: See `radar_api.dca_types.RadarFrame for data format info.
+        NOTE: See `radar_api.dca_types.RadarFrame` for data format info.
         """
         iq = np.zeros(
             (*iiqq.shape[:-1], iiqq.shape[-1] // 2), dtype=np.complex64)
@@ -190,14 +187,12 @@ SENSOR_TYPES = {
 class Dataset:
     """A dataset with multiple sensors.
     
-    Parameters
-    ----------
-    path: file path; should be a directory.
+    Args:
+        path: file path; should be a directory.
 
-    Attributes
-    ----------
-    sensors: dictionary of each sensor in the dataset. The value is an
-        initialized `SensorData` (or subclass).
+    Returns:
+        sensors: dictionary of each sensor in the dataset. The value is an
+            initialized `SensorData` (or subclass).
     """
 
     def __init__(self, path: str) -> None:

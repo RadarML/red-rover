@@ -1,19 +1,20 @@
-Red Rover: Data Collection System
+Red Rover: Data Processing System
 =================================
 
-.. image:: wiring.svg
-   :alt: System diagram
+.. image:: processing.svg
+   :alt: Data processing pipeline
 
 .. toctree::
    :maxdepth: 1
    :caption: Contents:
 
-   usage.md
-   components.md
    setup.md
+   usage.md
+   format.md
+   docker.md
+
+   scripts.rst
    rover.rst
-   imu.rst
-   radar.rst
 
 
 Indices and tables
