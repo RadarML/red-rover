@@ -44,6 +44,10 @@ class SensorData:
     
     Args:
         path: file path; should be a directory containing a `meta.json` file.
+
+    Attributes:
+        channels: dictionary of each channel in this sensor. Each value is an
+            initialized `BaseChannel`.
     """
 
     def __init__(self, path: str) -> None:
@@ -115,7 +119,28 @@ class SensorData:
 
 
 class LidarData(SensorData):
-    """Ouster Lidar sensor."""
+    """Ouster Lidar sensor.
+    
+    Note that Lidar data are stored in a "staggered" format, and must be
+    destaggered when used::
+
+        lidar = Dataset(path)["lidar"]
+        raw = lidar['rng'].read(1)
+        sample = lidar.destagger(raw)
+
+    To get a pointcloud, the ouster-supplied API is wrapped in `pointcloud`::
+
+        points = lidar.pointcloud(raw)
+    
+    Use `*_stream` versions of `destagger` and `stream` to get an iterator
+    of the transformed data::
+
+        for depthmaps in lidar.destaggered_stream():
+            ...
+
+        for points in lidar.pointcloud_stream():
+            ...
+    """
 
     @cached_property
     def lidar_metadata(self):
@@ -148,16 +173,30 @@ class LidarData(SensorData):
 
 
 class RadarData(SensorData):
-    """TI Radar sensor."""
+    """TI Radar sensor.
+    
+    Radar data are stored in a non-standard `IIQQ int16` format; see
+    `collect.radar_api.dca_types.RadarFrame` for details. Radar data should
+    be converted to `complex64` in order to be used::
+
+        radar = Dataset(path)["radar]
+        raw = radar["iq"].read(1)
+        sample = radar.iiqq16_to_iq64(raw)
+        # or
+        sample = RadarData.iiqq16_to_iq64(raw)
+        # or
+        for sample in radar["iq"].iq_stream():
+            ...
+
+    Note that the `IIQQ int16` format uses only 32-bytes per sample, while
+    `complex64` uses 64-bytes per sample, so should not be used for storage.     
+    """
 
     @staticmethod
     def iiqq16_to_iq64(
         iiqq: Int16[np.ndarray, "... iiqq"]
     ) -> Complex64[np.ndarray, "... iq"]:
-        """Convert IIQQ int16 to float64 IQ.
-        
-        NOTE: See `radar_api.dca_types.RadarFrame` for data format info.
-        """
+        """Convert IIQQ int16 to float64 IQ."""
         iq = np.zeros(
             (*iiqq.shape[:-1], iiqq.shape[-1] // 2), dtype=np.complex64)
         iq[..., 0::2] = 1j * iiqq[..., 0::4] + iiqq[..., 2::4]
@@ -187,10 +226,24 @@ SENSOR_TYPES = {
 class Dataset:
     """A dataset with multiple sensors.
     
+    Create a `Dataset` for the trace path; then, use `Dataset[...]` to
+    fetch the associated sensors, then channels::
+
+        ds = Dataset(path)
+        radar = ds['radar']
+        iq = radar['iq']
+    
+    `Dataset[...]` will not return "virtual" sensors (those starting with
+    `_`, e.g. `_radar`); virtual sensors must be fetched using::
+
+        processed_radar = ds.get('_radar')
+
+    Note that `Dataset.get` will also fetch non-virtual sensors.
+    
     Args:
         path: file path; should be a directory.
 
-    Returns:
+    Attributes:
         sensors: dictionary of each sensor in the dataset. The value is an
             initialized `SensorData` (or subclass).
     """
