@@ -56,3 +56,11 @@ source rover.sh
     ```
 
 4. (Optional) Set up [Cartographer/Ros/Docker stack](docker.md).
+
+    After setting up docker, you can build the catkin workspace:
+    ```sh
+    make docker
+    # once in the docker container...
+    cd rover/catkin_ws
+    catkin_make
+    ```
