@@ -4,6 +4,11 @@
 
 ## Common Recipes
 
+Get dataset metadata:
+```sh
+roverp info -p path/to/dataset
+```
+
 Upload data to storage server or external drive:
 ```sh
 roverp export -p {path/to/dataset} -o {path/to/destination}
@@ -22,11 +27,11 @@ cp $SRC/radar/iq $DST/radar/iq
 
 Prepare DART data:
 ```sh
-export DATASET=path/to/dataset
-roverp rosbag -p $DATASET
+export DATASET=dataset
+roverp rosbag -p data/$DATASET
 make lidar
-roverp sensorpose -p $DATASET -s radar
-roverp fft -p $DATASET --mode hybrid
+roverp sensorpose -p data/$DATASET -s radar
+roverp fft -p data/$DATASET --mode hybrid
 ```
 
 Generate reports (requires DART data):
