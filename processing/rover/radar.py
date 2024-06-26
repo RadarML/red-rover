@@ -188,14 +188,15 @@ class CFAR:
         guard: size of guard cells (excluded from noise estimation).
         window: CFAR window size.
 
-    Usage:
-        The user is responsible for applying the desired thresholding. For
-        example, when using a gaussian model, the threshold should be
-        calculated using an inverse normal CDF (e.g. `scipy.stats.norm.isf`)::
+    Usage
+    -----
+    The user is responsible for applying the desired thresholding. For
+    example, when using a gaussian model, the threshold should be
+    calculated using an inverse normal CDF (e.g. `scipy.stats.norm.isf`)::
 
-            cfar = CFAR(guard=(2, 2), window=(4, 4))
-            thresholds = cfar(image)
-            mask = (thresholds > scipy.stats.norm.isf(0.01))
+        cfar = CFAR(guard=(2, 2), window=(4, 4))
+        thresholds = cfar(image)
+        mask = (thresholds > scipy.stats.norm.isf(0.01))
     """
 
     def __init__(

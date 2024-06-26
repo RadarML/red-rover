@@ -37,8 +37,8 @@ autodoc_default_options = {
 html_theme = 'sphinx_rtd_theme'
 html_static_path = ['_static']
 
-# Remove namedtuple "Alias for ...", typeddict duplicates
-import collections, typing
+# Remove namedtuple "Alias for ..."
+import collections
 def remove_namedtuple_attrib_docstring(app, what, name, obj, skip, options):
     if type(obj) is collections._tuplegetter:
         return True
