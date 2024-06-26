@@ -9,9 +9,9 @@ Red Rover: Data Processing System
    :caption: Contents:
 
    setup.md
-   usage.md
    format.md
    docker.md
+   usage.md
 
    scripts.rst
    rover.rst

@@ -9,15 +9,13 @@ def hsv_to_rgb(
 ) -> Float[Array, "... 3"]:
     """Convert hsv values to rgb.
 
-    Copied here, and modified for vectorization:
-    https://matplotlib.org/3.1.1/_modules/matplotlib/colors.html#hsv_to_rgb
-    and converted to jax.
+    Copied from [G1]_, modified for vectorization, and converted to jax.
 
     Args:
         hsv: HSV colors.
 
     Returns:
-        RGB colors `float: (0, 1)`, using the array format corresponding to the
+        RGB colors `float (0, 1)`, using the array format corresponding to the
         provided backend.
     """
     in_shape = hsv.shape

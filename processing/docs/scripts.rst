@@ -1,146 +1,28 @@
+Data Processing Pipeline
+========================
+
+.. image:: processing.svg
+   :alt: Data processing pipeline
+
+
 Scripts
-=======
-
-align
------
-
-.. argparse::
-   :func: _parser
-   :filename: ../process.py
-   :prog: process.py
-   :path: align
-
-as_rover1
----------
-
-.. argparse::
-   :func: _parser
-   :filename: ../process.py
-   :prog: process.py
-   :path: as_rover1
-
-cfar
-----
-
-.. argparse::
-   :func: _parser
-   :filename: ../process.py
-   :prog: process.py
-   :path: cfar
-
-compare
 -------
 
-.. argparse::
-   :func: _parser
-   :filename: ../process.py
-   :prog: process.py
-   :path: compare
+Scripts are categorized as follows:
 
-decompress
-----------
+- **Convert**: convert data format for compatibility with external software.
+- **Create**: generate a specific representation based on the input data.
+- **Export**: convert or copy data for training or other distribution.
+- **Get**: print or visualize dataset metadata.
+- **Render**: create a video visualization of the data.
+- **Run**: a compute (GPU) intensive operation to apply a given algorithm.
 
-.. argparse::
-   :func: _parser
-   :filename: ../process.py
-   :prog: process.py
-   :path: decompress
+.. toctree::
+   :maxdepth: 2
 
-export
-------
-
-.. argparse::
-   :func: _parser
-   :filename: ../process.py
-   :prog: process.py
-   :path: export
-
-fft
----
-
-.. argparse::
-   :func: _parser
-   :filename: ../process.py
-   :prog: process.py
-   :path: fft
-
-info
-----
-
-.. argparse::
-   :func: _parser
-   :filename: ../process.py
-   :prog: process.py
-   :path: info
-
-lidarmap
---------
-
-.. argparse::
-   :func: _parser
-   :filename: ../process.py
-   :prog: process.py
-   :path: lidarmap
-
-nearest
--------
-
-.. argparse::
-   :func: _parser
-   :filename: ../process.py
-   :prog: process.py
-   :path: nearest
-
-report
-------
-
-.. argparse::
-   :func: _parser
-   :filename: ../process.py
-   :prog: process.py
-   :path: report
-
-rosbag
-------
-
-.. argparse::
-   :func: _parser
-   :filename: ../process.py
-   :prog: process.py
-   :path: rosbag
-
-sensorpose
-----------
-
-.. argparse::
-   :func: _parser
-   :filename: ../process.py
-   :prog: process.py
-   :path: sensorpose
-
-simulate
---------
-
-.. argparse::
-   :func: _parser
-   :filename: ../process.py
-   :prog: process.py
-   :path: simulate
-
-slice
------
-
-.. argparse::
-   :func: _parser
-   :filename: ../process.py
-   :prog: process.py
-   :path: slice
-
-video
------
-
-.. argparse::
-   :func: _parser
-   :filename: ../process.py
-   :prog: process.py
-   :path: video
+   scripts/convert.rst
+   scripts/create.rst
+   scripts/export.rst
+   scripts/get.rst
+   scripts/render.rst
+   scripts/run.rst

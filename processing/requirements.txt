@@ -1,5 +1,6 @@
 # General
 numpy
+jax[cuda12]
 scipy
 tqdm
 pyyaml

@@ -1,7 +1,12 @@
-"""Simulate radar range-doppler data.
+"""Run radar simulations using an occupancy or reflectance grid.
 
-Inputs: `_radar/pose.npz`, `_slam/map.npz`
-Outputs: `_radar/sim_lidar` or `_radar/sim_cfar`
+Inputs:
+    - `_radar/pose.npz`
+    - `_slam/map.npz`
+
+Outputs:
+    - `_radar/sim_lidar` or `_radar/sim_cfar` (same shape, properties as the
+      reference channel).
 """
 
 import os

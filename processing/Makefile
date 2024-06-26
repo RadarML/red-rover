@@ -9,16 +9,11 @@ DATASET?=example
 
 # ------------------------------ Python Config ------------------------------ #
 
-PYTHON?=python3.11
-JAX_CUDA?=cuda12_pip
 ROVER_DIR=$(shell pwd)
 VENV=./env/bin
 
 env:
 	$(PYTHON) -m venv env
-	$(VENV)/pip install --upgrade "jax[$(JAX_CUDA)]" \
-		-f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
-
 	$(VENV)/pip install -r requirements.txt
 
 # ------------------------------ Docker Config ------------------------------ #

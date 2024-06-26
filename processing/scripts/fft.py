@@ -1,7 +1,14 @@
-"""Generate range-doppler-azimuth images.
+"""Run range-doppler-azimuth FFT.
 
-Inputs: `radar/*`, `_radar/pose.npz` (optional)
-Outputs: `_radar/{mode}` depending on the selected mode.
+Inputs:
+    - `radar/*`
+    - `_radar/pose.npz` (optional)
+
+Outputs:
+    - `_radar/{mode}` depending on the selected mode.
+    - Channels:
+        - `ts`: `_radar/ts` is populated if not already.
+        - `{mode}`: see `--mode`.
 """
 
 import os

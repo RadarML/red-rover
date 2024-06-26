@@ -1,7 +1,15 @@
 """Create CFAR point cloud.
 
-Inputs: `_cfar/*`, `_radar/pose.npz`
-Outputs: `_cfar/pointcloud.npz`
+Inputs:
+    - `_cfar/*`
+    - `_radar/pose.npz`
+
+Outputs:
+    - `_cfar/pointcloud.npz`.
+    - Keys:
+        - `pos`: point positions (xyz with respect to front-left-up).
+        - `amplitude`: signal amplitude observed.
+        - `cfar`: CFAR threshold associated with each point.
 """
 
 import numpy as np

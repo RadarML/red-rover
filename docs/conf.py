@@ -13,7 +13,7 @@ extensions = [
     'sphinx.ext.coverage',
     'sphinxarg.ext',
     'sphinx.ext.intersphinx',
-    'sphinx.ext.autosectionlabel',
+    # 'sphinx.ext.autosectionlabel',
     'sphinx.ext.todo',
     'sphinx.ext.mathjax',
     'sphinx.ext.ifconfig',

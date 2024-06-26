@@ -1,7 +1,10 @@
 """Convert Rover dataset to ROS 1 bag for Cartographer.
 
-Inputs: `lidar/*`
-Outputs: `_scratch/lidar.bag`
+Inputs:
+    - `lidar/*`
+
+Outputs:
+    - `_scratch/lidar.bag`
 """
 
 import os

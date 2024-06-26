@@ -8,6 +8,7 @@
 # Data files
 collect/data*
 processing/data*
+processing/calibration/_*
 
 # Ros files
 processing/catkin_ws/devel/

@@ -1,7 +1,5 @@
 # Usage
 
-![Data processing pipeline](processing.svg)
-
 ## Common Recipes
 
 Get dataset metadata:
@@ -49,7 +47,7 @@ roverp lidarmap -p $DATASET
 roverp simulate -p $DATASET
 ```
 
-## Commands
+## Scripts
 
 Run `roverp <command> -h` for more information, or see [the full documentation](scripts.rst).
 

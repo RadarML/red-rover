@@ -1,7 +1,10 @@
 """Render map slices.
 
-Inputs: any map-like data, e.g. `_slam/map.npz`.
-Outputs: `_report/slices.mp4` unless overridden.
+Inputs:
+    - any map-like data, e.g. `_slam/map.npz`.
+
+Outputs:
+    - `_report/slices.mp4` unless overridden.
 """
 
 import os

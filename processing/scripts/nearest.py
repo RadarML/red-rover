@@ -1,7 +1,11 @@
 """Run nearest-neighbor simulation.
 
-Inputs: `_radar/pose.npz`, `_radar/rda`
-Outputs: `_radar/sim_nearest`
+Inputs:
+    - `_radar/pose.npz`
+    - `_radar/rda`
+
+Outputs:
+    - `_radar/sim_nearest` (same shape, properties as the reference channel).
 """
 
 import os

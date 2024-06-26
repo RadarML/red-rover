@@ -1,7 +1,15 @@
 """Create reflectance grid from cfar data.
 
-Inputs: `_cfar/points.npz`, `_slam/trajectory.csv`
-Outputs: `_cfar/map.npz`
+Inputs:
+    - `_cfar/points.npz`
+    - `_slam/trajectory.csv`
+
+Outputs:
+    - `_cfar/map.npz`.
+    - Keys:
+        - `grid`: reflectance grid with DART/Rover/Cartographer front-left-up
+          axis conventions.
+        - `lower`, `upper`: lower, upper corners of the grid.
 """
 
 import os

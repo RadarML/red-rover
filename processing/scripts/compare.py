@@ -1,8 +1,11 @@
-"""Create simulation (novel view synthesis) comparison video.
+"""Render simulation (novel view synthesis) comparison video.
 
-Inputs: any set of radar-like data in `_radar`, or elsewhere so long as they
-    match the format of `_radar/rda`.
-Outputs: `_report/compare.mp4` unless overridden.
+Inputs:
+    - any set of radar-like data in `_radar`, or elsewhere so long as they
+      match the format of `_radar/rda`.
+
+Outputs:
+    - `_report/compare.mp4` unless overridden.
 """
 
 import os

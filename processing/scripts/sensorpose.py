@@ -1,7 +1,17 @@
-"""Calculate interpolated poses for a specific sensor.
+"""Get interpolated poses for a specific sensor.
 
-Inputs: `_slam/trajectory.csv`
-Outputs: `{sensor}/pose.npz` depending on the specified `--sensor`.
+Inputs:
+    - `_slam/trajectory.csv`
+
+Outputs:
+    - `{sensor}/pose.npz` depending on the specified `--sensor`.
+    - Keys:
+        - `mask`: binary mask, applied to the raw sensor data along the time
+          axis, which denotes valid samples for the available poses.
+        - `smoothing`, `start_threshold`, `filter_size`: parameters used for
+          pose interpolation.
+        - `t`, `pos`, `vel`, `acc`, `rot`: pose parameters; see
+          :class:`rover.Poses`.
 """
 
 import os

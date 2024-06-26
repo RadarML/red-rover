@@ -1,7 +1,16 @@
 """Create ground truth occupancy grid.
 
-Inputs: `_slam/trajectory.csv`, `_slam/lidar.bag_points.ply`
-Outputs: `_rover1/map.npz` or `_slam/map.npz`, depending on `--legacy`.
+Inputs:
+    - `_slam/trajectory.csv`
+    - `_slam/lidar.bag_points.ply`
+
+Outputs:
+    - `_rover1/map.npz` or `_slam/map.npz`, depending on `--legacy`.
+    - Keys:
+        - `grid`: occupancy grid data as a packed bit array (default) or a u8
+          array (with `--legacy`).
+        - `lower`, `upper`: lower, upper corners of the grid.
+        - `shape`: original `grid` shape for unpacking the packed bit array.
 """
 
 import os

@@ -1,7 +1,12 @@
-"""Create sensor data video.
+"""Render sensor data video.
 
-Inputs: `camera/*`, `lidar/*`, `_radar/rda`
-Outputs: `_report/data.mp4`
+Inputs:
+    - `camera/*`
+    - `lidar/*`
+    - `_radar/{radar}` for the specified `--radar`.
+
+Outputs:
+    - `_report/data.mp4`
 """
 
 import os

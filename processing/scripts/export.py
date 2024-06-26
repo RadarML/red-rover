@@ -1,8 +1,11 @@
 """Export dataset to another location.
 
-Inputs: an entire dataset.
-Outputs: the dataset is copied into the `dst` directory (e.g. on an external
-    drive or file server), except for easily recreated processed output files.
+Inputs:
+    - an entire dataset.
+Outputs:
+    - the dataset is copied into the `dst` directory (e.g. on an external
+      drive or file server), except for easily recreated processed output
+      files.
 """
 
 import os

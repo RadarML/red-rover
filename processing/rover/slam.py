@@ -15,11 +15,11 @@ class Poses(NamedTuple):
     """Discrete sampled poses.
     
     Attributes:
-        t: timestamp
-        pos: position
-        vel: velocity
-        acc: acceleration
-        rot: rotation (as matrix)
+        t: timestamp, in seconds.
+        pos: position, in meters (front-left-up coordinate convention).
+        vel: velocity, in meters/second.
+        acc: acceleration, in meters/second^2.
+        rot: rotation (as matrix).
     """
 
     t: Float64[np.ndarray, "N"]
@@ -27,7 +27,6 @@ class Poses(NamedTuple):
     vel: Float64[np.ndarray, "N 3"]
     acc: Float64[np.ndarray, "N 3"]
     rot: Float64[np.ndarray, "N 3 3"]
-
 
 
 class RawTrajectory(NamedTuple):
@@ -86,6 +85,7 @@ class RawTrajectory(NamedTuple):
         lower = lower - round_up / 2
         upper = upper + round_up / 2
         return lower, upper, size.astype(int)
+
 
 class Trajectory:
     """Sensor trajectory.

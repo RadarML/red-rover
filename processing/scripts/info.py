@@ -1,7 +1,10 @@
-"""Print dataset metadata.
+"""Get dataset metadata.
 
-Inputs: `/*`
-Outputs: Printed to `stdout`.
+Inputs:
+    - `/*`
+
+Outputs:
+    - Printed to `stdout`.
 """
 
 from rover import Dataset

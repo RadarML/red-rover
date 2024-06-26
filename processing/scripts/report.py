@@ -1,7 +1,11 @@
 """Get speed report.
 
-Inputs: `_radar/pose.npz`, `_slam/trajectory.csv`
-Outputs: `_report/speed.pdf`
+Inputs:
+    - `_radar/pose.npz`
+    - `_slam/trajectory.csv`
+
+Outputs:
+    - `_report/speed.pdf`
 """
 
 import os

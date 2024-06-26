@@ -1,7 +1,13 @@
 """Convert to legacy DART format.
 
-Inputs: `radar/`, `_radar/pose.npz`, `_radar/rover1`
-Outputs: `_rover1/*`
+Inputs:
+    - `radar/`
+    - `_radar/pose.npz`
+    - `_radar/rover1`
+
+Outputs:
+    - `_rover1/*`: compatibility for the original rover/dart data format. This
+      format is deprecated, and should not be used.
 """
 
 import os
