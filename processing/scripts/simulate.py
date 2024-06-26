@@ -1,7 +1,7 @@
 """Simulate radar range-doppler data.
 
 Inputs: `_radar/pose.npz`, `_slam/map.npz`
-Outputs: `_radar/sim_lidar`
+Outputs: `_radar/sim_lidar` or `_radar/sim_cfar`
 """
 
 import os
@@ -17,6 +17,8 @@ from rover import Dataset
 def _parse(p):
     p.add_argument("-p", "--path", help="Dataset path.")
     p.add_argument("-k", "--key", type=int, default=42, help="Random seed.")
+    p.add_argument(
+        "-m", "--mode", default="lidar", help="Simulation mode (lidar/cfar).")
 
 
 def _main(args):
@@ -29,7 +31,8 @@ def _main(args):
 
     intrinsics = rover_intrinsics(path=args.path, backend=jnp)
     num_doppler = intrinsics.doppler.shape[0]
-    grid, params = ReflectanceGrid.from_rover(path=args.path, backend=jnp)
+    grid, params = ReflectanceGrid.from_rover(
+        path=args.path, backend=jnp, mode=args.mode)
     arrow = Arrow(backend=jnp, k=128, eps=1e-5)
 
     @jax.jit
@@ -47,7 +50,7 @@ def _main(args):
     def render(i):
         return _render(seeds[i], params, pose[i:i+1])
 
-    out = Dataset(args.path).get("_radar").create("sim_lidar", {
+    out = Dataset(args.path).get("_radar").create(f"sim_{args.mode}", {
         "format": "raw", "type": "f4",
         "shape": [intrinsics.doppler.shape[0], intrinsics.range.shape[0], 8],
         "desc": "Simulated doppler-range-azimuth image using lidar data."})

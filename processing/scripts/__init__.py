@@ -10,4 +10,4 @@ r"""Rover data processing pipeline.
 _scripts = sorted([
     "rosbag", "info", "sensorpose", "fft", "as_rover1", "lidarmap",
     "report", "video", "simulate", "compare", "nearest", "slice", "export",
-    "align", "decompress", "cfar"])
+    "align", "decompress", "cfar", "cfar_pointcloud", "cfar_map"])

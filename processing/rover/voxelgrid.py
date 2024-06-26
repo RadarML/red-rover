@@ -44,9 +44,11 @@ class VoxelGrid(NamedTuple):
                     dx=decimate, dy=decimate, dz=decimate),
                 "Nx Ny Nz d -> Nx Ny Nz")
 
-        return cls(
-            data=data, lower=npz["lower"],
-            resolution=npz["resolution"] / decimate)
+        resolution = npz["resolution"] / decimate
+        if len(resolution.shape) == 0:
+            resolution = resolution.reshape(1)
+
+        return cls(data=data, lower=npz["lower"], resolution=resolution)
 
     def crop(
         self, left: Optional[tuple[int, int, int]] = None,
@@ -115,12 +117,13 @@ class VoxelGrid(NamedTuple):
         Returns:
             (xyz, rgb), where xyz are positions and rgb colors.
         """
-        colors = matplotlib.colormaps.get(cmap)
+        colors = matplotlib.colormaps[cmap]
 
         ixyz = np.stack(np.where(mask))
         rgb = colors(self.data[ixyz[0], ixyz[1], ixyz[2]])[:, :3]
-        rgb_u8 = (rgb * 255).astype(np.uint8)
-        xyz = self.lower[:, None] + ixyz / self.resolution
+        rgb_u8 = (rgb * 255).astype(np.uint8) 
+       
+        xyz = self.lower[:, None] + ixyz / self.resolution[:, None]
 
         return xyz, rgb_u8
 
@@ -133,11 +136,11 @@ class VoxelGrid(NamedTuple):
             path: output path (ending with .pcd).
             mask, cmap: pointcloud mask and colors.
         """
-        from pypcd4 import PointCloud
+        from pypcd4 import PointCloud  # type: ignore
 
         xyz, rgb = self.as_pointcloud(mask, cmap=cmap)
         rgb_packed = PointCloud.encode_rgb(rgb)
-        pc = PointCloud.from_xyzrgb_points([*xyz, rgb_packed])
+        pc = PointCloud.from_xyzrgb_points([*xyz, rgb_packed])  # type: ignore
         pc.save(path)
 
     def as_ply(

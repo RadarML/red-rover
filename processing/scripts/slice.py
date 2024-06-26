@@ -26,6 +26,10 @@ def _parse(p):
         help="Output video framerate (i.e. layers/sec).")
     p.add_argument(
         "--font", default=None, help="Use a specific `.ttf` font file.")
+    p.add_argument("--cmap", default="viridis", help="Colormap to use.")
+    p.add_argument(
+        "--mode", default="full",
+        help="Rendering mode (only plots sigma & alpha when `mode == full`)")
 
 
 def normalize(arr, left, right):
@@ -43,8 +47,8 @@ def _main(args):
         args.path = os.path.join(args.path, "_slam", "map.npz")
 
     font = graphics.JaxFont(args.font, size=40)
-    viridis = (
-        jnp.array(mpl.colormaps['viridis'].colors) * 255   # type: ignore
+    cmap = (
+        jnp.array(mpl.colormaps[args.cmap].colors) * 255   # type: ignore
     ).astype(jnp.uint8)
 
     npz = np.load(args.path)
@@ -55,19 +59,32 @@ def _main(args):
         nz = data.shape[0]
 
         def _render_data(x):
-            return jnp.take(
-                jnp.stack([viridis[0], viridis[-1]]), x, axis=0)
+            return jnp.take(jnp.stack([cmap[0], cmap[-1]]), x, axis=0)
+    elif "grid" in npz:
+        data = jnp.rollaxis(normalize(npz["grid"], 1, 99.5), 2)
+        nz = data.shape[0]
+
+        def _render_data(x):
+            return graphics.lut(cmap, x)
     else:
         sigma = jnp.rollaxis(normalize(npz["sigma"], 1, 99.5), 2)
         alpha = jnp.rollaxis(normalize(-jnp.array(npz["alpha"]), 5, 99.5), 2)
-        data = zip(sigma, alpha)
-        nz = sigma.shape[0]
 
-        def _render_data(x):
-            sigma, alpha = x
-            return jnp.concatenate(
-                [graphics.lut(viridis, sigma), graphics.lut(viridis, alpha)],
-                axis=1)
+        if args.mode == 'full':
+            data = zip(sigma, alpha)
+            nz = sigma.shape[0]
+
+            def _render_data(x):
+                sigma, alpha = x
+                return jnp.concatenate(
+                    [graphics.lut(cmap, sigma), graphics.lut(cmap, alpha)],
+                    axis=1)
+        else:
+            data = sigma
+            nz = sigma.shape[0]
+
+            def _render_data(x):
+                return graphics.lut(cmap, x)
 
     zz = np.linspace(npz["lower"][2], npz["upper"][2], nz)
 

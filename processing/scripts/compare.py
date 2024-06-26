@@ -35,6 +35,7 @@ DEFAULT_NAMES = {
     "hann": "Measured / Hanning Window",
     "raw": "Measured / Raw FFT",
     "sim_lidar": "Lidar Simulation",
+    "sim_cfar": "CFAR Simulation",
     "sim_nearest": "Nearest Neighbor"
 }
 
