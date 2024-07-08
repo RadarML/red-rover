@@ -52,3 +52,5 @@ These steps are taken care of by `make docker-run` in `collect`. Follow these st
 
 ## Troubleshooting
 A common error is a failure from the `nvidia-container-cli` noting that it was unable to load `libnvidia-ml` because of `no such file or directory`. This is caused by NVIDIA hating you, and the best fix seems to be to reinstall `docker.io` (i.e. the docker engine). If that does not work, reinstall everything else as well, which will typically resolve this issue.
+
+*(Tianshu, 06/2024)* - I suspect this may be caused by some kind of time issue affecting certificates, triggering automated invalidations/reinstalls/etc. This behavior was seen in our demo PC, which had CMOS battery issues. The immediate symptom was total failure of the Docker/Nvidia stack; additional indications include the system time being off anddocker images being re-pulled each time instead of cached.

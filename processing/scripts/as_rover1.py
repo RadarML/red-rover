@@ -1,13 +1,15 @@
 """Convert to legacy DART format.
 
+**NOTE**: this script is purely to provide compatibility for the original
+rover/dart data format. This format is deprecated, and should not be used.
+
 Inputs:
     - `radar/`
     - `_radar/pose.npz`
     - `_radar/rover1`
 
 Outputs:
-    - `_rover1/*`: compatibility for the original rover/dart data format. This
-      format is deprecated, and should not be used.
+    - `_rover1/*`
 """
 
 import os

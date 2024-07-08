@@ -5,11 +5,12 @@ Inputs:
 
 Outputs:
     - `_fusion/indices.npz` unless overridden.
-    - Keys:
-        * `indices`: corresponding `u32` data indices of each of the specified
-          `--sensors` in the provided order, with the sensor in axis 0 and
-          time index in axis 1.
-        * `sensors`: string array recording the provided `--sensors`.
+
+Keys:
+    - `indices`: corresponding `u32` data indices of each of the specified
+      `--sensors` in the provided order, with the sensor in axis 0 and
+      time index in axis 1.
+    - `sensors`: string array recording the provided `--sensors`.
 """
 
 import os

@@ -1,5 +1,8 @@
 """Convert poses and video into Nerfstudio format.
 
+See the `Nerfstudio data conventions:
+<https://docs.nerf.studio/quickstart/data_conventions.html>`_.
+
 Inputs:
     - `calibration/camera_ns.json`
     - `camera/video.avi`
@@ -7,8 +10,6 @@ Inputs:
 
 Outputs:
     - `_nerfstudio`
-    - See the `Nerfstudio data conventions
-      <https://docs.nerf.studio/quickstart/data_conventions.html>`_.
 """
 
 import os, json

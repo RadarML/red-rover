@@ -25,6 +25,8 @@ source rover.sh
     sudo apt install python3.11-venv
     ```
 
+    - **TODO**: `ouster-sdk` now indicates that it supports Python 3.12; we should be able to upgrade.
+
 2. Install libraries.
 
     If using `venv`:
@@ -34,15 +36,7 @@ source rover.sh
 
     If using `conda`:
     ```sh
-    pip install --upgrade "jax[cuda12_pip]" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
     pip install -r requirements.txt
-    ```
-
-    **NOTE**: if not using a GPU, set `JAX_CUDA=cpu`, e.g.
-    ```sh
-    JAX_CUDA=cpu make env
-    # or
-    pip install --upgrade "jax[cpu]" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
     ```
 
 3. (Optional) Set up aliases (requires `venv`):

@@ -5,13 +5,14 @@ Inputs:
 
 Outputs:
     - `{sensor}/pose.npz` depending on the specified `--sensor`.
-    - Keys:
-        - `mask`: binary mask, applied to the raw sensor data along the time
-          axis, which denotes valid samples for the available poses.
-        - `smoothing`, `start_threshold`, `filter_size`: parameters used for
-          pose interpolation.
-        - `t`, `pos`, `vel`, `acc`, `rot`: pose parameters; see
-          :class:`rover.Poses`.
+
+Keys:
+    - `mask`: binary mask, applied to the raw sensor data along the time
+      axis, which denotes valid samples for the available poses.
+    - `smoothing`, `start_threshold`, `filter_size`: parameters used for
+      pose interpolation.
+    - `t`, `pos`, `vel`, `acc`, `rot`: pose parameters; see
+      :class:`rover.Poses`.
 """
 
 import os

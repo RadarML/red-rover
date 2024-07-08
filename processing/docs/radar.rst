@@ -11,9 +11,12 @@ jax will not be imported until a function which requires it is called.
 
 .. autoclass:: rover.RadarProcessing
    :members:
+   :special-members: __call__
 
 .. autoclass:: rover.CFAR
    :members:
+   :special-members: __call__
 
 .. autoclass:: rover.AOAEstimation
    :members:
+   :special-members: __call__

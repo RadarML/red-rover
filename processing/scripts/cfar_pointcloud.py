@@ -6,10 +6,11 @@ Inputs:
 
 Outputs:
     - `_cfar/pointcloud.npz`.
-    - Keys:
-        - `pos`: point positions (xyz with respect to front-left-up).
-        - `amplitude`: signal amplitude observed.
-        - `cfar`: CFAR threshold associated with each point.
+
+Keys:
+    - `pos`: point positions (xyz with respect to front-left-up).
+    - `amplitude`: signal amplitude observed.
+    - `cfar`: CFAR threshold associated with each point.
 """
 
 import numpy as np

@@ -114,8 +114,32 @@ def doppler_range_azimuth_elevation(
 
 
 class RadarProcessing:
-    """Doppler-range-azimuth FFT with zero-doppler artifact removal.
+    """Doppler-range-azimuth FFT with zero-doppler calibration.
 
+    `RadarProcessing` performs the following steps:
+
+    0. Calculate the zero doppler offset.
+
+        - This is a constant offset applied to the zero-doppler bins of
+          range-Doppler images caused by the antenna geometry and any returns
+          from the data collection rig (which is mounted rigidly to the radar,
+          and therefore has no return).
+        - We assume that range-doppler plots are sparse, and take the median
+          across time for the zero doppler bin to estimate this offset.
+        - If a hanning window is applied, we instead calculate the offset
+          across doppler bins [-1, 1] to account for doppler bleed.
+    
+    1. Take doppler-range-azimuth FFT.
+
+        - If `hanning` is specified, we also apply a hanning window to the
+          range and doppler axes.
+
+    2. Apply the zero-doppler offset.
+
+        - This offset only results in modifications to the zero doppler bin
+          (and +/-1 bin if using a hanning window).
+        - Any resulting values are clipped to be non-negative.
+       
     Args:
         sample: sample IQ data for one-time artifact computation.
         hanning: whether to apply a hanning window in the range-doppler axes.
@@ -183,19 +207,18 @@ class CFAR:
 
     Expects a 2d input, with the `guard` and `window` sizes corresponding to
     the respective input axes.
-    
+
+    **Note**: The user is responsible for applying the desired thresholding.
+    For example, when using a gaussian model, the threshold should be
+    calculated using an inverse normal CDF (e.g. `scipy.stats.norm.isf`)::
+
+        cfar = CFAR(guard=(2, 2), window=(4, 4))
+        thresholds = cfar(image)
+        mask = (thresholds > scipy.stats.norm.isf(0.01))
+
     Args:
         guard: size of guard cells (excluded from noise estimation).
         window: CFAR window size.
-
-    Usage:
-        The user is responsible for applying the desired thresholding. For
-        example, when using a gaussian model, the threshold should be
-        calculated using an inverse normal CDF (e.g. `scipy.stats.norm.isf`)::
-
-            cfar = CFAR(guard=(2, 2), window=(4, 4))
-            thresholds = cfar(image)
-            mask = (thresholds > scipy.stats.norm.isf(0.01))
     """
 
     def __init__(

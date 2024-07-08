@@ -5,10 +5,11 @@ Inputs:
 
 Outputs:
     - `_lidar/*`, unless overridden.
-    - Channels:
-        - `ts`: copy of original `ts` timestamp channel.
-        - `rng`, `rfl`, `nir`: decompressed versions of the corresponding input
-          channels. Note that destaggering, etc is not performed.
+
+Channels:
+    - `ts`: copy of original `ts` timestamp channel.
+    - `rng`, `rfl`, `nir`: decompressed versions of the corresponding input
+      channels. Note that destaggering, etc is not performed.
 """
 
 from rover import Dataset

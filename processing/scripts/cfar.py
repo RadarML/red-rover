@@ -1,5 +1,9 @@
 """Run CFAR and AOA estimation.
 
+The output data has the same shape as the input range-doppler images, and
+assumes each range-doppler bin is a unique point. Different channels then
+denote the properties of each bin.
+
 NOTE: this script **appends** to existing data. If `_cfar/*` is already
 populated, it must be manually cleared first!
 
@@ -8,13 +12,11 @@ Inputs:
 
 Outputs:
     - `_cfar/*`
-    - The output data has the same shape as the input range-doppler images, and
-      assumes each range-doppler bin is a unique point. Different channels then
-      denote the properties of each bin.
-    - Channels:
-        - `amplitude`: point amplitudes.
-        - `cfar`: CFAR thresholds.
-        - `aoa`: angle of arrival.
+
+Channels:
+    - `amplitude`: point amplitudes.
+    - `cfar`: CFAR thresholds.
+    - `aoa`: angle of arrival.
 """
 
 import math

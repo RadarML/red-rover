@@ -6,9 +6,10 @@ Inputs:
 
 Outputs:
     - `_radar/{mode}` depending on the selected mode.
-    - Channels:
-        - `ts`: `_radar/ts` is populated if not already.
-        - `{mode}`: see `--mode`.
+
+Channels:
+    - `ts`: `_radar/ts` is populated if not already.
+    - `{mode}`: see `--mode`.
 """
 
 import os

@@ -6,11 +6,12 @@ Inputs:
 
 Outputs:
     - `_rover1/map.npz` or `_slam/map.npz`, depending on `--legacy`.
-    - Keys:
-        - `grid`: occupancy grid data as a packed bit array (default) or a u8
-          array (with `--legacy`).
-        - `lower`, `upper`: lower, upper corners of the grid.
-        - `shape`: original `grid` shape for unpacking the packed bit array.
+
+Keys:
+    - `grid`: occupancy grid data as a packed bit array (default) or a u8
+      array (with `--legacy`).
+    - `lower`, `upper`: lower, upper corners of the grid.
+    - `shape`: original `grid` shape for unpacking the packed bit array.
 """
 
 import os

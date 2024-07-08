@@ -6,10 +6,11 @@ Inputs:
 
 Outputs:
     - `_cfar/map.npz`.
-    - Keys:
-        - `grid`: reflectance grid with DART/Rover/Cartographer front-left-up
-          axis conventions.
-        - `lower`, `upper`: lower, upper corners of the grid.
+
+Keys:
+    - `grid`: reflectance grid with DART/Rover/Cartographer front-left-up
+      axis conventions.
+    - `lower`, `upper`: lower, upper corners of the grid.
 """
 
 import os

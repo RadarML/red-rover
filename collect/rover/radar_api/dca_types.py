@@ -177,9 +177,9 @@ class RadarFrame(NamedTuple):
 
     Notes:
         Assuming the radar/capture card are configured for 16-bit capture and
-        `SampleSwap.MSB_LSB_IQ` order (see `awr_types.py`), the output data use an
-        interleaved Complex32 format consisting of real (I: in-phase) and complex
-        (Q: quadrature) `i16` parts.
+        `SampleSwap.MSB_LSB_IQ` order (see `awr_types.py`), the output data use
+        an interleaved Complex32 format consisting of real (I: in-phase) and
+        complex (Q: quadrature) `i16` parts.
 
     NOTE: since the output is little-endian, `MSB_LSB_IQ` indicates that `I`
     is in the MSB, i.e. comes last, and the `Q` in the LSB comes first.
@@ -199,7 +199,8 @@ class RadarFrame(NamedTuple):
 
             shape = [64, 4, 2, 128]  # shape: (chirps, tx, rx, samples)
             iiqq = np.frombuffer(
-                frame.data, dtype=np.int16).reshape([*shape[:-1], shape[-1] * 2])
+                frame.data, dtype=np.int16
+            ).reshape([*shape[:-1], shape[-1] * 2])
             iq = np.zeros(shape, dtype=np.complex64)
             iq[..., 0::2] = 1j * iiqq[..., 0::4] + iiqq[..., 2::4]
             iq[..., 1::2] = 1j * iiqq[..., 1::4] + iiqq[..., 3::4]
