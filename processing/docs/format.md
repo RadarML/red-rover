@@ -44,6 +44,7 @@ tar --exclude '*/_*' -cf data.tar data
 
 **Dataset**: a directory containing a collection of sensors.
 - A copy of the active `config.yaml` is placed in the root dataset folder.
+- A `README` or other metadata files can be manually placed in the root dataset folder. These files should not start with `_`, and should not be referenced in the `config.yaml`.
 - Data processing output files should be placed in directories starting with an underscore (e.g. `_scratch`, `_out`).
 - Processed output files placed in a directory along with a valid `meta.json` may be interpreted as "virtual" sensors, e.g. a processed range-doppler-azimuth radar sensor.
 - **NOTE**: processed directories must not contain a `meta.json` file unless they are intended to be interpreted as virtual sensors.
@@ -76,5 +77,6 @@ tar --exclude '*/_*' -cf data.tar data
             meta.json
             ts
             valid
+        README
         config.yaml
     ```

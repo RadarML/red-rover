@@ -24,6 +24,7 @@ extensions = [
 templates_path = ['_templates']
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 source_suffix = ['.rst', '.md']
+default_role = "code"
 
 autodoc_default_options = {
     "member-order": "bysource",

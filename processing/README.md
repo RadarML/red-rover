@@ -4,7 +4,7 @@
 
 ## Quick Start
 
-Assuming you have `python3.11`, `python3.11-venv`, and `python3-pip` installed:
+Assuming you have `python3.12`, `python3.12-venv`, and `python3-pip` installed:
 ```sh
 make env
 ```
@@ -21,15 +21,15 @@ roverp <command> <args> ...
 
 ## Full Setup
 
-1. Install Python 3.11 (`ouster-sdk` does not support `python>=3.12` at present):
+1. Install Python 3.12:
     ```sh
-    conda create -n rover python=3.11
+    conda create -n rover python=3.12
     conda activate rover
     conda install pip
     # or
     sudo add-apt-repository ppa:deadsnakes/ppa
-    sudo apt install python3.11
-    sudo apt install python3.11-venv
+    sudo apt install python3.12
+    sudo apt install python3.12-venv
     ```
 
 2. Install libraries.
