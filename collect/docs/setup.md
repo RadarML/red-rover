@@ -17,9 +17,8 @@ The data collection computer uses a linux installation; we use ubuntu 22.04, tho
 1. Install dependencies:
     ```sh
     sudo add-apt-repository ppa:deadsnakes/ppa
-    sudo apt install -y python3.11 python3.11-venv build-essential net-tools
+    sudo apt install -y python3.12 python3.12-venv build-essential net-tools
     ```
-    - Python 3.11 is required, since `ouster-sdk` does not work on `python3.12` as of April 2024.
 
 2. Install `red-rover`:
     ```sh

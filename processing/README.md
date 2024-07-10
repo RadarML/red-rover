@@ -4,7 +4,7 @@
 
 ## Quick Start
 
-Assuming you have `python3.12`, `python3.12-venv`, and `python3-pip` installed:
+Assuming you have `python3.12`, `python3.12-venv`, `python3.12-dev`, and `python3-pip` installed:
 ```sh
 make env
 ```
@@ -28,8 +28,7 @@ roverp <command> <args> ...
     conda install pip
     # or
     sudo add-apt-repository ppa:deadsnakes/ppa
-    sudo apt install python3.12
-    sudo apt install python3.12-venv
+    sudo apt install python3.12 python3.12-venv python3.12-dev
     ```
 
 2. Install libraries.

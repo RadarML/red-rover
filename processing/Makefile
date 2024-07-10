@@ -9,6 +9,7 @@ DATASET?=example
 
 # ------------------------------ Python Config ------------------------------ #
 
+PYTHON?=python3.12
 ROVER_DIR=$(shell pwd)
 VENV=./env/bin
 

@@ -7,7 +7,7 @@ from multiprocessing.pool import ThreadPool
 from beartype.typing import Optional
 
 import numpy as np
-from ouster import client
+from ouster.sdk import client
 
 from .common import BaseCapture, BaseSensor, SensorException, SensorMetadata
 

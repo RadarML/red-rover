@@ -10,7 +10,7 @@ import numpy as np
 from beartype.typing import Iterator
 from jaxtyping import Float64, UInt16, Int16, Complex64, Float32
 
-from ouster import client
+from ouster.sdk import client
 
 from .channel import BaseChannel, CHANNEL_TYPES
 

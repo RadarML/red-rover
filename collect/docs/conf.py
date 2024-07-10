@@ -1,10 +1,9 @@
-project = 'Rover - Collect'
-
-import os
-import sys
+import os, sys
 
 os.chdir("..")
+sys.path.insert(0, os.getenv("ROOT_CONF_DIR"))
 sys.path.insert(0, os.path.abspath('.'))
-sys.path.insert(0, os.path.abspath('../docs'))
+
+project = 'Rover - Collect'
 
 from conf import *
