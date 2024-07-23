@@ -11,15 +11,13 @@ def mse(
     y_true: Float[Array, "..."], y_hat: Float[Array, "..."]
 ) -> tuple[Float[Array, ""], Float[Array, ""]]:
     """Compute MSE with optimal scaling computation.
-    
-    Parameters
-    ----------
-    y_true, y_hat: input actual/predicted data.
 
-    Returns
-    -------
-    mse: MSE of the optimally-scaled `y_hat`.
-    xi: Optimal scale factor.
+    Args:
+        y_true, y_hat: input actual/predicted data.
+
+    Returns:
+        `(mse, xi)` tuple of the MSE of the optimally-scaled `y_hat` and the
+        optimal scale factor.
     """
     xi = jnp.sum(y_true * y_hat) / jnp.sum(y_hat**2)
     mse = jnp.sum(jnp.square(y_true - xi * y_hat))
@@ -38,18 +36,16 @@ def ssim(
     approximately zero in img0 (assumed to be the ground truth) from the SSIM
     calculation.
 
-    Parameters
-    ----------
-    img0, img1: input images; img0 is considered the 'ground truth'.
-    max_val: maximum magnitude that `img0` or `img1` can have.
-    filter_size: window size (>1).
-    filter_sigma: Bandwidth of the gaussian used for filtering (>0).
-    k1, k2: SSIM dampening parameters.
-    eps: near-zero exclusion tolerance.
+    Args:
+        img0, img1: input images; img0 is considered the 'ground truth'.
+        max_val: maximum magnitude that `img0` or `img1` can have.
+        filter_size: window size (>1).
+        filter_sigma: Bandwidth of the gaussian used for filtering (>0).
+        k1, k2: SSIM dampening parameters.
+        eps: near-zero exclusion tolerance.
 
-    Returns
-    -------
-    Mean SSIM of the image.
+    Returns:
+        Mean SSIM of the image.
 
     References
     ----------

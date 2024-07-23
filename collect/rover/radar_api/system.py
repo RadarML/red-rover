@@ -29,7 +29,6 @@ class AWRSystem:
 
     def _statistics(self, radar: RadarConfig, capture: CaptureConfig) -> None:
         """Compute statistics, and warn if potentially invalid."""
-
         # Network utilization
         util = radar.throughput / capture.throughput
         self.log.info("Radar/Capture card: {} Mbps / {} Mbps ({:.1f}%)".format(

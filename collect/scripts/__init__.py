@@ -5,8 +5,9 @@ r"""Rover data collection platform.
     |    \_ |_____|   \/   |______ |    \_
     Radar sensor fusion research platform
 .
-"""
+"""  # noqa: D205
 
 from .control import Controller
 
 _scripts = ["run", "start", "stop", "exit", "get_config"]
+__all__ = ["Controller"]

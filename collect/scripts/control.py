@@ -34,7 +34,7 @@ class Controller:
 
     def start(self, path: str) -> None:
         self._sendall({"type": "start", "path": path})
-    
+
     def stop(self) -> None:
         self._sendall({"type": "stop"})
 

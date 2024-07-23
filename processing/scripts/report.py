@@ -8,13 +8,14 @@ Outputs:
     - `_report/speed.pdf`
 """
 
-import os
+import os, json
 import math
-import json
 import numpy as np
 from tqdm import tqdm
 from matplotlib import pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
+
+from beartype.typing import cast
 
 import rover
 
@@ -72,6 +73,7 @@ def _main(args):
     with PdfPages(args.out) as pdf:
         for i in tqdm(range(math.ceil(duration / args.width / 2))):
             fig, page = plt.subplots(8, 1, figsize=(8.5, 11))
+            page = cast(np.ndarray, page)
 
             for j, axs in enumerate([page[:4], page[4:]]):
                 _plot_speed(axs, tproc, traw, vproc, vraw, dmax)

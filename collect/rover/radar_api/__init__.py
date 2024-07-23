@@ -6,7 +6,7 @@ r"""AWR1843Boost Radar & DCA1000EVM Capture Card API.
     |    \_ |_____|   \/   |______ |    \_
     TI AWR1843Boost/DCA1000EVM Raw I/Q API
 
-    
+
 .. [R1] DCA1000EVM Data Capture Card User's Guide (Rev A)
     https://www.ti.com/lit/ug/spruij4a/spruij4a.pdf?ts=1709104212742
 .. [R2] `ReferenceCode/DCA1000/SourceCode` folder in the mmWave Studio install.
@@ -19,7 +19,7 @@ r"""AWR1843Boost Radar & DCA1000EVM Capture Card API.
     https://www.ti.com/lit/ds/symlink/awr1843.pdf?ts=1708800208074
 .. [R7] MMwave Radar Device ADC Raw Capture Data
         https://www.ti.com/lit/an/swra581b/swra581b.pdf?ts=1609161628089
-"""
+"""  # noqa: D205
 
 from . import dca_types, awr_types
 from .awr_api import AWR1843

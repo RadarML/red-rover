@@ -10,6 +10,7 @@ beartype
 jaxtyping
 types-PyYAML
 types-pyserial
+mypy
 
 # Sensor-specific
 pyserial                # Radar, IMU

@@ -19,7 +19,7 @@ def smooth_timestamps(
     x: Float64[np.ndarray, "n"] , interval: float = 60.
 ) -> Float64[np.ndarray, "n"]:
     """Apply piecewise linear smoothing to system timestamps.
-    
+
     Args:
         x: input timestamp array.
         interval: piecewise linear interpolation interval, in seconds.
@@ -41,7 +41,7 @@ def smooth_timestamps(
 
 class SensorData:
     """A sensor with multiple channels.
-    
+
     Args:
         path: file path; should be a directory containing a `meta.json` file.
 
@@ -120,7 +120,7 @@ class SensorData:
 
 class LidarData(SensorData):
     """Ouster Lidar sensor.
-    
+
     Note that Lidar data are stored in a "staggered" format, and must be
     destaggered when used::
 
@@ -131,7 +131,7 @@ class LidarData(SensorData):
     To get a pointcloud, the ouster-supplied API is wrapped in `pointcloud`::
 
         points = lidar.pointcloud(raw)
-    
+
     Use `*_stream` versions of `destagger` and `stream` to get an iterator
     of the transformed data::
 
@@ -174,7 +174,7 @@ class LidarData(SensorData):
 
 class RadarData(SensorData):
     """TI Radar sensor.
-    
+
     Radar data are stored in a non-standard `IIQQ int16` format; see
     `collect.radar_api.dca_types.RadarFrame` for details. Radar data should
     be converted to `complex64` in order to be used::
@@ -189,7 +189,7 @@ class RadarData(SensorData):
             ...
 
     Note that the `IIQQ int16` format uses only 32-bytes per sample, while
-    `complex64` uses 64-bytes per sample, so should not be used for storage.     
+    `complex64` uses 64-bytes per sample, so should not be used for storage.
     """
 
     @staticmethod
@@ -208,7 +208,7 @@ class RadarData(SensorData):
         self, batch: int = 64
     ) -> Iterator[Complex64[np.ndarray, "..."]]:
         """Get an iterator which returns a Complex64 stream of IQ frames.
-        
+
         NOTE: TI, for some reason, streams data in IIQQ order instead of IQIQ.
         This special stream (instead of a generic `.stream()`) handles this.
         """
@@ -225,21 +225,21 @@ SENSOR_TYPES = {
 
 class Dataset:
     """A dataset with multiple sensors.
-    
+
     Create a `Dataset` for the trace path; then, use `Dataset[...]` to
     fetch the associated sensors, then channels::
 
         ds = Dataset(path)
         radar = ds['radar']
         iq = radar['iq']
-    
+
     `Dataset[...]` will not return "virtual" sensors (those starting with
     `_`, e.g. `_radar`); virtual sensors must be fetched using::
 
         processed_radar = ds.get('_radar')
 
     Note that `Dataset.get` will also fetch non-virtual sensors.
-    
+
     Args:
         path: file path; should be a directory.
 

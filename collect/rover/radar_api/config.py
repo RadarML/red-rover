@@ -21,7 +21,7 @@ RADAR_INTRINSICS = [
 
 class RadarConfig(NamedTuple):
     """Radar configuration.
-    
+
     Attributes:
         port: Control serial port (usually `/dev/ttyACM0`).
         frequency: base frequency, in GHz.
@@ -107,7 +107,7 @@ class RadarConfig(NamedTuple):
 
     @property
     def doppler_resolution(self):
-        """Doppler resolution, in m/s."""    
+        """Doppler resolution, in m/s."""
         return (
             self.wavelength / (2 * self.frame_length * self.chirp_time * 1e-6))
 
@@ -148,7 +148,7 @@ DCA_BITRATE = 1e9
 
 class CaptureConfig(NamedTuple):
     """Capture card configuration.
-    
+
     Attributes:
         sys_ip: system IP; should be manually configured with a subnet mask of
             `255.255.255.0`.

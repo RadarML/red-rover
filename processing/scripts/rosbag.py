@@ -34,14 +34,13 @@ NULL_COV = np.zeros(9, dtype=np.float64)
 
 def sensor_msgs_imu(rot, acc, avel, sec, nsec):
     """Assemble sensor_msgs/Imu message."""
-
     ts = types.builtin_interfaces__msg__Time(sec=sec, nanosec=nsec)
     return types.sensor_msgs__msg__Imu(
         header=types.std_msgs__msg__Header(
-            frame_id="imu_link", stamp=ts), 
+            frame_id="imu_link", stamp=ts),
         orientation=types.geometry_msgs__msg__Quaternion(
             x=rot[0], y=rot[1], z=rot[2], w=rot[3]),
-        orientation_covariance=NULL_COV, 
+        orientation_covariance=NULL_COV,
         angular_velocity=types.geometry_msgs__msg__Vector3(
             x=avel[0], y=avel[1], z=avel[2]),
         angular_velocity_covariance=NULL_COV,
@@ -82,7 +81,7 @@ def _main(args):
 
     dataset = Dataset(args.path)
     if args.out is None:
-        args.out = os.path.join(args.path, "_scratch", "lidar.bag")    
+        args.out = os.path.join(args.path, "_scratch", "lidar.bag")
     os.makedirs(os.path.dirname(args.out), exist_ok=True)
 
     with Writer(args.out) as writer:
@@ -106,7 +105,7 @@ def _main(args):
         print(lidar)
 
         msgtype = types.sensor_msgs__msg__PointCloud2.__msgtype__
-        connection = writer.add_connection("/points2", msgtype, latching=True)        
+        connection = writer.add_connection("/points2", msgtype, latching=True)
         data = zip(lidar.pointcloud_stream(), *ts_sec_ns(lidar.timestamps()))
         for points, sec, nsec, ts in tqdm(data, total=len(lidar)):
             msg = sensor_msgs_pointcloud2(points, sec, nsec)

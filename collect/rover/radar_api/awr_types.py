@@ -5,6 +5,7 @@ from enum import Enum
 
 class AWRException(Exception):
     """Error raised by the Radar (via non-normal return message)."""
+
     pass
 
 
@@ -36,7 +37,7 @@ class ADCDepth(Enum):
 
 class ADCFormat(Enum):
     """ADC output format.
-    
+
     COMPLEX_1X has the image band filtered out, while COMPLEX_2X does not.
     """
 
@@ -47,7 +48,7 @@ class ADCFormat(Enum):
 
 class SampleSwap(Enum):
     """ADC I/Q bit order.
-    
+
     NOTE: MSB_LSB_QI doesn't seem to work.
     """
 

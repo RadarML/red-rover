@@ -34,7 +34,7 @@ class CameraCapture(BaseCapture):
 
 class Camera(BaseSensor):
     """Video camera.
-    
+
     Args:
         idx: camera index in `/dev`, i.e. `/dev/video0`.
         width, height: frame size, in pixels.

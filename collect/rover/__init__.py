@@ -13,7 +13,7 @@ Supported sensors:
 - IMU: XSens MTi-3; partial api implemented in `rover.imu_api`.
 - Lidar: Ouster lidar; via the Ouster SDK.
 - Camera: Any UVC camera.
-"""
+"""  # noqa: D205
 
 from .imu import IMU
 from .lidar import Lidar

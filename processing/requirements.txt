@@ -15,6 +15,7 @@ jaxtyping
 tqdm-stubs
 pandas-stubs
 types-PyYAML
+mypy
 
 # Sensor-specific
 opencv-python-headless  # Reading video

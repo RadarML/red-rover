@@ -143,7 +143,7 @@ def _main(args):
     active = {k: next(v) for k, v in streams.items()}
 
     # Note: we don't use nvenc because the quality is terrible
-    writer = imageio.get_writer(args.out, fps=args.fps, codec="h264")            
+    writer = imageio.get_writer(args.out, fps=args.fps, codec="h264")
     pbar = tqdm(total=sum(v.shape[0] for v in timestamps.values()))
     try:
         while True:

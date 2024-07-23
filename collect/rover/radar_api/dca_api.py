@@ -13,7 +13,7 @@ from . import dca_types as types
 
 class DCA1000EVM:
     """DCA1000EVM Interface.
-    
+
     Documented by [R1]_; based on a (little-endian) UDP protocol (Sec 5).
     Included C++ source code exerpts from the mmWave API are used as a
     secondary reference [R2]_.
@@ -115,7 +115,7 @@ class DCA1000EVM:
 
     def _recv(self) -> Optional[types.DataPacket]:
         """Receive data.
-        
+
         NOTE: due to high packet rates (up to 200KHz), we only busy-wait, and
         manually track the timeout using `perf_counter`.
         """
@@ -180,7 +180,7 @@ class DCA1000EVM:
                 # Update timestamp for remainder
                 if len(buf) < size:
                     timestamp = time.time()
- 
+
     def system_aliveness(self) -> None:
         """Simple ping to query system status."""
         cmd = types.Request(types.Command.SYSTEM_ALIVENESS, bytes())
@@ -197,7 +197,7 @@ class DCA1000EVM:
         capture=types.DataCapture.ETH_STREAM
     ) -> None:
         """Configure FPGA.
-        
+
         NOTE: This seems to cause the FPGA to ignore requests for a short time
         after. Sending `system_aliveness` pings until it responds seems to be
         the best way to check when it's ready again.
@@ -234,7 +234,7 @@ class DCA1000EVM:
         config_port: int = 4096, data_port: int = 4098
     ) -> None:
         """Configure EEPROM; contains IP, MAC, port information.
-        
+
         NOTE: Use with extreme caution. This should never be used in normal
         operation. May require delay before use depending on the previous cmd.
 
@@ -279,7 +279,7 @@ class DCA1000EVM:
 
     def configure_record(self, delay: float = 25.0) -> None:
         """Configure data packets (with a packet delay in us).
-        
+
         The packet delay must be between 5 and 500 us (Table 19, [1]). This
         sets the theoretical maximum throughput to between 193 and 706 Mbps.
         """

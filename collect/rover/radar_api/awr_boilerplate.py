@@ -1,9 +1,12 @@
 """Irrelevant, but required, AWR initialization steps."""
 
+# NOTE: We ignore a few naming rules to maintain consistency with TI's naming.
+# ruff: noqa: N802, N803
 
-class AWR1843_Mixins:
+
+class AWR1843Mixins:
     """Mixins capturing non-relevant parts of the AWR1843 Demo API.
-    
+
     These configuration class are required for the software to not cause an
     error, but are not actually relevant to the output.
     """
@@ -30,19 +33,19 @@ class AWR1843_Mixins:
         self.analogMonitor()
         self.calibData()
 
-    def lowPower(self, dontCare: int = 0, adcMode: int = 0) -> None: 
+    def lowPower(self, dontCare: int = 0, adcMode: int = 0) -> None:
         """Low power mode config."""
         cmd = "lowPower {} {}".format(dontCare, adcMode)
         self.send(cmd)
 
     def guiMonitor(
-        self, subFrameIdx: int = -1, detectedObjects: int = 0, 
+        self, subFrameIdx: int = -1, detectedObjects: int = 0,
         logMagRange: int = 0, noiseProfile: int = 0,
         rangeAzimuthHeatMap: int = 0, rangeDopplerHeatMap: int = 0,
         statsInfo: int = 0
     ) -> None:
         """Set GUI exports.
-        
+
         NOTE: We disable everything to minimize the chances of interference.
         """
         cmd = "guiMonitor {} {} {} {} {} {} {}".format(
@@ -51,20 +54,20 @@ class AWR1843_Mixins:
         self.send(cmd)
 
     def cfarCfg(
-        self, subFrameIdx: int = -1, procDirection: int = 1, 
+        self, subFrameIdx: int = -1, procDirection: int = 1,
         averageMode: int = 0, winLen: int = 4, guardLen: int = 2,
         noiseDivShift: int = 3, cyclicMode: int = 1, threshold: float = 15.0,
         peakGroupingEn: int = 1
     ) -> None:
         """Configure CFAR.
-        
+
         NOTE: this command must be called twice for `procDirection=0, 1`.
         """
         cmd = "cfarCfg {} {} {} {} {} {} {} {} {}".format(
             subFrameIdx, procDirection, averageMode, winLen, guardLen,
             noiseDivShift, cyclicMode, threshold, peakGroupingEn)
         self.send(cmd)
-    
+
     def multiObjBeamForming(
         self, subFrameIdx: int = -1, enabled: int = 0, threshold: float = 0.5
     ) -> None:
@@ -72,7 +75,7 @@ class AWR1843_Mixins:
         cmd = "multiObjBeamForming {} {} {}".format(
             subFrameIdx, enabled, threshold)
         self.send(cmd)
-        
+
     def calibDcRangeSig(
         self, subFrameIdx: int = -1, enabled: int = 0,
         negativeBinIdx: int = -5, positiveBinIdx: int = 8,
@@ -90,7 +93,7 @@ class AWR1843_Mixins:
             the first N chirps, and then it is subtracted during the
             subsequent chirps
 
-        NOTE: Rover performs this step during offline data processing.    
+        NOTE: Rover performs this step during offline data processing.
         """
         cmd = "calibDcRangeSig {} {} {} {} {}".format(
             subFrameIdx, enabled, negativeBinIdx, positiveBinIdx, numAvgFrames)
@@ -103,22 +106,22 @@ class AWR1843_Mixins:
 
 
     def aoaFovCfg(
-        self, subFrameIdx: int = -1, minAzimuthDeg: int = -90, 
+        self, subFrameIdx: int = -1, minAzimuthDeg: int = -90,
         maxAzimuthDeg: int = 90, minElevationDeg: int = -90,
         maxElevationDeg: int = 90
     ) -> None:
         """FOV limits for CFAR."""
         cmd = "aoaFovCfg {} {} {} {} {}".format(
-            subFrameIdx, minAzimuthDeg, maxAzimuthDeg, 
+            subFrameIdx, minAzimuthDeg, maxAzimuthDeg,
             minElevationDeg, maxElevationDeg)
-        self.send(cmd)    
+        self.send(cmd)
 
     def cfarFovCfg(
-        self, subFrameIdx: int = -1, procDirection: int = 0, 
+        self, subFrameIdx: int = -1, procDirection: int = 0,
         min_meters_or_mps: float = 0, max_meters_or_mps: float = 0
     ) -> None:
         """Range/doppler limits for CFAR.
-        
+
         NOTE: must be called twice for `procDirection=0, 1`.
         """
         cmd = "cfarFovCfg {} {} {} {}".format(

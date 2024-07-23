@@ -13,7 +13,7 @@ Scripts are categorized as follows:
 - Get: print or visualize dataset metadata.
 - Render: create a video visualization of the data.
 - Run: a compute (GPU) intensive operation to apply a given algorithm.
-"""
+"""  # noqa: D205
 
 _scripts = sorted([
     "rosbag", "info", "sensorpose", "fft", "as_rover1", "lidarmap",

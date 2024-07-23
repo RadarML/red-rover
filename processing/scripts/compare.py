@@ -117,7 +117,7 @@ def _main(args):
     data = [_get_data(k).stream_prefetch() for k in args.compare]
     render_func = _renderer(args.path, args.font, args.compare, ts.shape[0])
 
-    writer = imageio.get_writer(args.out, fps=fps, codec="h264")            
+    writer = imageio.get_writer(args.out, fps=fps, codec="h264")
     for i, (t, *frames) in enumerate(zip(tqdm(ts), *data)):
         writer.append_data(render_func(frames, i, t))
 

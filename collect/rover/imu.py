@@ -39,7 +39,7 @@ class IMUCapture(BaseCapture):
 
 class IMU(BaseSensor):
     """Xsens IMU Sensor.
-    
+
     Args:
         port: serial port to use. Must have read/write permissions, e.g.
             `sudo chmod 666 /dev/ttyUSB0`.
@@ -57,10 +57,10 @@ class IMU(BaseSensor):
         self.fps = fps
         self.imu = XsensIMU(port=port, baudrate=baudrate)
         self.log.info("Initialized IMU {}.".format(port))
-    
+
     def capture(self, path: str) -> None:
         """Create capture (while `active` is set).
-        
+
         NOTE: we discard the first 100 samples due to rate instability, likely
         due to serial port read latency/batching.
         """

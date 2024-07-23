@@ -7,8 +7,6 @@ This includes:
 - Any original collected data (i.e. not starting with `_`).
 - Any data ending in `.npz` or `.csv`.
 
-
-
 Inputs:
     - An entire dataset.
 

@@ -37,7 +37,7 @@ class Prefetch:
 
     def __iter__(self):
         return self
-    
+
     def __next__(self):
         if self.done and self.queue.empty():
             raise StopIteration
@@ -52,7 +52,7 @@ class Prefetch:
 
 class BaseChannel:
     """Sensor data channel.
-    
+
     Args:
         path: file path.
         dtype: data type, or string name of dtype (e.g. u8, f32).
@@ -60,7 +60,7 @@ class BaseChannel:
     """
 
     def __init__(
-        self, path: str, dtype: Union[str, type], shape: list[int]
+        self, path: str, dtype: Union[str, type, np.dtype], shape: list[int]
     ) -> None:
         self.path = path
         self.type = np.dtype(dtype)
@@ -124,7 +124,7 @@ class RawChannel(BaseChannel):
 
     def stream(self, transform=None, batch: int = 0) -> Iterator[np.ndarray]:
         """Get iterable data stream.
-        
+
         Args:
             transform: callable to apply to the read data.
             batch: batch size to read. If 0, load only a single sample and do

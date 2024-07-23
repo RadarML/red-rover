@@ -52,7 +52,7 @@ class LidarCapture(BaseCapture):
 
 class Lidar(BaseSensor):
     """Ouster Lidar sensor.
-    
+
     Args:
         addr: lidar IP address; found automatically via
             `avahi-browse -lrt _roger._tcp` if not manually specified.

@@ -12,7 +12,7 @@ class RadarCapture(BaseCapture):
 
     def _init(
         self, path, shape: list[int] = [], **_
-    ) -> SensorMetadata:        
+    ) -> SensorMetadata:
         self.iq = open(os.path.join(path, "iq"), mode='wb')
         self.valid = open(os.path.join(path, "valid"), mode='wb')
         return {
@@ -36,7 +36,7 @@ class RadarCapture(BaseCapture):
 
 class Radar(BaseSensor):
     """TI AWR1843Boost Radar Sensor & DCA1000EVM capture card.
-    
+
     See `AWRSystem` for arguments.
     """
 

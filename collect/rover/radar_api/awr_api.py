@@ -1,14 +1,17 @@
 """AWR1843 TI Demo API."""
 
+# NOTE: We ignore a few naming rules to maintain consistency with TI's naming.
+# ruff: noqa: N802, N803
+
 import time
 import serial
 import logging
 
 from . import awr_types as types
-from .awr_boilerplate import AWR1843_Mixins
+from .awr_boilerplate import AWR1843Mixins
 
 
-class AWR1843(AWR1843_Mixins):
+class AWR1843(AWR1843Mixins):
     """AWR1843 Interface for the TI `demo/xwr18xx` MSS firmware.
 
     Documented by [R3]_, [R4]_, [R5]_, [R6]_; based on a UART ASCII CLI.

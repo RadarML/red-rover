@@ -1,13 +1,13 @@
 """DCA1000EVM API Defines [R2]_."""
 
 import struct
-import numpy as np
 from enum import Enum
 from beartype.typing import cast, NamedTuple
 
 
 class DCAException(Exception):
     """Error raised by the FPGA (via non-0 status)."""
+
     pass
 
 
@@ -39,7 +39,7 @@ class Log(Enum):
 
 class LVDS(Enum):
     """LVDS mode (number of lanes); see `rf_api.h:enum CONFIG_LVDS_MODE`.
-    
+
     TI Notes:
 
     - AR1243 - 4 lane
@@ -112,7 +112,7 @@ class Request(NamedTuple):
 
     def to_bytes(self) -> bytes:
         """Form into a single packet.
-        
+
         Data format: `<HHH{}sH`.
 
         - < : assumed to be little endian. Not documented anywhere, but implied
@@ -155,7 +155,7 @@ class DataPacket(NamedTuple):
     @classmethod
     def from_bytes(cls, packet: bytes) -> "DataPacket":
         """Read packet.
-        
+
         Packet format (Sec. 5.2, [R1]_):
 
         - < : assumed to be little endian.
@@ -168,7 +168,7 @@ class DataPacket(NamedTuple):
 
 class RadarFrame(NamedTuple):
     """Radar frame, in IIQQ format (Fig 11, [R7]_).
-    
+
     Attributes:
         timestamp: system timestamp of the first packet received for this frame.
         data: radar frame data.

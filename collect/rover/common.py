@@ -11,7 +11,7 @@ from time import perf_counter, time
 
 import numpy as np
 
-from beartype.typing import Callable, Optional, Any
+from beartype.typing import Optional, Any
 
 
 SensorMetadata = dict[str, dict[str, Any]]
@@ -19,18 +19,19 @@ SensorMetadata = dict[str, dict[str, Any]]
 
 class SensorException(Exception):
     """Sensor-related failure."""
+
     pass
 
 
 class BaseCapture:
     """Capture data for a generic sensor stream.
-    
+
     Args:
         path: directory path to write data to.
         fps: target framerate
         report_interval: interval for reporting sensor statistics, in seconds
         log: parent logger to use
-        kwargs: passthrough to sensor-specific initialization    
+        kwargs: passthrough to sensor-specific initialization
     """
 
     _COMMON: SensorMetadata = {
@@ -117,7 +118,7 @@ class BaseCapture:
 
 class BaseSensor:
     """Generic sensor channel.
-    
+
     Communicates using local `AF_UNIX` sockets using the socket
     `/tmp/rover/{name}` with the provided sensor name.
 

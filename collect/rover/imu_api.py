@@ -15,6 +15,7 @@ from jaxtyping import Float32
 
 class InvalidChecksum(Exception):
     """Non-fatal IMU error message."""
+
     pass
 
 
@@ -28,7 +29,7 @@ class IMUData(NamedTuple):
 
 class XsensIMU:
     """Xsens MTi-3 IMU API.
-    
+
     The IMU should be set up using MT Manager with the following:
     - Orientation: Euler Angles; Floating Point 32-bit; 100Hz
     - Inertial data: Rate of Turn, Acceleration; Floating Point 32-bit; 100Hz
@@ -52,7 +53,7 @@ class XsensIMU:
         self.port = serial.Serial(port, baudrate, timeout=1)
         self.port.set_low_latency_mode(True)
         self.port.reset_input_buffer()
-    
+
     def read(self) -> Optional[IMUData]:
         """Read a single data packet.
 

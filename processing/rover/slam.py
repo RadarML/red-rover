@@ -13,7 +13,7 @@ from scipy.signal import medfilt
 
 class Poses(NamedTuple):
     """Discrete sampled poses.
-    
+
     Attributes:
         t: timestamp, in seconds.
         pos: position, in meters (front-left-up coordinate convention).
@@ -31,7 +31,7 @@ class Poses(NamedTuple):
 
 class RawTrajectory(NamedTuple):
     """Raw trajectory from cartographer.
-    
+
     Attributes:
         xyz: position
         quat: rotation (as quaternion)
@@ -64,7 +64,7 @@ class RawTrajectory(NamedTuple):
         Integer[np.ndarray, "3"]
     ]:
         """Get grid bounds.
-        
+
         Args:
             margin_xy, margin_z: grid margin around trajectory bounds in the
                 horizontal plane and vertical axis, respectively.
@@ -73,7 +73,7 @@ class RawTrajectory(NamedTuple):
                 specified margin until the resolution is divisible by `align`.
 
         Returns:
-            (lower bound, upper bound, grid size)        
+            (lower bound, upper bound, grid size)
         """
         margin = np.array([margin_xy, margin_xy, margin_z])
         lower = np.min(self.xyz, axis=1) - margin
@@ -133,7 +133,7 @@ class Trajectory:
         self, t: Float64[np.ndarray, "N"]
     ) -> tuple[Poses, Bool[np.ndarray, "N"]]:
         """Interpolate trajectory to target timestamps.
-        
+
         Args:
             t: input timestamps; can be in an arbitrary order.
 
@@ -141,7 +141,6 @@ class Trajectory:
             (poses, mask). Only valid timestamps are included in `poses`;
             these valid timestamps are specified in `mask`.
         """
-
         t_rel = t - self.base_time
         mask = (t_rel > 0) & (t_rel < self.t_slam[-1])
         t_valid = t_rel[mask]

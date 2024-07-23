@@ -36,7 +36,7 @@ def _main(args):
 
     lidar = ds["lidar"]
     _lidar = out.create("_lidar", exist_ok=True)
-    
+
     for k, v in lidar.config.items():
         v = dict(**v)
         v["format"] = "raw"
