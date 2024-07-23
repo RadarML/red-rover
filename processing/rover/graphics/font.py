@@ -14,7 +14,7 @@ class JaxFont:
 
     NOTE: `@cached_property` doesn't seem to play well with jax, so `JaxFont`
     pre-computes the font LUT. Don't intialize this class until needed!
-    
+
     Args:
         font: Font file; must be monospace (or will be treated like one!). If
             `None`, load the included `roboto.ttf` file.
@@ -38,8 +38,8 @@ class JaxFont:
         width, height = 0, 0
         for char in chars:
             _, _, w, h = ttf.getbbox(char)
-            width = max(width, w)
-            height = max(height, h)
+            width = max(width, int(w))
+            height = max(height, int(h))
 
         stack = []
         for char in chars:
@@ -66,7 +66,6 @@ class JaxFont:
             subsequent computation uses only the return here), `render` will
             not cause a copy as long as it is jit-compiled.
         """
-
         indices = jnp.clip(text - 32, 0, self.raster.shape[0] - 1)
         mask = jnp.concatenate(self.raster[indices], axis=1)
         b = y + mask.shape[0]
@@ -75,16 +74,16 @@ class JaxFont:
             :min(canvas.shape[0] - y, mask.shape[0]),
             :min(canvas.shape[1] - x, mask.shape[1])
         ] / 255
-        
+
         return canvas.at[y:b, x:r].set(
             ((1 - mask)[:, :, None] * color[None, None, :]).astype(jnp.uint8)
             + (mask[:, :, None] * canvas[y: b, x: r]).astype(jnp.uint8))
-    
+
     def encode(
         self, text: Union[str, Iterable[str]]
     ) -> UInt8[Array, "..."]:
         """Convert a string or list of strings to an array of ASCII indices.
-        
+
         NOTE: the inputs must all have the same length. This function is not
         jit-compilable.
         """
