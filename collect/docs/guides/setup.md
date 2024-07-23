@@ -1,4 +1,4 @@
-# Setup Guide
+# Software Setup & Configuration
 
 ## Computer
 

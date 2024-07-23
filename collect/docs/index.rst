@@ -1,19 +1,12 @@
 Red Rover: Data Collection System
 =================================
 
-.. image:: wiring.svg
-   :alt: System diagram
-
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
    :caption: Contents:
 
-   usage.md
-   components.md
-   setup.md
-   rover.rst
-   imu.rst
-   radar.rst
+   guides/guides.rst
+   api/api.rst
 
 
 Indices and tables

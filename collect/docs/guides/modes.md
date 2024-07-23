@@ -1,4 +1,4 @@
-# Usage
+# Operation Modes
 
 ## UI Operation
 
