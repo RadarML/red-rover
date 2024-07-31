@@ -7,7 +7,9 @@
 
 # Data files
 collect/data*
+collect/_data*
 processing/data*
+processing/_data*
 processing/calibration/_*
 
 # Ros files

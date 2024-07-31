@@ -13,30 +13,7 @@ from jaxtyping import Float64, UInt16, Int16, Complex64, Float32
 from ouster.sdk import client
 
 from .channel import BaseChannel, CHANNEL_TYPES
-
-
-def smooth_timestamps(
-    x: Float64[np.ndarray, "n"] , interval: float = 60.
-) -> Float64[np.ndarray, "n"]:
-    """Apply piecewise linear smoothing to system timestamps.
-
-    Args:
-        x: input timestamp array.
-        interval: piecewise linear interpolation interval, in seconds.
-
-    Returns:
-        Smoothed timestamp array.
-    """
-    blocksize = int(interval * (len(x) / (x[-1] - x[0])))
-    start = 0
-    out = np.zeros(x.shape, x.dtype)
-    while x.shape[0] > 0:
-        end = min(blocksize, x.shape[0])
-        out[start:start + end] = np.linspace(x[0], x[end - 1], end)
-        x = x[end:]
-        start += end
-
-    return out
+from .timestamps import smooth_timestamps, discretize_timestamps
 
 
 class SensorData:
@@ -96,7 +73,7 @@ class SensorData:
         return self.channels[channel]
 
     def timestamps(
-        self, interval: float = 60.0, smooth: bool = True
+        self, interval: float = 30.0, smooth: bool = True
     ) -> Float64[np.ndarray, "n"]:
         """Get smoothed timestamps."""
         if smooth:
@@ -170,6 +147,15 @@ class LidarData(SensorData):
     ) -> Iterator[UInt16[np.ndarray, "..."]]:
         """Get iterator which returns a destaggered range stream."""
         return self.open(key).stream_prefetch(self.destagger)
+
+    def timestamps(
+        self, interval: float = 30.0, smooth: bool = True
+    ) -> Float64[np.ndarray, "n"]:
+        """Get smoothed timestamps."""
+        if smooth:
+            return discretize_timestamps(self.open("ts").read(), interval)
+        else:
+            return self.open("ts").read()
 
 
 class RadarData(SensorData):

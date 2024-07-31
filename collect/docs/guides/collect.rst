@@ -66,18 +66,20 @@ Data Collection: Step by Step
 
    a. In the web app, press the `start` button.
       
-      * Text should begin to scroll on all four sections of the web app.
+      * Text should begin to scroll on all four sections of the web app; the frequency and utilization of data collection for each sensor are regularly logged.
       * Blue messages indicate normal information.
       * Yellow messages indicate warnings.
 
          * The IMU usually gives an `invalid checksum` warning when starting data collection; if this only occurs once, it can be ignored.
          * The radar may give a `missing packets` warning from time to time. If this occurs infrequently (once every few blue status messages, i.e. no more than a few times per minute), it can be ignored. Missing packet warnings are observed to be correlated with certain locations, and perhaps temperature/humidity; the exact cause is not known.
+         * If the data collection frequency drops below 99% of the expected frequency, a warning is logged. This can be ignored if intermittent.
 
       * Red messages indicate errors. Upon receiving an error, data collection should immediately stop until the cause is identified.
 
          * If you attempt to start data collection when one is already running, or start a data collection with a name which is already used, you will receive an error.
          * If you attempt to stop data collection when no data collection is running, you will also receive an error.
-         * Any other errors are likely system and/or hardware problems. If a full reboot (turn off computer, unplug the battery, and return to step 0.) does not fix the problem, please report the issue.
+         * Any other errors are likely system and/or hardware problems. If a full reboot (turn off computer, unplug the battery, and return to step 0.) does not fix the problem, please report this to the system manager.
+         * If the data collection frequency drops below 90% of the expected frequency, an error is logged. If this happens outside of initialization (e.g. not in the first few messages), please report the system manager.
 
    b. Press stop.
    

@@ -7,7 +7,7 @@ options = {
   map_frame = "map",
   tracking_frame = "imu_link",
   published_frame = "radar",
-  odom_frame = "odom",
+  odom_frame = "base_link",
   provide_odom_frame = true,
   publish_frame_projected_to_2d = false,
   use_odometry = false,
@@ -25,7 +25,7 @@ options = {
   odometry_sampling_ratio = 1.,
   fixed_frame_pose_sampling_ratio = 1.,
   imu_sampling_ratio = 1.,
-  landmarks_sampling_ratio = 1.,
+  landmarks_sampling_ratio = 1.0,
   publish_tracked_pose = true,
 }
 
@@ -46,7 +46,7 @@ options = {
 
 -- Sensor carrier exclusion: 0.5m; no real maximum
 TRAJECTORY_BUILDER_3D.min_range = 0.5
-TRAJECTORY_BUILDER_3D.max_range = 50
+TRAJECTORY_BUILDER_3D.max_range = 20
 
 -- 1 message per scan
 -- The entire pipeline is very slow when each column is provided separately.
@@ -73,6 +73,9 @@ TRAJECTORY_BUILDER_3D.submaps.low_resolution = 0.1
 -- Give ceres a lot of iterations to make sure it will always converge
 -- We're also not trying to run real time anyways
 TRAJECTORY_BUILDER_3D.ceres_scan_matcher.ceres_solver_options.max_num_iterations = 500
+
+-- TRAJECTORY_BUILDER_3D.ceres_scan_matcher.translation_weight = 1.0
+-- TRAJECTORY_BUILDER_3D.ceres_scan_matcher.rotation_weight = 0.1
 
 
 -- MAP_BUILDER [3.2]
@@ -106,7 +109,7 @@ POSE_GRAPH.constraint_builder.global_localization_min_score = 0.6
 POSE_GRAPH.optimization_problem.huber_scale = 5e2
 
 -- Sample a subset of nodes to build constraints.
-POSE_GRAPH.constraint_builder.sampling_ratio = 0.5
+POSE_GRAPH.constraint_builder.sampling_ratio = 1.0
 
 -- Maximum number of cleanup iterations to run.
 POSE_GRAPH.max_num_final_iterations = 200000

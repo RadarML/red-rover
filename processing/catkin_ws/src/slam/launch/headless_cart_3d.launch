@@ -23,6 +23,6 @@
           -urdf_filenames $(find slam)/red-rover.urdf
           -bag_filenames $(arg bag_filenames)
           "
-      output="screen">
+      output="screen" required="true">
   </node>
 </launch>

@@ -23,7 +23,7 @@
 
 0. Set configuration file.
     ```sh
-    ROVER_CFG=`realpath dart.yaml`
+    ROVER_CFG=`realpath config/dart.yaml`
     ```
 
 1. Configure interfaces.
