@@ -47,15 +47,14 @@ def _main(args):
             abspath = os.path.join(root, file)
             relpath = os.path.relpath(abspath, args.path)
             if should_copy(relpath):
-                pairs.append((
-                    os.stat(abspath).st_size, abspath,
-                    os.path.join(args.out, relpath)))
+                dst = os.path.join(args.out, relpath)
+                if not os.path.exists(dst):
+                    pairs.append((os.stat(abspath).st_size, abspath, dst))
 
     pairs.sort(key=lambda x: x[0])
     totalsize = sum([s for s, _, _ in pairs])
     pbar = tqdm(total=totalsize, unit_scale=True, unit='B')
     for (size, src, dst) in pairs:
         os.makedirs(os.path.dirname(dst), exist_ok=True)
-        if not os.path.exists(dst):
-            shutil.copyfile(src, dst)
+        shutil.copyfile(src, dst)
         pbar.update(size)

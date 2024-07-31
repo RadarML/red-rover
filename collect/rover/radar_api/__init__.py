@@ -18,7 +18,9 @@ r"""AWR1843Boost Radar & DCA1000EVM Capture Card API.
 .. [R6] AWR1843 Data Sheet
     https://www.ti.com/lit/ds/symlink/awr1843.pdf?ts=1708800208074
 .. [R7] MMwave Radar Device ADC Raw Capture Data
-        https://www.ti.com/lit/an/swra581b/swra581b.pdf?ts=1609161628089
+    https://www.ti.com/lit/an/swra581b/swra581b.pdf?ts=1609161628089
+.. [R8] TI mmWave Sensing Estimator
+    https://dev.ti.com/gallery/view/mmwave/mmWaveSensingEstimator/ver/2.4.0/
 """  # noqa: D205
 
 from . import dca_types, awr_types

@@ -22,6 +22,8 @@ RADAR_INTRINSICS = [
 class RadarConfig(NamedTuple):
     """Radar configuration.
 
+    [R8]_ may be helpful for creating a configuration.
+
     Attributes:
         port: Control serial port (usually `/dev/ttyACM0`).
         frequency: base frequency, in GHz.
@@ -118,8 +120,8 @@ class RadarConfig(NamedTuple):
 
     @property
     def throughput(self):
-        """Throughput, in bits/sec."""
-        return self.frame_size * 8 / self.frame_time * 1e3
+        """Average throughput, in bits/sec."""
+        return self.frame_size * 8 / self.frame_period * 1e3
 
     def as_dict(self) -> dict:
         """Export as dictionary."""

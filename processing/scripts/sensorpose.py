@@ -37,8 +37,8 @@ def _main(args):
 
     traj = Trajectory(
         path=os.path.join(args.path, "_slam", "trajectory.csv"), **cfg)
-    t_radar = Dataset(args.path)[args.sensor]["ts"].read()
-    poses, mask = traj.interpolate(t_radar)
+    t_sensor = Dataset(args.path)[args.sensor].timestamps()
+    poses, mask = traj.interpolate(t_sensor)
 
     os.makedirs(os.path.join(args.path, "_" + args.sensor), exist_ok=True)
     np.savez(

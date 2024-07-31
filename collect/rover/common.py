@@ -106,14 +106,24 @@ class BaseCapture:
         self.ts.close()
 
     def reset_stats(self) -> None:
-        """Reset tracked statistics."""
-        period = np.array(self.period)
-        runtime = np.array(self.runtime)
-        self.log.info(
-            "freq: {:.3f}  util: {:.3f}".format(
-                1 / np.mean(period), np.mean(runtime) * self.fps))
+        """Reset (and log) tracked statistics.
+
+        The log message is usually `info`; if the observed frequency drops
+        below 99% of the target, a `warning` is issued, and if the frequency
+        drops below 90%, a `error` is issued.
+        """
+        freq = 1 / np.mean(self.period)
+        util = np.mean(self.runtime) * self.fps
         self.period = []
         self.runtime = []
+
+        log_msg = f"freq: {freq:.3f}  util: {util:.3f}"
+        if freq < self.fps * 0.9:
+            self.log.error(log_msg)
+        elif freq < self.fps * 0.99:
+            self.log.warning(log_msg)
+        else:
+            self.log.info(log_msg)
 
 
 class BaseSensor:

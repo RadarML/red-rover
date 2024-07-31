@@ -3,7 +3,7 @@
 import numpy as np
 import pandas as pd
 
-from beartype.typing import NamedTuple
+from beartype.typing import NamedTuple, cast
 from jaxtyping import Bool, Float64, Float, Integer
 
 from scipy.interpolate import splprep, splev
@@ -116,7 +116,7 @@ class Trajectory:
         origin_dist = medfilt(
             np.linalg.norm(raw.xyz - raw.xyz[0, None], axis=0), filter_size)
         start = np.argmax(origin_dist > start_threshold)
-        end = max(1, np.argmax(origin_dist[::-1] > start_threshold))
+        end = max(np.int64(1), np.argmax(origin_dist[::-1] > start_threshold))
 
         _t_slam = raw.t[start:-end]
 

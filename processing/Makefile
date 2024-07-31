@@ -56,8 +56,15 @@ PBSTREAM=$(OUT_DIR)/lidar.pbstream
 POINTS=$(OUT_DIR)/lidar.bag_points.ply
 TRAJ=$(OUT_DIR)/trajectory.csv
 
+ifdef HEADLESS
+	LAUNCHFILE=headless_cart_3d.launch
+else
+	LAUNCHFILE=offline_cart_3d.launch
+endif
+
 .PRECIOUS: $(PBSTREAM)
-.PHONY: lidar validate info
+.PHONY: lidar trajectory validate info
+trajectory: $(TRAJ)
 lidar: $(TRAJ) $(POINTS)
 
 trajectory: $(TRAJ)
@@ -72,7 +79,7 @@ $(OUT_DIR):
 	mkdir -p $(OUT_DIR)
 
 $(PBSTREAM): $(OUT_DIR)
-	$(call docker_run, roslaunch slam offline_cart_3d.launch \
+	$(call docker_run, roslaunch slam $(LAUNCHFILE) \
 		bag_filenames:=$(D_BAG))
 	mv $(BAG_DIR)/lidar.bag.pbstream $(PBSTREAM)
 

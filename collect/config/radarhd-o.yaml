@@ -1,0 +1,47 @@
+lidar:
+  type: lidar
+  interface: enp86s0
+  args:
+    addr: null
+    port_lidar: 7502
+    port_imu: 7503
+    mode: 2048x10
+    beams: 128
+imu:
+  type: imu
+  args:
+    port: /dev/ttyUSB0
+    baudrate: 115200
+camera:
+  type: camera
+  args:
+    idx: 0
+    width: 1920
+    height: 1080
+    fps: 30.0
+radar:
+  type: radar
+  interface: enx207bd2be1456
+  comment: "RadarHD, outdoor"
+  args:
+    radar:
+      port: /dev/ttyACM0
+      frequency: 77.0
+      idle_time: 200.0
+      adc_start_time: 5.7
+      ramp_end_time: 59.00
+      tx_start_time: 1.0
+      freq_slope: 33.506
+      adc_samples: 256
+      sample_rate: 5000
+      frame_length: 64
+      frame_period: 50.0
+      num_tx: 3
+    capture:
+      sys_ip: 192.168.33.30
+      fpga_ip: 192.168.33.180
+      data_port: 4098
+      config_port: 4096
+      timeout: 1.0
+      socket_buffer: 8388608
+      delay: 5.0
