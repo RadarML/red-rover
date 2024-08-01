@@ -2,6 +2,7 @@
 
 Inputs:
     - any set of sensors
+    - `_{sensor}/pose.npz` if `--require_pose` is set
 
 Outputs:
     - `_fusion/indices.npz` unless overridden.
@@ -31,6 +32,9 @@ def _parse(p):
     p.add_argument(
         "-m", "--mode", default="left", help="Alignment mode. `left`: align "
         "to first sensor; `union`: align to all sensors.")
+    p.add_argument(
+        "-r", "--require_pose", default=False, action='store_true',
+        help="Require valid poses for inclusion.")
 
 
 def _main(args):
@@ -53,8 +57,20 @@ def _main(args):
 
     t0 = time.time()
 
-    start = max(t[1] for t in timestamps)
-    end = min(t[-3] for t in timestamps)
+    if args.require_pose:
+        _start = []
+        _end = []
+        for s, t in zip(args.sensors, timestamps):
+            mask = np.load(
+                os.path.join(args.path, '_' + s, "pose.npz"))["mask"]
+            _start.append(t[np.argmax(mask)])
+            _end.append(t[-np.argmax(mask[::-1])])
+        start = max(_start)
+        end = min(_end)
+    else:
+        start = max(t[1] for t in timestamps)
+        end = min(t[-3] for t in timestamps)
+
     ref = ref[(ref > start) & (ref < end)]
 
     def advance(target, start, ts):

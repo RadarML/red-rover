@@ -46,6 +46,10 @@ Generate simulations (requires DART data)::
     roverp lidarmap -p $DATASET
     roverp simulate -p $DATASET
 
+List all datasets in current directory::
+
+    find -name 'config.yaml' | xargs dirname
+
 
 Makefile
 --------

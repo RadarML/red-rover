@@ -15,6 +15,7 @@ Outputs:
 """
 
 import os
+import re
 import shutil
 from tqdm import tqdm
 
@@ -25,31 +26,46 @@ def _parse(p):
     p.add_argument(
         "--metadata", default=False, action='store_true',
         help="Copy metadata only.")
+    p.add_argument(
+        "-t", "--test", default=False, action='store_true',
+        help="Test run only (list files; don't actually copy)")
+
+
+RE = re.compile(r"""^(
+    [^_](.*) |                     # original data (doesn't start with '#')
+    _camera/clip |                 # clip embeddings
+    _(.*).(json|yaml|csv|npz) |    # metadata, generated data formats
+    _(.*)/_report/(.*)             # any reports
+)$""", re.VERBOSE)
+
+RE_METADATA = re.compile(r"""^(
+    (.*).(json|yaml) |             # pure metadata files
+    (.*)/ts                        # timestamps
+)$""", re.VERBOSE)
+
+
+def should_copy(path: str, metadata: bool = False) -> bool:
+    """Check if the file should be copied by referencing the above regex."""
+    return re.match(RE_METADATA if metadata else RE, path)
 
 
 def _main(args):
-
-    def should_copy(path):
-        if args.metadata:
-            return (
-                (not path.startswith('_')) and (
-                    os.path.splitext(path)[1] in {'.json', '.yaml'}
-                    or os.path.split(path)[-1] == 'ts'))
-        else:
-            if path.startswith('_') and "_report" not in path:
-                return os.path.splitext(path)[1] in {'.npz', '.csv'}
-            else:
-                return True
+    if args.test:
+        args.out = ""
 
     pairs = []
     for root, _, files in os.walk(args.path):
         for file in files:
             abspath = os.path.join(root, file)
             relpath = os.path.relpath(abspath, args.path)
-            if should_copy(relpath):
+            if should_copy(relpath, metadata=args.metadata):
                 dst = os.path.join(args.out, relpath)
                 if not os.path.exists(dst):
                     pairs.append((os.stat(abspath).st_size, abspath, dst))
+    
+    if args.test:
+        print("\n".join([x[-1] for x in pairs]))
+        exit(0)
 
     pairs.sort(key=lambda x: x[0])
     totalsize = sum([s for s, _, _ in pairs])

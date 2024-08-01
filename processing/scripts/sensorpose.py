@@ -29,11 +29,15 @@ def _parse(p):
     p.add_argument(
         "-m", "--smoothing", type=float, default=500.0,
         help="Smoothing coefficient; higher = more smooth.")
+    p.add_argument(
+        "-t", "--threshold", type=float, default=1.0,
+        help="Exclude data points close to the starting point (in meters).")
 
 
 def _main(args):
     cfg = {
-        "smoothing": args.smoothing, "start_threshold": 1.0, "filter_size": 5}
+        "smoothing": args.smoothing, "start_threshold": args.threshold,
+        "filter_size": 5}
 
     traj = Trajectory(
         path=os.path.join(args.path, "_slam", "trajectory.csv"), **cfg)
