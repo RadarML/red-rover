@@ -100,7 +100,7 @@ def _main(args):
         ts = ds["radar"]["ts"].read()
         ts_out = radar.create("ts", {
             "format": "raw", "type": "f8", "shape": [],
-            "desc": "Smoothed timestamp, in seconds (only for clipped modes)."})
+            "desc": "Raw timestamp, in seconds (only for clipped modes)."})
 
         mask = np.load(os.path.join(args.path, "_radar", "pose.npz"))["mask"]
         ts_out.write(ts[mask])

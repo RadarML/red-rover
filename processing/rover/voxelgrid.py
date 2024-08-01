@@ -29,8 +29,8 @@ class VoxelGrid(NamedTuple):
         """Load voxel grid, applying decimation factor if specified.
 
         Args:
-            path: path to `.npz` file. Must have the specified `key`, as well as a
-                `lower` and `resolution` array.
+            path: path to `.npz` file. Must have the specified `key`, as well
+                as a `lower` and `resolution` array.
             key: field to load.
             decimate: decimation factor to apply.
         """

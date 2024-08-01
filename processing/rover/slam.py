@@ -3,7 +3,7 @@
 import numpy as np
 import pandas as pd
 
-from beartype.typing import NamedTuple, cast
+from beartype.typing import NamedTuple
 from jaxtyping import Bool, Float64, Float, Integer
 
 from scipy.interpolate import splprep, splev

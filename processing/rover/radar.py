@@ -128,7 +128,7 @@ class RadarProcessing:
           across time for the zero doppler bin to estimate this offset.
         - If a hanning window is applied, we instead calculate the offset
           across doppler bins [-1, 1] to account for doppler bleed.
-    
+
     1. Take doppler-range-azimuth FFT.
 
         - If `hanning` is specified, we also apply a hanning window to the
@@ -139,7 +139,7 @@ class RadarProcessing:
         - This offset only results in modifications to the zero doppler bin
           (and +/-1 bin if using a hanning window).
         - Any resulting values are clipped to be non-negative.
-       
+
     Args:
         sample: sample IQ data for one-time artifact computation.
         hanning: whether to apply a hanning window in the range-doppler axes.
@@ -234,7 +234,7 @@ class CFAR:
 
     def __call__(self, x: Float[Array, "d r ..."]) -> Float[Array, "d r"]:
         """Get CFAR mask.
-        
+
         Args:
             x: input. If more than 2 axes are present, the additional axes
                 are averaged before running CFAR.
@@ -258,7 +258,7 @@ class CFAR:
 
 class AOAEstimation:
     """Angle of arrival estimation.
-    
+
     Args:
         bins: number of angular bins to span `(-pi, pi)` during AOA estimation.
     """
@@ -268,11 +268,11 @@ class AOAEstimation:
 
     def __call__(self, x: Float[Array, "a"]) -> Float[Array, ""]:
         """Estimate angle of arrival for a planar antenna array.
-        
+
         Args:
             x: planar array receive values. Should already have any relevant
                 FFTs applied.
-        
+
         Returns:
             Estimated AOA in `(-pi, pi)`.
         """

@@ -5,13 +5,12 @@ Red Rover: Data Processing System
    :alt: Data processing pipeline
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
    :caption: Contents:
 
    setup.md
    format.md
    docker.md
-   usage.md
 
    scripts.rst
    rover.rst

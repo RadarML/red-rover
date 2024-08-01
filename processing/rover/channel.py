@@ -201,7 +201,7 @@ class VideoChannel(BaseChannel):
         while cap.isOpened():
             ret, frame = cap.read()
             if ret:
-                yield frame
+                yield transform(frame)
             else:
                 break
         cap.release()

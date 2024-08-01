@@ -6,7 +6,7 @@ r"""Rover data processing and loading library.
     |    \_ |_____|   \/   |______ |    \_
     Radar sensor fusion research platform
 .
-"""
+"""  # noqa: D205
 
 from .channel import (
     Prefetch, BaseChannel, RawChannel, LzmaChannel, CHANNEL_TYPES)
