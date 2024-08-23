@@ -61,15 +61,19 @@ def _main(args):
     if sample is None:
         print("IQ stream seems to be empty.")
         exit(1)
+
     _, _, tx, rx, _ = sample.shape
-    if tx != 2 or rx != 4:
-        print("This script only supports 2x4 mode.")
+    if (rx != 4) or (tx not in {2, 3}):
+        print("This script only supports 2x4 or 3x4 mode.")
         exit(1)
+    antenna = (None if tx == 2 else [0, 2])
 
     if args.mode == "hybrid" or args.mode == "rover1":
         sample = jnp.array(sample)
-        proc_hann = RadarProcessing(sample, hanning=True, pad=args.pad)
-        proc_raw = RadarProcessing(sample, hanning=False, pad=args.pad)
+        proc_hann = RadarProcessing(
+            sample, hanning=True, pad=args.pad, antenna=antenna)
+        proc_raw = RadarProcessing(
+            sample, hanning=False, pad=args.pad, antenna=antenna)
         shape = proc_raw.shape
         dtype = "f4"
 
@@ -79,7 +83,7 @@ def _main(args):
 
     elif args.mode == "raw" or args.mode == "hann":
         process = RadarProcessing(
-            jnp.array(sample), hanning=(args.mode == "hann"))
+            jnp.array(sample), hanning=(args.mode == "hann"), antenna=antenna)
         shape = process.shape
         dtype = "f4"
 

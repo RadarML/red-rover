@@ -46,7 +46,7 @@ RE_METADATA = re.compile(r"""^(
 
 def should_copy(path: str, metadata: bool = False) -> bool:
     """Check if the file should be copied by referencing the above regex."""
-    return re.match(RE_METADATA if metadata else RE, path)
+    return bool(re.match(RE_METADATA if metadata else RE, path))
 
 
 def _main(args):
@@ -62,7 +62,7 @@ def _main(args):
                 dst = os.path.join(args.out, relpath)
                 if not os.path.exists(dst):
                     pairs.append((os.stat(abspath).st_size, abspath, dst))
-    
+
     if args.test:
         print("\n".join([x[-1] for x in pairs]))
         exit(0)

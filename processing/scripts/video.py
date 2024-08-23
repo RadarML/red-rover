@@ -44,9 +44,11 @@ def _load(path: str, radar: str):
     """Load timestamps and streams."""
     ds = Dataset(path)
 
-    _ts = {k: ds.get(k).timestamps() for k in ["_radar", "lidar", "camera"]}
+    radar_meta = 'radar' if radar == 'raw' else '_radar'
+
+    _ts = {k: ds.get(k).timestamps() for k in [radar_meta, "lidar", "camera"]}
     timestamps = {
-        "radar": _ts["_radar"], "camera": _ts["camera"],
+        "radar": _ts[radar_meta], "camera": _ts["camera"],
         "rfl": _ts["lidar"], "nir": _ts["lidar"], "rng": _ts["lidar"]}
 
     streams = {

@@ -44,4 +44,4 @@ radar:
       config_port: 4096
       timeout: 1.0
       socket_buffer: 16777216
-      delay: 5.0
+      delay: 60.0

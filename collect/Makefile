@@ -34,6 +34,9 @@ env:
 	$(PYTHON) -m venv env
 	$(VENV)/pip install -r requirements.txt
 
+lsconfig:
+	$(VENV)/python config/summary.py
+
 # -- Configuration (on each reboot) -------------------------------------------
 
 .PHONY: config radar-if radar-tty radar-socket imu-tty lidar-if

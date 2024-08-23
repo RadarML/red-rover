@@ -77,7 +77,7 @@ def _main(args):
     ts.write(camera["ts"].read())
 
     embeddings = _camera.create("clip", {
-        "format": "raw", "type": "f4", "shape": [4, 2, 768],
+        "format": "raw", "type": "f2", "shape": [2, 4, 768],
         "desc": "Clip embeddings, applied to 8 patches (4 wide by 2 high)."})
     stream = camera["video.avi"].stream_prefetch(transform=_preprocess)
     embeddings.consume(

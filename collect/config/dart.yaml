@@ -18,7 +18,7 @@ camera:
     idx: 0
     width: 1920
     height: 1080
-    fps: 60.0
+    fps: 30.0
 radar:
   type: radar
   interface: enx207bd2bd84d3
@@ -44,4 +44,4 @@ radar:
       config_port: 4096
       timeout: 1.0
       socket_buffer: 4194304
-      delay: 5.0
+      delay: 200.0
