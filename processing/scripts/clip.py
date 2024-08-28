@@ -2,7 +2,7 @@
 
 NOTE: requires `open_clip` to to be installed, along with dependencies::
 
-    pip install open_clip_torch==2.26.1
+    pip install torch torchvision open_clip_torch==2.26.1
 
 These dependencies are not installed by `make env` by default, since they are
 rather heavy and used only for this script.

@@ -181,7 +181,7 @@ class VideoChannel(BaseChannel):
         frames: List[np.ndarray] = []
         while cap.isOpened():
             ret, frame = cap.read()
-            if ret and len(frames) + 1 != samples:
+            if ret and len(frames) != samples:
                 frames.append(frame)
             else:
                 break
