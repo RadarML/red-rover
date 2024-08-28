@@ -22,7 +22,7 @@ from jax import numpy as jnp
 from beartype.typing import cast
 
 from roverd import Dataset, sensors
-from rover import RadarProcessing
+from roverp import RadarProcessing
 
 
 def _parse(p):

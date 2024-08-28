@@ -6,7 +6,7 @@ import json
 import logging
 import traceback
 
-import rover
+import roverc
 
 
 class JsonFormatter(logging.Formatter):
@@ -48,7 +48,7 @@ def _main(args):
             exit(-1)
 
     try:
-        rover.SENSORS[cfg["type"]](name=args.sensor, **cfg["args"]).loop()
+        roverc.SENSORS[cfg["type"]](name=args.sensor, **cfg["args"]).loop()
     except Exception as e:
         root.critical("".join(traceback.format_exception(e)))
     except KeyboardInterrupt:

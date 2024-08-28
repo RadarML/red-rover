@@ -16,7 +16,7 @@ from jax import numpy as jnp
 import numpy as np
 import matplotlib as mpl
 
-from rover import graphics
+from roverp import graphics
 
 
 def _parse(p):

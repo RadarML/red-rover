@@ -2,7 +2,6 @@
 
 import numpy as np
 import lzma
-from functools import partial
 from multiprocessing.pool import ThreadPool
 from jaxtyping import Shaped
 from beartype.typing import Iterable, Iterator, Callable, Optional, Any

@@ -19,7 +19,7 @@ from jax import numpy as jnp
 import numpy as np
 
 from roverd import Dataset, channels
-from rover import graphics
+from roverp import graphics
 
 
 def _parse(p):

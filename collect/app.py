@@ -8,7 +8,7 @@ import io
 import logging
 from datetime import datetime
 
-from scripts import Controller
+from roverc_scripts import Controller
 from flask import Flask, render_template, jsonify, request
 
 

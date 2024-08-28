@@ -6,7 +6,7 @@ import importlib
 from typing import cast
 
 
-target = "scripts"
+target = "scriptsc"
 
 
 def _parser():

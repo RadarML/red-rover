@@ -1,5 +1,3 @@
-# roverd
-
 ## Install
 
 Install with `pip install .`. By default, `ouster-sdk` (for handling lidar metadata) and `opencv-python-headless` (for reading video) are not installed; you can install these with one of the following:

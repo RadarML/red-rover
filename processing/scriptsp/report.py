@@ -17,7 +17,7 @@ from matplotlib.backends.backend_pdf import PdfPages
 
 from beartype.typing import cast
 
-from rover import RawTrajectory
+from roverp import RawTrajectory
 
 
 def _parse(p):

@@ -20,7 +20,7 @@ from tqdm import tqdm
 import numpy as np
 from plyfile import PlyData
 
-from rover import RawTrajectory
+from roverp import RawTrajectory
 
 
 def _parse(p):

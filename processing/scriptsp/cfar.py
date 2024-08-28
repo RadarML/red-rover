@@ -29,7 +29,7 @@ from beartype.typing import cast
 from jaxtyping import Float, Array
 
 from roverd import Dataset, sensors
-from rover import RadarProcessing, AOAEstimation, CFAR
+from roverp import RadarProcessing, AOAEstimation, CFAR
 from arrow import AWR1843Boost
 
 
