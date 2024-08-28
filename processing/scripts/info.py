@@ -7,7 +7,7 @@ Outputs:
     - Printed to `stdout`.
 """
 
-from rover import Dataset
+from roverd import Dataset
 
 
 def _size(x, units=[' B', 'KB', 'MB', 'GB', 'TB'], suffix=''):

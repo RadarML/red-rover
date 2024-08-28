@@ -20,7 +20,8 @@ import jax
 from jax import numpy as jnp
 from beartype.typing import cast
 
-from rover import Dataset, LidarData, graphics
+from roverd import Dataset, sensors
+from rover import graphics
 
 
 def _parse(p):
@@ -46,16 +47,16 @@ def _load(path: str, radar: str):
 
     radar_meta = 'radar' if radar == 'raw' else '_radar'
 
-    _ts = {k: ds.get(k).timestamps() for k in [radar_meta, "lidar", "camera"]}
+    _ts = {k: ds[k].timestamps() for k in [radar_meta, "lidar", "camera"]}
     timestamps = {
         "radar": _ts[radar_meta], "camera": _ts["camera"],
         "rfl": _ts["lidar"], "nir": _ts["lidar"], "rng": _ts["lidar"]}
 
     streams = {
-        "radar": ds.get("_radar")[radar].stream_prefetch(),
-        "rng": cast(LidarData, ds["lidar"]).destaggered_stream("rng"),
-        "rfl": cast(LidarData, ds["lidar"]).destaggered_stream("rfl"),
-        "nir": cast(LidarData, ds["lidar"]).destaggered_stream("nir"),
+        "radar": ds["_radar"][radar].stream_prefetch(),
+        "rng": cast(sensors.LidarData, ds["lidar"]).destaggered_stream("rng"),
+        "rfl": cast(sensors.LidarData, ds["lidar"]).destaggered_stream("rfl"),
+        "nir": cast(sensors.LidarData, ds["lidar"]).destaggered_stream("nir"),
         "camera": ds["camera"]["video.avi"].stream_prefetch()
     }
 

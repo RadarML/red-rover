@@ -36,6 +36,7 @@ def _parse(p):
 
 
 def normalize(arr, left, right):
+    """Apply frame normalization / auto-gain."""
     left, right = jnp.percentile(arr, jnp.array([left, right]))
     return (jnp.clip(arr, left, right) - left) / (right - left)
 

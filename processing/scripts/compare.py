@@ -18,7 +18,8 @@ import jax
 from jax import numpy as jnp
 import numpy as np
 
-from rover import graphics, Dataset, RawChannel
+from roverd import Dataset, channels
+from rover import graphics
 
 
 def _parse(p):
@@ -101,7 +102,7 @@ def _main(args):
         args.out = os.path.join(args.path, "_report", "compare.mp4")
     os.makedirs(os.path.dirname(args.out), exist_ok=True)
 
-    radar = Dataset(args.path).get("_radar")
+    radar = Dataset(args.path)["_radar"]
 
     ts = radar.timestamps()
     ts = ts - ts[0]
@@ -111,7 +112,7 @@ def _main(args):
         if k in radar.channels:
             return radar[k]
         else:
-            return RawChannel(
+            return channels.RawChannel(
                 k, radar[args.compare[0]].type, radar[args.compare[0]].shape)
 
     data = [_get_data(k).stream_prefetch() for k in args.compare]

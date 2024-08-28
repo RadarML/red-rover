@@ -93,12 +93,15 @@ class Channel(ABC):
 
     def _verify_type(self, data: Shaped[np.ndarray, "..."]) -> None:
         """Verify data shape and type."""
-        if tuple(data.shape[-len(self.shape):]) != tuple(self.shape):
+        if (
+                len(self.shape) > 0 and
+                tuple(data.shape[-len(self.shape):]) != tuple(self.shape)
+            ):
             raise ValueError(f"Data shape {data.shape} does not match channel "
-                "shape {self.shape}.")
+                f"shape {self.shape}.")
         if data.dtype != self.type:
             raise ValueError(f"Data type {data.dtype} does not match channel "
-                "type {self.type}.")
+                f"type {self.type}.")
 
     def write(
         self, data: Shaped[np.ndarray, "..."], mode: str = 'wb'

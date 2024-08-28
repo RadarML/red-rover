@@ -17,7 +17,7 @@ import numpy as np
 import os, json
 from tqdm import tqdm
 
-from rover import Dataset
+from roverd import Dataset
 
 
 def _parse(p):
@@ -58,7 +58,7 @@ def _main(args):
         return {"pos": xyz_world.T, "amplitude": pts_amp, "cfar": pts_thresh}
 
 
-    cfar = Dataset(args.path).get("_cfar")
+    cfar = Dataset(args.path)["_cfar"]
     poses = np.load(os.path.join(args.path, "_radar", "pose.npz"))
 
     # Toss tqdm in here so it fetches the progress bar length for us

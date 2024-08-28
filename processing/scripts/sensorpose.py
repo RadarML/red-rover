@@ -18,7 +18,8 @@ Keys:
 import os
 import numpy as np
 
-from rover import Dataset, Trajectory
+from roverd import Dataset
+from rover import Trajectory
 
 
 def _parse(p):

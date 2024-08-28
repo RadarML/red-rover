@@ -12,7 +12,7 @@ import os
 import numpy as np
 from beartype.typing import cast
 
-from rover import Dataset, RawChannel
+from roverd import Dataset, channels
 
 
 def _parse(p):
@@ -23,8 +23,8 @@ def _parse(p):
 
 
 def _main(args):
-    radar = Dataset(args.path).get("_radar")
-    gt = cast(RawChannel, radar["rda"]).memmap()
+    radar = Dataset(args.path)["_radar"]
+    gt = cast(channels.RawChannel, radar["rda"]).memmap()
 
     nval = int(gt.shape[0] * args.val)
     poses = np.load(os.path.join(args.path, "_radar", "pose.npz"))

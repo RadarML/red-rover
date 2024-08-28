@@ -17,7 +17,7 @@ import json
 import numpy as np
 from scipy.ndimage import binary_dilation
 
-import rover
+from roverd import Dataset
 
 
 def _parse(p):
@@ -78,9 +78,9 @@ def _main(args):
         }, f, indent=4)
 
     # Radar data
-    ds = rover.Dataset(args.path)
+    ds = Dataset(args.path)
     radarfile = h5py.File(os.path.join(args.out, "radar.h5"), 'w')
-    radardata = np.swapaxes(ds.get('_radar')['rover1'].read(), 1, 2) * 1e-6
+    radardata = np.swapaxes(ds['_radar']['rover1'].read(), 1, 2) * 1e-6
     radarfile.create_dataset("rad", data=radardata)
 
     # Radar metadata

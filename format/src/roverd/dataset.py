@@ -80,6 +80,21 @@ class Dataset:
             json.dump({}, f)
         return self[key]
 
+    def virtual_copy(
+        self, key: str, exist_ok: bool = False
+    ) -> SensorData:
+        """Create a virtual sensor corresponding to an existing sensor.
+
+        The virtual sensor will have the same name as the specified `key`, with
+        a prepended `_`; timestamp data is copied as well.
+        """
+        original = self.sensors[key]
+        copy = self.create(key='_' + key, exist_ok=exist_ok)
+        if "ts" not in copy.channels:
+            ts = copy.create("ts", original.config["ts"])
+            ts.write(original["ts"].read())
+        return copy
+
     def __getitem__(self, key: str) -> SensorData:
         """Alias for `self.sensors[...]`."""
         if key in self.sensors:

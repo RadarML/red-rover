@@ -12,7 +12,7 @@ Channels:
       channels. Note that destaggering, etc is not performed.
 """
 
-from rover import Dataset
+from roverd import Dataset
 
 
 def _parse(p):

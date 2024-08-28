@@ -16,7 +16,7 @@ from functools import partial
 import jax
 from jax import numpy as jnp
 
-from rover import Dataset
+from roverd import Dataset
 
 
 def _parse(p):
@@ -55,7 +55,7 @@ def _main(args):
     def render(i):
         return _render(seeds[i], params, pose[i:i+1])
 
-    out = Dataset(args.path).get("_radar").create(f"sim_{args.mode}", {
+    out = Dataset(args.path)["_radar"].create(f"sim_{args.mode}", {
         "format": "raw", "type": "f4",
         "shape": [intrinsics.doppler.shape[0], intrinsics.range.shape[0], 8],
         "desc": "Simulated doppler-range-azimuth image using lidar data."})

@@ -21,7 +21,8 @@ import jax
 from jax import numpy as jnp
 from beartype.typing import cast
 
-from rover import Dataset, RadarData, RadarProcessing
+from roverd import Dataset, sensors
+from rover import RadarProcessing
 
 
 def _parse(p):
@@ -49,7 +50,7 @@ def _main(args):
     else:
         out = Dataset(args.out)
 
-    radar = cast(RadarData, ds["radar"])
+    radar = cast(sensors.RadarData, ds["radar"])
     stream = tqdm(
         radar.iq_stream(batch=args.batch), desc=args.mode,
         total=math.ceil(len(ds["radar"]) / args.batch))

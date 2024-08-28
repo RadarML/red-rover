@@ -8,7 +8,7 @@ Outputs:
     - `_fusion/indices.npz` unless overridden.
 
 Keys:
-    - `indices`: corresponding `u32` data indices of each of the specified
+    - `indices`: corresponding `u4` data indices of each of the specified
       `--sensors` in the provided order, with the sensor in axis 0 and
       time index in axis 1.
     - `sensors`: string array recording the provided `--sensors`.
@@ -18,7 +18,7 @@ import os
 import time
 import numpy as np
 
-from rover import Dataset
+from roverd import Dataset
 
 
 def _parse(p):
@@ -45,7 +45,7 @@ def _main(args):
     os.makedirs(os.path.dirname(out), exist_ok=True)
 
     ds = Dataset(args.path)
-    timestamps = [ds.get(s).timestamps(smooth=False) for s in args.sensors]
+    timestamps = [ds[s].timestamps(smooth=False) for s in args.sensors]
 
     if args.mode == 'left':
         ref = timestamps[0]

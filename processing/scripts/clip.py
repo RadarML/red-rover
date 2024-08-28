@@ -1,6 +1,6 @@
 """Create clip embeddings for each frame in the video.
 
-NOTE: requires `open_clip` to to be installed, along with dependencies::
+NOTE: requires `open_clip` to be installed, along with dependencies::
 
     pip install torch torchvision open_clip_torch==2.26.1
 
@@ -23,7 +23,7 @@ import numpy as np
 from einops import rearrange
 from tqdm import tqdm
 
-from rover import Dataset
+from roverd import Dataset
 
 
 def _parse(p):
@@ -35,7 +35,7 @@ def _parse(p):
 
 def _main(args):
 
-    # Ignore errors here since torch & open_clip aren't shipped by default.
+    # Ignore for type checking since torch & open_clip aren't shipped by default.
     try:
         import open_clip  # type: ignore
         import torch      # type: ignore
@@ -65,16 +65,13 @@ def _main(args):
         ) / std[None, :, None, None]).astype(np.float16)
 
     def _apply_image(img):
-        with torch.no_grad(), torch.cuda.amp.autocast():
+        with torch.no_grad(), torch.amp.autocast('cuda'):
             features = model.encode_image(torch.Tensor(img).to('cuda'))
         return rearrange(features.cpu().numpy(), "(h w) c -> h w c", h=2, w=4)
 
     ds = Dataset(args.path)
     camera = ds["camera"]
-    _camera = ds.create("_camera", exist_ok=True)
-
-    ts = _camera.create("ts", camera.config["ts"])
-    ts.write(camera["ts"].read())
+    _camera = ds.virtual_copy("camera", exist_ok=True)
 
     embeddings = _camera.create("clip", {
         "format": "raw", "type": "f2", "shape": [2, 4, 768],

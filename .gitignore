@@ -10,6 +10,9 @@ collect/data*
 collect/_data*
 processing/data*
 processing/_data*
+processing/models/*/*.md
+processing/models/*/*.h5
+processing/models/*/*.bin
 processing/calibration/_*
 
 # Ros files

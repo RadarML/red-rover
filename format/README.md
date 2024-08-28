@@ -8,6 +8,7 @@ Install with `pip install .`. By default, `ouster-sdk` (for handling lidar metad
     pip install .[video]
     pip install .[ouster]
 ```
+- **NOTE**: when using `pip install` from local files, you can replace `.` with the relative path to the `red-rover/format` directory, e.g. `pip install ./red-rover/format[video,ouster]` from the root `RadarML` directory.
 
 To run unit tests:
 ```

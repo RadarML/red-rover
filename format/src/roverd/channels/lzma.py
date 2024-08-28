@@ -2,6 +2,8 @@
 
 import numpy as np
 import lzma
+from functools import partial
+from multiprocessing.pool import ThreadPool
 from jaxtyping import Shaped
 from beartype.typing import Iterable, Iterator, Callable, Optional, Any
 
@@ -146,6 +148,9 @@ class LzmaFrameChannel(Channel):
     def consume(self, iterator: Iterable[np.ndarray], preset: int = 0) -> None:
         """Consume iterator and write to file.
 
+        NOTE: if consuming batched data, compressesion is handled in parallel
+        by a thread pool.
+
         Args:
             iterator: iterable to consume. Should yield frame-by-frame.
             preset: LZMA compression preset to use (0-9).
@@ -157,9 +162,17 @@ class LzmaFrameChannel(Channel):
         with open(self.path, 'wb') as f:
             for data in iterator:
                 self._verify_type(data)
-                compressed = lzma.compress(data.data, preset=preset)
-                f.write(compressed)
-                offsets.append(offsets[-1] + len(compressed))
+                if len(data.shape) == len(self.shape):
+                    compressed: bytes = lzma.compress(data.data, preset=preset)
+                    f.write(compressed)
+                    offsets.append(offsets[-1] + len(compressed))
+                else:
+                    batch: list[bytes] = ThreadPool(
+                        processes=data.shape[0]
+                    ).map(lambda x: lzma.compress(x.data, preset=preset), data)
+                    for frame in batch:
+                        f.write(frame)
+                        offsets.append(offsets[-1] + len(frame))
 
         offsets_np = np.array(offsets, dtype=np.uint64)
         with open(self.path + "_i", 'wb') as f:

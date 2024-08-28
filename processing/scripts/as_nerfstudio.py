@@ -17,7 +17,7 @@ import numpy as np
 import cv2
 from tqdm import tqdm
 
-from rover import Dataset
+from roverd import Dataset
 
 
 def _parse(p):
@@ -62,7 +62,8 @@ def _main(args):
     intrinsics["frames"] = []
     for i, pose in zip(tqdm(raw_indices), c2w):
         frame_path = os.path.join("images", "frame_{}.jpg".format(i))
-        cv2.imwrite(os.path.join(out_path, frame_path), video.index(i))
+        cv2.imwrite(
+            os.path.join(out_path, frame_path), video.read(i, samples=1))
         intrinsics["frames"].append({
             "file_path": frame_path, "transform_matrix": pose.tolist()})
 

@@ -17,7 +17,7 @@ from matplotlib.backends.backend_pdf import PdfPages
 
 from beartype.typing import cast
 
-import rover
+from rover import RawTrajectory
 
 
 def _parse(p):
@@ -53,7 +53,7 @@ def _main(args):
         args.out = os.path.join(args.path, "_report", "speed.pdf")
     os.makedirs(os.path.dirname(args.out), exist_ok=True)
 
-    traj = rover.RawTrajectory.from_csv(
+    traj = RawTrajectory.from_csv(
         os.path.join(args.path, "_slam", "trajectory.csv"))
     base_time = traj.t[0]
     duration = traj.t[-1] - base_time

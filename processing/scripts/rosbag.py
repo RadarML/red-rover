@@ -17,7 +17,7 @@ from rosbags.rosbag1 import Writer
 from rosbags.serde import cdr_to_ros1, serialize_cdr
 from rosbags.typesys import types
 
-from rover.dataset import Dataset, LidarData
+from roverd import Dataset, sensors
 
 
 def ts_sec_ns(t):
@@ -101,7 +101,7 @@ def _main(args):
                 connection, ts,
                 cdr_to_ros1(serialize_cdr(msg, msgtype), msgtype))
 
-        lidar = cast(LidarData, dataset["lidar"])
+        lidar = cast(sensors.LidarData, dataset["lidar"])
         print(lidar)
 
         msgtype = types.sensor_msgs__msg__PointCloud2.__msgtype__

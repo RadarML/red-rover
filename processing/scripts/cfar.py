@@ -28,7 +28,8 @@ from jax import numpy as jnp
 from beartype.typing import cast
 from jaxtyping import Float, Array
 
-from rover import Dataset, RadarData, RadarProcessing, AOAEstimation, CFAR
+from roverd import Dataset, sensors
+from rover import RadarProcessing, AOAEstimation, CFAR
 from arrow import AWR1843Boost
 
 
@@ -50,7 +51,7 @@ def _main(args):
     else:
         out = Dataset(args.out)
 
-    radar = cast(RadarData, ds["radar"])
+    radar = cast(sensors.RadarData, ds["radar"])
     stream = tqdm(
         radar.iq_stream(batch=args.batch),
         total=math.ceil(len(ds["radar"]) / args.batch))
