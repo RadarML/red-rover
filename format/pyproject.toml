@@ -1,0 +1,33 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "roverd"
+version = "0.0.1"
+authors = [
+  { name="Tianshu Huang", email="tianshu2@andrew.cmu.edu" },
+]
+description = "Python API for the Rover data format."
+readme = "README.md"
+requires-python = ">=3.11"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent"
+]
+dependencies = [
+    "numpy",
+    "pyyaml",
+    "beartype",
+    "jaxtyping"
+]
+
+[project.optional-dependencies]
+video = ["opencv-python-headless"]
+ouster = ["ouster-sdk==0.12.0"]
+
+
+[project.urls]
+Homepage = "https://github.com/WiseLabCMU/red-rover"
+Issues = "https://github.com/WiseLabCMU/red-rover/issues"

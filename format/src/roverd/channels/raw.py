@@ -27,7 +27,7 @@ class RawChannel(Channel):
         """
         with self._FOPEN(self.path, 'rb') as f:  # type: ignore
             if start > 0:
-                f.seek(self.size * start, whence=0)  # type: ignore
+                f.seek(self.size * start, 0)  # type: ignore
             size = -1 if samples == -1 else samples * self.size
             data = cast(bytes, f.read(size))
         return np.frombuffer(data, dtype=self.type).reshape(-1, *self.shape)

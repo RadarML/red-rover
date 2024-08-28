@@ -1,6 +1,6 @@
 """Video (nominally mjpeg) channel."""
 
-import cv2
+from functools import cached_property
 import numpy as np
 from jaxtyping import Shaped
 from beartype.typing import Iterator, Callable, Optional, Any
@@ -16,6 +16,11 @@ class VideoChannel(Channel):
     Using `opencv-python-headless` instead of the default opencv should
     alleviate some of these issues.
     """
+
+    @cached_property
+    def _cv2_module(self):
+        import cv2
+        return cv2
 
     def read(
         self, start: int = 0, samples: int = -1
@@ -36,10 +41,10 @@ class VideoChannel(Channel):
             ValueError: None of the frames could be read, possibly due to
                 an invalid video, or invalid start index.
         """
-        cap = cv2.VideoCapture(self.path)
+        cap = self._cv2_module.VideoCapture(self.path)
 
         if start != 0:
-            cap.set(cv2.CAP_PROP_POS_FRAMES, start - 1)
+            cap.set(self._cv2_module.CAP_PROP_POS_FRAMES, start - 1)
 
         frames: list[np.ndarray] = []
         while cap.isOpened():
@@ -74,11 +79,12 @@ class VideoChannel(Channel):
         if transform is None:
             transform = lambda x: x
 
-        cap = cv2.VideoCapture(self.path)
+        cap = self._cv2_module.VideoCapture(self.path)
         frames: list[np.ndarray] = []
         while cap.isOpened():
-            if len(frames) == batch:
+            if batch != 0 and len(frames) == batch:
                 yield transform(np.stack(frames))
+                frames = []
 
             ret, frame = cap.read()
             if ret:

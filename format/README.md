@@ -1,5 +1,19 @@
 # roverd
 
+## Install
+
+Install with `pip install .`. By default, `ouster-sdk` (for handling lidar metadata) and `opencv-python-headless` (for reading video) are not installed; you can install these with one of the following:
+```sh
+    pip install .[video,ouster]
+    pip install .[video]
+    pip install .[ouster]
+```
+
+To run unit tests:
+```
+python -m unittest discover
+```
+
 ## Design Goals
 
 The rover dataset format, `roverd` is designed to handle data collection and storage for concurrent sensor streams with a fixed dimension, such as camera, lidar, or radar data. Its design has the following goals:

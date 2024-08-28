@@ -69,14 +69,16 @@ class LzmaFrameChannel(Channel):
                 an invalid video, or invalid start index.
         """
         with open(self.path + "_i", "rb") as f:
+            if start != 0:
+                f.seek(8 * start)
+
             if samples == -1:
                 indices = np.frombuffer(f.read(), dtype=np.uint64)
             else:
-                f.seek(8 * start)
                 indices = np.frombuffer(
                     f.read((samples + 1) * 8), dtype=np.uint64)
 
-        if len(indices) < 8:
+        if len(indices) < 2:
             raise ValueError("Could not read indices.")
 
         data = []
@@ -122,13 +124,14 @@ class LzmaFrameChannel(Channel):
             transform = lambda x: x
 
         with open(self.path + "_i", "rb") as f:
-            indices = np.frombuffer(f.read())
+            indices = np.frombuffer(f.read(), dtype=np.uint64)
 
         frames: list[np.ndarray] = []
         with open(self.path, 'rb') as f:
             for left, right in zip(indices[:-1], indices[1:]):
-                if len(frames) == batch:
+                if batch != 0 and len(frames) == batch:
                     yield transform(np.concatenate(frames, axis=0))
+                    frames = []
 
                 decompressed = self.buffer_to_array(
                     lzma.decompress(f.read(right - left)))
@@ -139,9 +142,6 @@ class LzmaFrameChannel(Channel):
 
         if len(frames) > 0:
             yield transform(np.concatenate(frames, axis=0))
-
-        raise NotImplementedError(
-            "`.stream()` is not implemented for this channel type.")
 
     def consume(self, iterator: Iterable[np.ndarray], preset: int = 0) -> None:
         """Consume iterator and write to file.
