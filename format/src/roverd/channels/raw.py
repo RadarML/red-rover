@@ -1,10 +1,13 @@
 """Raw, uncompressed binary data."""
 
-import numpy as np
-from jaxtyping import Shaped
-from beartype.typing import cast, Callable, Optional, Any, Iterable, Iterator
+from queue import Queue
+from threading import Thread
 
-from .base import Channel
+import numpy as np
+from beartype.typing import Any, Callable, Iterable, Iterator, Optional, Union, cast
+from jaxtyping import Shaped
+
+from .base import Buffer, Channel
 
 
 class RawChannel(Channel):
@@ -81,14 +84,33 @@ class RawChannel(Channel):
                 yield transform(
                     np.frombuffer(data, dtype=self.type).reshape(shape))
 
-    def consume(self, iterator: Iterable[np.ndarray]) -> None:
-        """Consume iterator and write to file.
+    def consume(
+        self, stream: Union[Iterable[Shaped[np.ndarray, "..."]], Queue],
+        thread: bool = False
+    ) -> None:
+        """Consume iterable or queue and write to file.
 
+        - If `Iterable`, fetches from the iterator until exhausted (i.e. until
+          `StopIteration`), then returns.
+        - If `Queue`, `.get()` from the `Queue` until `None` is received, then
+          return.
+
+        Args:
+            stream: stream to consume.
+            thread: whether to return immediately, and run in a separate thread
+                instead of returning immediately.
+            preset: lzma compression preset to use.
         Raises:
             ValueError: data type/shape does not match channel specifications.
         """
+        if isinstance(stream, Queue):
+            stream = Buffer(stream)
+        if thread:
+            Thread(target=self.consume, kwargs={"stream": stream}).start()
+            return
+
         with self._FOPEN(self.path, 'wb') as f:  # type: ignore
-            for data in iterator:
+            for data in stream:
                 self._verify_type(data)
                 f.write(data.tobytes())  # type: ignore
 

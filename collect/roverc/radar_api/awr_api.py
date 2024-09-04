@@ -3,9 +3,10 @@
 # NOTE: We ignore a few naming rules to maintain consistency with TI's naming.
 # ruff: noqa: N802, N803
 
-import time
-import serial
 import logging
+import time
+
+import serial
 
 from . import awr_types as types
 from .awr_boilerplate import AWR1843Mixins

@@ -1,20 +1,17 @@
 """Common capture utilities."""
 
-import os
 import json
-import struct
-import socket
 import logging
+import os
+import socket
 import threading
 import traceback
+from queue import Queue
 from time import perf_counter, time
 
 import numpy as np
-
-from beartype.typing import Optional, Any
-
-
-SensorMetadata = dict[str, dict[str, Any]]
+from beartype.typing import Any, Optional
+from roverd import sensors
 
 
 class SensorException(Exception):
@@ -23,7 +20,7 @@ class SensorException(Exception):
     pass
 
 
-class BaseCapture:
+class Capture:
     """Capture data for a generic sensor stream.
 
     Args:
@@ -31,33 +28,24 @@ class BaseCapture:
         fps: target framerate
         report_interval: interval for reporting sensor statistics, in seconds
         log: parent logger to use
-        kwargs: passthrough to sensor-specific initialization
     """
-
-    _COMMON: SensorMetadata = {
-        "ts": {
-            "format": "raw", "type": "f8", "shape": (),
-            "description": "Timestamp, in seconds."},
-    }
-
-    def _init(self, path: str, **kwargs) -> SensorMetadata:
-        """Run sensor-specific initialization.
-
-        Returns:
-            Data channel metadata information.
-        """
-        raise NotImplementedError()
 
     def __init__(
         self, path: str, fps: float = 1.0, report_interval: float = 5.0,
-        log: Optional[logging.Logger] = None, **kwargs
+        log: Optional[logging.Logger] = None
     ) -> None:
-        os.makedirs(path)
-        self.ts = open(os.path.join(path, "ts"), 'wb')
+        self.sensor = sensors.SensorData(path=path, create=True)
+        self.ts: Queue = Queue()
+        self.sensor.create("ts", {
+            "format": "raw", "type": "f8", "shape": (),
+            "description": "Timestamp, in seconds."}
+        ).consume(self.ts)
 
         self.len = 0
         self.period: list[float] = []
         self.runtime: list[float] = []
+        self.qlen: int = 0
+
         self.prev_time = self.start_time = self.trace_time = perf_counter()
         self._ref_time: Optional[tuple[float, float]] = None
         self._first_loop = True
@@ -66,10 +54,9 @@ class BaseCapture:
         self.report_interval = report_interval
         self.log = log if log else logging.Logger("placeholder")
 
-        meta = self._init(path, **kwargs)
-        with open(os.path.join(path, "meta.json"), 'w') as f:
-            json.dump({**meta, **self._COMMON}, f, indent=4)
-
+    def queue_length(self) -> int:
+        """Get queue length."""
+        return self.ts.qsize()
 
     def start(self, timestamp: Optional[float] = None) -> None:
         """Mark start of current frame processing.
@@ -79,7 +66,7 @@ class BaseCapture:
         """
         t = time() if timestamp is None else timestamp
         self.start_time = perf_counter()
-        self.ts.write(struct.pack('d', t))
+        self.ts.put(np.array(t, dtype=np.float64))
         self.len += 1
 
     def end(self):
@@ -90,6 +77,7 @@ class BaseCapture:
         self.period.append(end - self.prev_time)
         self.runtime.append(end - self.start_time)
         self.prev_time = end
+        self.qlen = max(self.queue_length(), self.qlen)
 
         if self.len % int(self.fps * self.report_interval) == 0:
             self.reset_stats()
@@ -103,30 +91,44 @@ class BaseCapture:
 
     def close(self) -> None:
         """Close files and clean up."""
-        self.ts.close()
+        self.ts.put(None)
 
     def reset_stats(self) -> None:
         """Reset (and log) tracked statistics.
 
-        The log message is usually `info`; if the observed frequency drops
-        below 99% of the target, a `warning` is issued, and if the frequency
-        drops below 90%, a `error` is issued.
+        Three values are logged:
+        - `f`: frequency of the capture sensor, in Hz.
+        - `u`: utilization of the capture, in percent.
+        - `w`: WCET (worst-case execution time) of the capture, in ms.
+        - `q`: maximum queue length.
+
+        The log message is usually `info`, unless certain targets are violated:
+
+        - `error`: if the observed frequency drops below 90% of the target, or
+          the WCET exceeds the deadline (i.e. `T = D < C`).
+        - `warning`: if the observed frequency drops below 99% of the target,
+          or the WCET exceeds 90% of the deadline.
         """
         freq = 1 / np.mean(self.period)
         util = np.mean(self.runtime) * self.fps
-        self.period = []
-        self.runtime = []
+        wcet = np.max(self.period)
 
-        log_msg = f"freq: {freq:.3f}  util: {util:.3f}"
-        if freq < self.fps * 0.9:
+        log_msg = (
+            f"f: {freq:.2f} u: {util * 100:.0f}% "
+            f"w: {wcet * 1000:.1f} q: {self.qlen}")
+        if (freq < self.fps * 0.9) or (wcet > 1.0):
             self.log.error(log_msg)
-        elif freq < self.fps * 0.99:
+        elif (freq < self.fps * 0.99) or (wcet > 0.9):
             self.log.warning(log_msg)
         else:
             self.log.info(log_msg)
 
+        self.period = []
+        self.runtime = []
+        self.qlen = 0
 
-class BaseSensor:
+
+class Sensor:
     """Generic sensor channel.
 
     Communicates using local `AF_UNIX` sockets using the socket

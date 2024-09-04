@@ -1,40 +1,65 @@
 """Radar data collection."""
 
-import os
 import json
+import logging
+import os
+from queue import Queue
 
-from .common import BaseCapture, BaseSensor, SensorMetadata
-from .radar_api import AWRSystem, dca_types, RadarConfig, CaptureConfig
+import numpy as np
+from beartype.typing import Optional
+
+from .common import Capture, Sensor
+from .radar_api import AWRSystem, CaptureConfig, RadarConfig, dca_types
 
 
-class RadarCapture(BaseCapture):
-    """Radar capture data."""
+class RadarCapture(Capture):
+    """Radar capture data.
 
-    def _init(
-        self, path, shape: list[int] = [], **_
-    ) -> SensorMetadata:
-        self.iq = open(os.path.join(path, "iq"), mode='wb')
-        self.valid = open(os.path.join(path, "valid"), mode='wb')
-        return {
-            "iq": {
-                "format": "raw", "type": "i2", "shape": shape,
-                "desc": "Raw I/Q stream."},
-            "valid": {
-                "format": "raw", "type": "u1", "shape": [],
-                "desc": "True if this frame is complete (no zero-fill)."}}
+    Args:
+        path: directory path to write data to.
+        fps: target framerate
+        report_interval: interval for reporting sensor statistics, in seconds
+        log: parent logger to use
+        shape: radar shape.
+    """
+
+    def __init__(
+        self, path: str, fps: float = 1.0, report_interval: float = 5.0,
+        log: Optional[logging.Logger] = None, shape: list[int] = []
+    ) -> None:
+        super().__init__(
+            path=path, fps=fps, report_interval=report_interval, log=log)
+
+        self.iq: Queue = Queue()
+        self.sensor.create("iq", {
+            "format": "raw", "type": "i2", "shape": shape,
+            "desc": "Raw I/Q stream."}
+        ).consume(self.iq, thread=True)
+
+        self.valid: Queue = Queue()
+        self.sensor.create("valid", {
+            "format": "raw", "type": "u1", "shape": [],
+            "desc": "True if this frame is complete (no zero-fill)."}
+        ).consume(self.valid, thread=True)
+
+    def queue_length(self) -> int:
+        return self.iq.qsize()
 
     def write(self, data: dca_types.RadarFrame) -> None:
         """Write a single frame."""
-        self.iq.write(data.data)
-        self.valid.write(b'\x01' if data.complete else b'\x00')
+        self.iq.put(data.data)
+        self.valid.put(
+            np.array(True, dtype=np.uint8) if data.complete
+            else np.array(False, dtype=np.uint8))
 
     def close(self) -> None:
         """Close files and clean up."""
+        self.iq.put(None)
+        self.valid.put(None)
         super().close()
-        self.iq.close()
 
 
-class Radar(BaseSensor):
+class Radar(Sensor):
     """TI AWR1843Boost Radar Sensor & DCA1000EVM capture card.
 
     See `AWRSystem` for arguments.

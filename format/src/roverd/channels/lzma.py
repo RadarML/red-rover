@@ -1,13 +1,16 @@
 """LZMA-compressed channels."""
 
-import numpy as np
 import lzma
 from multiprocessing.pool import ThreadPool
-from jaxtyping import Shaped
-from beartype.typing import Iterable, Iterator, Callable, Optional, Any
+from queue import Queue
+from threading import Thread
 
+import numpy as np
+from beartype.typing import Any, Callable, Iterable, Iterator, Optional, Union
+from jaxtyping import Shaped
+
+from .base import Buffer, Channel
 from .raw import RawChannel
-from .base import Channel
 
 
 class LzmaChannel(RawChannel):
@@ -144,22 +147,36 @@ class LzmaFrameChannel(Channel):
         if len(frames) > 0:
             yield transform(np.concatenate(frames, axis=0))
 
-    def consume(self, iterator: Iterable[np.ndarray], preset: int = 0) -> None:
-        """Consume iterator and write to file.
+    def consume(
+        self, stream: Union[Iterable[Shaped[np.ndarray, "..."]], Queue],
+        thread: bool = False, preset: int = 0
+    ) -> None:
+        """Consume iterable or queue and write to file.
 
-        NOTE: if consuming batched data, compressesion is handled in parallel
-        by a thread pool.
+        - If `Iterable`, fetches from the iterator until exhausted (i.e. until
+          `StopIteration`), then returns.
+        - If `Queue`, `.get()` from the `Queue` until `None` is received, then
+          return.
 
         Args:
-            iterator: iterable to consume. Should yield frame-by-frame.
-            preset: LZMA compression preset to use (0-9).
-
+            stream: stream to consume.
+            thread: whether to return immediately, and run in a separate thread
+                instead of returning immediately.
+            preset: lzma compression preset to use.
         Raises:
             ValueError: data type/shape does not match channel specifications.
         """
+        if isinstance(stream, Queue):
+            stream = Buffer(stream)
+        if thread:
+            Thread(
+                target=self.consume,
+                kwargs={"stream": stream, "preset": preset}).start()
+            return
+
         offsets = [0]
         with open(self.path, 'wb') as f:
-            for data in iterator:
+            for data in stream:
                 self._verify_type(data)
                 if len(data.shape) == len(self.shape):
                     compressed: bytes = lzma.compress(data.data, preset=preset)

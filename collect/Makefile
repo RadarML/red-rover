@@ -32,6 +32,7 @@ stop:
 
 env:
 	$(PYTHON) -m venv env
+	$(VENV)/pip install ../format
 	$(VENV)/pip install -r requirements.txt
 
 lsconfig:

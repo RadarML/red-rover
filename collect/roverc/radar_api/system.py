@@ -3,8 +3,8 @@
 import logging
 
 from .awr_api import AWR1843
+from .config import CaptureConfig, RadarConfig
 from .dca_api import DCA1000EVM
-from .config import RadarConfig, CaptureConfig
 
 
 class AWRSystem:

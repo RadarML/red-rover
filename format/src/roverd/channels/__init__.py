@@ -1,8 +1,8 @@
 """Channel types."""
 
 from .base import Channel, Prefetch
-from .raw import RawChannel
 from .lzma import LzmaChannel, LzmaFrameChannel
+from .raw import RawChannel
 from .video import VideoChannel
 
 CHANNEL_TYPES: dict[str, type[Channel]] = {

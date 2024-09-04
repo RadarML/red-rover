@@ -3,50 +3,59 @@
 import os
 from abc import ABC
 from functools import cached_property
-from queue import Queue, Empty
+from queue import Queue
 from threading import Thread
 
 import numpy as np
-
+from beartype.typing import Any, Callable, Iterable, Iterator, Optional, Union
 from jaxtyping import Shaped
-from beartype.typing import Union, Iterator, Iterable, Callable, Optional, Any
 
 
-class Prefetch:
-    """Simple prefetch queue wrapper.
+class Buffer:
+    """Simple queue buffer (i.e. queue to iterator).
 
     Args:
-        iterator: any python iterator.
-        size: prefetch buffer size.
+        queue: queue to use as a buffer. Should return `None` when the stream
+            is complete (i.e. `StopIteration`).
     """
 
-    def __init__(self, iterator, size: int = 64) -> None:
-        self.iterator = iterator
-        self.queue: Queue = Queue(maxsize=size)
-        self.done = False
-
-        self.thread = Thread(target=self._prefetch)
-        self.thread.daemon = True
-        self.thread.start()
-
-    def _prefetch(self):
-        for item in self.iterator:
-            self.queue.put(item)
-        self.done = True
+    def __init__(self, queue: Queue) -> None:
+        self.queue = queue
 
     def __iter__(self):
         return self
 
     def __next__(self):
-        if self.done and self.queue.empty():
+        item = self.queue.get()
+        if item is None:
             raise StopIteration
         else:
-            while True:
-                try:
-                    return self.queue.get(timeout=1.0)
-                except Empty:
-                    if self.done:
-                        raise StopIteration
+            return item
+
+
+class Prefetch(Buffer):
+    """Simple prefetch queue wrapper (i.e. iterator to queue).
+
+    Can be used as a prefetched iterator (`for x in Prefetch(...)`), or as a
+    queue (`Prefetch(...).queue`). When used as a queue, `None` is put in the
+    queue to indicate that the iterator has terminated.
+
+    Args:
+        iterator: any python iterator; must never yield `None`.
+        size: prefetch buffer size.
+    """
+
+    def __init__(self, iterator: Iterable, size: int = 64) -> None:
+        super().__init__(queue=Queue(maxsize=size))
+        self.iterator = iterator
+
+        self.thread = Thread(target=self._prefetch, daemon=True)
+        self.thread.start()
+
+    def _prefetch(self):
+        for item in self.iterator:
+            self.queue.put(item)
+        self.queue.put(None)
 
 
 class Channel(ABC):
@@ -133,9 +142,21 @@ class Channel(ABC):
         raise NotImplementedError(
             "`.stream()` is not implemented for this channel type.")
 
-    def consume(self, iterator: Iterable[np.ndarray]) -> None:
-        """Consume iterable and write to file.
+    def consume(
+        self, stream: Union[Iterable[Shaped[np.ndarray, "..."]], Queue],
+        thread: bool = False
+    ) -> None:
+        """Consume iterable or queue and write to file.
 
+        - If `Iterable`, fetches from the iterator until exhausted (i.e. until
+          `StopIteration`), then returns.
+        - If `Queue`, `.get()` from the `Queue` until `None` is received, then
+          return.
+
+        Args:
+            stream: stream to consume.
+            thread: whether to return immediately, and run in a separate thread
+                instead of returning immediately.
         Raises:
             ValueError: data type/shape does not match channel specifications.
         """

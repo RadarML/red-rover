@@ -2,7 +2,8 @@
 
 import struct
 from enum import Enum
-from beartype.typing import cast, NamedTuple
+
+from beartype.typing import NamedTuple, cast
 
 
 class DCAException(Exception):

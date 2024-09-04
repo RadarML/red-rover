@@ -1,6 +1,7 @@
 """Stop data collection."""
 
 import os
+
 from .control import Controller
 
 

@@ -1,15 +1,17 @@
 """Rover Control Server."""
 
+import io
+import json
+import logging
 import os
-import yaml, json
 import subprocess
 import threading
-import io
-import logging
 from datetime import datetime
 
-from roverc_scripts import Controller
-from flask import Flask, render_template, jsonify, request
+import yaml
+from flask import Flask, jsonify, render_template, request
+
+from scriptsc import Controller
 
 
 class RoverSensor:
@@ -29,7 +31,7 @@ class RoverSensor:
             ['./env/bin/python', 'collect.py', "run", "-s", self.name],
             stdout=subprocess.PIPE, stderr=subprocess.STDOUT
         ) as proc:
-            for line in io.TextIOWrapper(proc.stdout, encoding="utf-8"):
+            for line in io.TextIOWrapper(proc.stdout, encoding="utf-8"):  # type: ignore
                 print(line.rstrip())
                 try:
                     data = json.loads(line.rstrip())
@@ -51,7 +53,7 @@ class Rover:
     """Rover system."""
 
     def __init__(self):
-        with open(os.getenv('ROVER_CFG')) as f:
+        with open(os.getenv('ROVER_CFG')) as f:  # type: ignore
             self.cfg = yaml.load(f, Loader=yaml.FullLoader)
 
         self.controller = Controller(list(self.cfg.keys()))
@@ -92,6 +94,7 @@ with app.app_context():
 
 @app.route('/')
 def index():
+    """Index page."""
     media = "/media/rover"
     disks = os.listdir(media)
     return render_template(
@@ -100,10 +103,11 @@ def index():
 
 @app.route('/command', methods=['POST'])
 def command():
+    """Issue command."""
     try:
-        action = request.json['action']
+        action = request.json['action']  # type: ignore
         if action == 'start':
-            path = request.json["path"]
+            path = request.json["path"]  # type: ignore
             if path.endswith('/'):
                 path += datetime.now().strftime("%Y-%m-%d.%H-%M-%S")
 
@@ -124,13 +128,15 @@ def command():
 
 @app.route('/log')
 def log_all():
+    """Get all log messages."""
     return jsonify(rover.log(start=-1.))
 
 
 @app.route('/log/<start>')
 def log(start=None):
+    """Get log messages after start time."""
     try:
-        ts_start = datetime.strptime(start, "%Y-%m-%dT%H:%M:%S,%f")
+        ts_start = datetime.strptime(start, "%Y-%m-%dT%H:%M:%S,%f")  # type: ignore
         return jsonify(rover.log(start=ts_start.timestamp()))
     except (TypeError, ValueError):
         return "bad timestamp", 400

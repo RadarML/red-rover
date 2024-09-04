@@ -1,10 +1,9 @@
 """Sensor types."""
 
+from ._timestamps import discretize_timestamps, smooth_timestamps
 from .base import SensorData
 from .lidar import LidarData
 from .radar import RadarData
-
-from ._timestamps import smooth_timestamps, discretize_timestamps
 
 SENSOR_TYPES: dict[str, type[SensorData]] = {
     "lidar": LidarData,

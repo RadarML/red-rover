@@ -2,7 +2,6 @@
 
 from beartype.typing import NamedTuple
 
-
 SPEED_OF_LIGHT = 299792458
 """Speed of light, in m/s."""
 

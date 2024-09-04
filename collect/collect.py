@@ -1,10 +1,9 @@
 """Script dispatcher."""
 
+import importlib
 import sys
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
-import importlib
 from typing import cast
-
 
 target = "scriptsc"
 

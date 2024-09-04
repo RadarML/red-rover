@@ -1,38 +1,48 @@
 """Camera data collection."""
 
+import logging
 import os
+from queue import Queue
+
 import cv2
 import numpy as np
+from beartype.typing import Optional, cast
+from roverd import channels
 
-from .common import BaseCapture, BaseSensor, SensorException, SensorMetadata
+from .common import Capture, Sensor, SensorException
 
 
-class CameraCapture(BaseCapture):
+class CameraCapture(Capture):
     """Camera capture data."""
 
-    def _init(
-        self, path: str, width: int = 1920, height: int = 1080, **_
-    ) -> SensorMetadata:
-        fourcc = cv2.VideoWriter_fourcc(*'MJPG')  # type: ignore
-        self.video = cv2.VideoWriter(
-            os.path.join(path, "video.avi"), fourcc, self.fps, (width, height))
-        return {
-            "video.avi": {
-                "format": "mjpg", "type": "u1", "shape": (height, width, 3),
-                "desc": "Ordinary camera video"}
-        }
+    def __init__(
+        self, path: str, fps: float = 1.0,
+        report_interval: float = 5.0, log: Optional[logging.Logger] = None,
+        width: int = 1920, height: int = 1080
+    ) -> None:
+        super().__init__(
+            path=path, fps=fps, report_interval=report_interval, log=log)
+
+        self.video: Queue = Queue()
+        cast(channels.VideoChannel, self.sensor.create("video.avi", {
+            "format": "mjpg", "type": "u1", "shape": (height, width, 3),
+            "desc": "Ordinary camera video"
+        })).consume(self.video, thread=True, fps=fps)
+
+    def queue_length(self) -> int:
+        return self.video.qsize()
 
     def write(self, data: np.ndarray) -> None:
         """Write MJPG stream."""
-        self.video.write(data)
+        self.video.put(data)
 
     def close(self) -> None:
         """Close files and clean up."""
-        self.video.release()
+        self.video.put(None)
         super().close()
 
 
-class Camera(BaseSensor):
+class Camera(Sensor):
     """Video camera.
 
     Args:

@@ -1,13 +1,14 @@
 """DCA1000EVM API."""
 
-import socket
 import logging
+import socket
 import struct
-import time
 import threading
-import numpy as np
+import time
 
+import numpy as np
 from beartype.typing import Optional
+
 from . import dca_types as types
 
 

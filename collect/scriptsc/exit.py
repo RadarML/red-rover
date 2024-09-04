@@ -1,6 +1,7 @@
 """Close data collection processes and clean up."""
 
 import os
+
 from .control import Controller
 
 

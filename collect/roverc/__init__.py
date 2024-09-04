@@ -15,14 +15,13 @@ Supported sensors:
 - Camera: Any UVC camera.
 """  # noqa: D205
 
+from .camera import Camera
+from .common import Sensor
 from .imu import IMU
 from .lidar import Lidar
 from .radar import Radar
-from .camera import Camera
-from .common import BaseSensor
 
-
-__all__ = ["BaseSensor", "IMU", "Lidar", "Radar", "Camera"]
+__all__ = ["Sensor", "IMU", "Lidar", "Radar", "Camera"]
 
 
 SENSORS = {

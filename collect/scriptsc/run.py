@@ -1,10 +1,11 @@
 """Launch data collection process."""
 
-import os
-import yaml
 import json
 import logging
+import os
 import traceback
+
+import yaml
 
 import roverc
 

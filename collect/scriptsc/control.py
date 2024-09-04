@@ -1,8 +1,9 @@
 """Start data collection."""
 
+import json
 import os
 import socket
-import json
+
 import yaml
 
 

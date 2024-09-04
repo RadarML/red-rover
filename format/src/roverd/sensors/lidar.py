@@ -2,12 +2,13 @@
 
 import os
 from functools import cached_property
-import numpy as np
-from jaxtyping import Float32, UInt16, Float64
-from beartype.typing import Iterator
 
-from .base import SensorData
+import numpy as np
+from beartype.typing import Iterator
+from jaxtyping import Float32, Float64, UInt16
+
 from ._timestamps import discretize_timestamps
+from .base import SensorData
 
 
 class LidarData(SensorData):

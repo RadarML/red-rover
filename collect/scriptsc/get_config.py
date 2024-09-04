@@ -1,6 +1,7 @@
 """Get configuration key."""
 
 import os
+
 import yaml
 
 

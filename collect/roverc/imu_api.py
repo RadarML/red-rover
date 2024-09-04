@@ -5,10 +5,10 @@
 """
 
 import logging
-import serial
 import struct
-import numpy as np
 
+import numpy as np
+import serial
 from beartype.typing import NamedTuple, Optional
 from jaxtyping import Float32
 

@@ -1,15 +1,16 @@
 """Sensor base class."""
 
-import os
 import json
-from abc import ABC
+import os
 import struct
+from abc import ABC
 from functools import cached_property
-import numpy as np
 
+import numpy as np
 from jaxtyping import Float64
 
-from roverd.channels import Channel, CHANNEL_TYPES
+from roverd.channels import CHANNEL_TYPES, Channel
+
 from ._timestamps import smooth_timestamps
 
 
@@ -18,20 +19,32 @@ class SensorData(ABC):
 
     Args:
         path: file path; should be a directory containing a `meta.json` file.
+        create: whether we are creating a new sensor.
 
     Attributes:
         channels: dictionary of each channel in this sensor. Each value is an
             initialized :py:class:`Channel`.
     """
 
-    def __init__(self, path: str) -> None:
+    def __init__(self, path: str, create: bool = False) -> None:
         self.path = path
-        try:
-            with open(os.path.join(path, "meta.json")) as f:
-                self.config = json.load(f)
-        except (FileNotFoundError, json.JSONDecodeError) as e:
-            raise ValueError(
-                "{}: no valid 'metadata.json' found.".format(str(e)))
+
+        if not create:
+            try:
+                with open(os.path.join(path, "meta.json")) as f:
+                    self.config = json.load(f)
+            except (FileNotFoundError, json.JSONDecodeError) as e:
+                raise ValueError(
+                    "{}: no valid 'metadata.json' found.".format(str(e)))
+        else:
+            if os.path.exists(self.path):
+                raise ValueError(
+                    "`create=True`, but this sensor already exists!")
+
+            os.makedirs(path)
+            with open(os.path.join(path, "meta.json"), 'w') as f:
+                json.dump({}, f)
+            self.config = {}
 
         self.channels = {
             name: CHANNEL_TYPES.get(cfg["format"], Channel)(

@@ -1,9 +1,10 @@
 """Dataset loading utilities."""
 
-import os
 import json
-import yaml
+import os
 from functools import cached_property
+
+import yaml
 
 from .sensors import SENSOR_TYPES, SensorData
 

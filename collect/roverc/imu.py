@@ -1,43 +1,56 @@
 """IMU data collection."""
 
+import logging
 import os
+from queue import Queue
 
-from .imu_api import XsensIMU, IMUData, InvalidChecksum
-from .common import BaseCapture, BaseSensor, SensorMetadata
+from beartype.typing import Optional
+
+from .common import Capture, Sensor
+from .imu_api import IMUData, InvalidChecksum, XsensIMU
 
 
-class IMUCapture(BaseCapture):
+class IMUCapture(Capture):
     """IMU capture data."""
 
-    def _init(self, path: str, **_) -> SensorMetadata:
-        _meta = {
-            "rot": {
-                "format": "raw", "type": "f4", "shape": (3,),
-                "desc": "Orientation (Euler Angles)"},
-            "acc": {
-                "format": "raw", "type": "f4", "shape": (3,),
-                "desc": "Linear acceleration"},
-            "avel": {
-                "format": "raw", "type": "f4", "shape": (3,),
-                "desc": "Angular velocity"}
-        }
-        self.outputs = {
-            k: open(os.path.join(path, k), mode='wb') for k in _meta}
-        return _meta
+    def __init__(
+        self, path: str, fps: float = 1.0,
+        report_interval: float = 5.0, log: Optional[logging.Logger] = None
+    ) -> None:
+        super().__init__(
+            path=path, fps=fps, report_interval=report_interval, log=log)
+
+        self.outputs: dict[str, Queue] = {
+            channel: Queue() for channel in ["rot", "acc", "avel"]}
+        self.sensor.create("rot", {
+            "format": "raw", "type": "f4", "shape": (3,),
+            "desc": "Orientation (Euler Angles)"
+        }).consume(self.outputs["rot"], thread=True)
+        self.sensor.create("acc", {
+            "format": "raw", "type": "f4", "shape": (3,),
+            "desc": "Linear acceleration"
+        }).consume(self.outputs["acc"], thread=True)
+        self.sensor.create("avel", {
+            "format": "raw", "type": "f4", "shape": (3,),
+            "desc": "Angular velocity"
+        }).consume(self.outputs["avel"], thread=True)
+
+    def queue_length(self) -> int:
+        return max(v.qsize() for v in self.outputs.values())
 
     def write(self, data: IMUData) -> None:
         """Write IMU data."""
         for k, v in self.outputs.items():
-            v.write(getattr(data, k))
+            v.put(getattr(data, k))
 
     def close(self) -> None:
         """Close files and clean up."""
         for v in self.outputs.values():
-            v.close()
+            v.put(None)
         super().close()
 
 
-class IMU(BaseSensor):
+class IMU(Sensor):
     """Xsens IMU Sensor.
 
     Args:

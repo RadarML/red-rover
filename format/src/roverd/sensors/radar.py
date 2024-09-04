@@ -1,8 +1,8 @@
 """TI radar sensor."""
 
 import numpy as np
-from jaxtyping import Int16, Complex64
 from beartype.typing import Iterator
+from jaxtyping import Complex64, Int16
 
 from .base import SensorData
 

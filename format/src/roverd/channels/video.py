@@ -1,11 +1,14 @@
 """Video (nominally mjpeg) channel."""
 
 from functools import cached_property
-import numpy as np
-from jaxtyping import Shaped
-from beartype.typing import Iterator, Callable, Optional, Any
+from queue import Queue
+from threading import Thread
 
-from .base import Channel
+import numpy as np
+from beartype.typing import Any, Callable, Iterable, Iterator, Optional, Union
+from jaxtyping import Shaped
+
+from .base import Buffer, Channel
 
 
 class VideoChannel(Channel):
@@ -19,8 +22,14 @@ class VideoChannel(Channel):
 
     @cached_property
     def _cv2_module(self):
-        import cv2
-        return cv2
+        try:
+            import cv2
+            return cv2
+        except ImportError:
+            raise ImportError(
+                "Could not import cv2. `opencv-python` or "
+                "`opencv-python-headless` must be installed in order to use "
+                "video encoding or decoding.")
 
     def read(
         self, start: int = 0, samples: int = -1
@@ -100,3 +109,38 @@ class VideoChannel(Channel):
 
         cap.release()
         return
+
+    def consume(
+        self, stream: Union[Iterable[Shaped[np.ndarray, "..."]], Queue],
+        thread: bool = False, fps: float = 10.0
+    ) -> None:
+        """Consume iterable or queue and write to file.
+
+        - If `Iterable`, fetches from the iterator until exhausted (i.e. until
+          `StopIteration`), then returns.
+        - If `Queue`, `.get()` from the `Queue` until `None` is received, then
+          return.
+
+        Args:
+            stream: stream to consume.
+            fps: video framerate.
+            thread: whether to return immediately, and run in a separate thread
+                instead of returning immediately.
+        Raises:
+            ValueError: data type/shape does not match channel specifications.
+        """
+        if isinstance(stream, Queue):
+            stream = Buffer(stream)
+        if thread:
+            Thread(
+                target=self.consume, kwargs={"stream": stream, "fps": fps}
+            ).start()
+            return
+
+        fourcc = self._cv2_module.VideoWriter_fourcc(*'MJPG')  # type: ignore
+        cap = self._cv2_module.VideoWriter(
+            self.path, fourcc, fps, (self.shape[1], self.shape[0]))
+        for frame in stream:
+            self._verify_type(frame)
+            cap.write(frame)
+        cap.release()

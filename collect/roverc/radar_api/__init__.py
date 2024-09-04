@@ -23,11 +23,11 @@ r"""AWR1843Boost Radar & DCA1000EVM Capture Card API.
     https://dev.ti.com/gallery/view/mmwave/mmWaveSensingEstimator/ver/2.4.0/
 """  # noqa: D205
 
-from . import dca_types, awr_types
+from . import awr_types, dca_types
 from .awr_api import AWR1843
+from .config import CaptureConfig, RadarConfig
 from .dca_api import DCA1000EVM
 from .system import AWRSystem
-from .config import RadarConfig, CaptureConfig
 
 __all__ = [
     "AWRSystem", "RadarConfig", "CaptureConfig",
