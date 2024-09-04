@@ -5,7 +5,7 @@ from queue import Queue
 from threading import Thread
 
 import numpy as np
-from beartype.typing import Any, Callable, Iterable, Iterator, Optional, Union
+from beartype.typing import Any, Callable, Iterable, Iterator, Optional, Union, cast
 from jaxtyping import Shaped
 
 from .base import Buffer, Channel, Data
@@ -111,7 +111,7 @@ class VideoChannel(Channel):
         return
 
     def consume(
-        self, stream: Union[Iterable[Data], Queue],
+        self, stream: Union[Iterable[Data], Queue[Data]],
         thread: bool = False, fps: float = 10.0
     ) -> None:
         """Consume iterable or queue and write to file.
@@ -130,7 +130,7 @@ class VideoChannel(Channel):
             ValueError: data type/shape does not match channel specifications.
         """
         if isinstance(stream, Queue):
-            stream = Buffer(stream)
+            stream = cast(Iterable[Data], Buffer(stream))
         if thread:
             Thread(
                 target=self.consume, kwargs={"stream": stream, "fps": fps}

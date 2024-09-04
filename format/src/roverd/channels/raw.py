@@ -85,7 +85,7 @@ class RawChannel(Channel):
                     np.frombuffer(data, dtype=self.type).reshape(shape))
 
     def consume(
-        self, stream: Union[Iterable[Data], Queue],
+        self, stream: Union[Iterable[Data], Queue[Data]],
         thread: bool = False
     ) -> None:
         """Consume iterable or queue and write to file.
@@ -104,7 +104,7 @@ class RawChannel(Channel):
             ValueError: data type/shape does not match channel specifications.
         """
         if isinstance(stream, Queue):
-            stream = Buffer(stream)
+            stream = cast(Iterable[Data], Buffer(stream))
         if thread:
             Thread(target=self.consume, kwargs={"stream": stream}).start()
             return

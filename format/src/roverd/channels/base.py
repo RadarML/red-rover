@@ -7,10 +7,10 @@ from queue import Queue
 from threading import Thread
 
 import numpy as np
-from beartype.typing import Any, Callable, Iterable, Iterator, Optional, Union
+from beartype.typing import Any, Callable, Iterable, Iterator, Optional, Union, cast
 from jaxtyping import Shaped
 
-Data = Union[Shaped[np.ndarray, "..."], bytes, bytearray]
+Data = Union[Shaped[np.ndarray, "..."], bytes, bytearray, list["Data"]]
 """Generic writable data.
 
 Should generally behave as follows:
@@ -22,7 +22,7 @@ Should generally behave as follows:
 
 
 class Buffer:
-    """Simple queue buffer (i.e. queue to iterator).
+    """Simple queue buffer (i.e. queue to iterator) with batching.
 
     Args:
         queue: queue to use as a buffer. Should return `None` when the stream
@@ -53,30 +53,35 @@ class Prefetch(Buffer):
     Args:
         iterator: any python iterator; must never yield `None`.
         size: prefetch buffer size.
-        batch: batch size; if 0 (default), no batching is performed.
     """
 
-    def __init__(
-        self, iterator: Iterable, size: int = 64, batch: int = 0
-    ) -> None:
+    def __init__(self, iterator: Iterable, size: int = 64) -> None:
         super().__init__(queue=Queue(maxsize=size))
         self.iterator = iterator
-        self.batch = batch
 
         Thread(target=self._prefetch, daemon=True).start()
 
     def _prefetch(self):
-        if self.batch == 0:
-            for item in self.iterator:
-                self.queue.put(item)
-        else:
-            buf = []
-            for item in self.iterator:
-                buf.append(item)
-                if len(buf) == self.batch:
-                    self.queue.put(buf)
-                    buf = []
+        for item in self.iterator:
+            self.queue.put(item)
         self.queue.put(None)
+
+
+def batch_iterator(iterator: Iterable, size: int = 8):
+    """Convert an iterator into a batched version.
+
+    NOTE: any excess values (modulo `size`) are discarded.
+
+    Args:
+        iterator: input iterator/iterable.
+        size: batch size.
+    """
+    buf = []
+    for item in iterator:
+        buf.append(item)
+        if len(buf) == size:
+            yield buf
+            buf = []
 
 
 class Channel(ABC):
@@ -204,8 +209,9 @@ class Channel(ABC):
             Iterator which yields successive frames, with core computations
             running in a separate thread.
         """
-        return Prefetch(
-            self.stream(transform=transform, batch=batch), size=size)
+        return cast(
+            Iterator[np.ndarray],
+            Prefetch(self.stream(transform=transform, batch=batch), size=size))
 
     def __repr__(self):
         """Get string representation."""

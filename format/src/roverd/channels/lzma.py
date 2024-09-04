@@ -6,10 +6,10 @@ from queue import Queue
 from threading import Thread
 
 import numpy as np
-from beartype.typing import Any, Callable, Iterable, Iterator, Optional, Union
+from beartype.typing import Any, Callable, Iterable, Iterator, Optional, Union, cast
 from jaxtyping import Shaped
 
-from .base import Buffer, Channel, Data, Prefetch
+from .base import Buffer, Channel, Data, Prefetch, batch_iterator
 from .raw import RawChannel
 
 
@@ -164,7 +164,7 @@ class LzmaFrameChannel(Channel):
         offsets.close()
 
     def consume(
-        self, stream: Union[Iterable[Data], Queue],
+        self, stream: Union[Iterable[Data], Queue[Data]],
         thread: bool = False, preset: int = 0, batch: int = 8
     ) -> None:
         """Consume iterable or queue and write to file.
@@ -180,29 +180,27 @@ class LzmaFrameChannel(Channel):
                 instead of returning immediately.
             preset: lzma compression preset to use.
             batch: aggregate, then batch this many lzma compressions in
-                parallel. May be necessary for throughput reasons, since lzma
+                parallel. Necessary for throughput reasons, since lzma
                 is only single (?) threaded.
+
         Raises:
             ValueError: data type/shape does not match channel specifications.
         """
         if isinstance(stream, Queue):
             stream = Buffer(stream)
         if thread:
-            Thread(
-                target=self.consume,
-                kwargs={"stream": stream, "preset": preset}).start()
+            Thread(target=self.consume, kwargs={
+                "stream": stream, "preset": preset, "batch": batch
+            }).start()
             return
 
-        def compress(data: Data):
+        def compress(data: list[np.ndarray]):
             if not isinstance(data, np.ndarray):
                 raise ValueError("LzmaFrame does not allow raw data.")
             self._verify_type(data)
 
-            if len(data.shape) == len(self.shape):
-                return [lzma.compress(data.data, preset=preset)]
-            else:
-                return ThreadPool(
-                    processes=data.shape[0]
-                ).map(lambda x: lzma.compress(x.data, preset=preset), data)
+            return ThreadPool(
+                processes=data.shape[0]
+            ).map(lambda x: lzma.compress(x.data, preset=preset), data)
 
-        self._consume(Prefetch((compress(x) for x in stream), batch=batch))
+        self._consume(Prefetch(compress(x) for x in batch_iterator(stream)))
