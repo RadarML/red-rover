@@ -39,7 +39,7 @@ class Capture:
         self.sensor.create("ts", {
             "format": "raw", "type": "f8", "shape": (),
             "description": "Timestamp, in seconds."}
-        ).consume(self.ts)
+        ).consume(self.ts, thread=True)
 
         self.len = 0
         self.period: list[float] = []
@@ -111,7 +111,7 @@ class Capture:
         """
         freq = 1 / np.mean(self.period)
         util = np.mean(self.runtime) * self.fps
-        wcet = np.max(self.period)
+        wcet = np.max(self.runtime)
 
         log_msg = (
             f"f: {freq:.2f} u: {util * 100:.0f}% "

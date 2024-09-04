@@ -89,10 +89,10 @@ class XsensIMU:
             payload = payload[data_len:]
 
             if data_id & 0xfff0 == 0x2030:
-                rot = np.frombuffer(data, dtype='>f4').byteswap()
+                rot = np.frombuffer(data, dtype='>f4').astype(np.dtype('f4'))
             elif data_id & 0xfff0 == 0x4020:
-                acc = np.frombuffer(data, dtype='>f4').byteswap()
+                acc = np.frombuffer(data, dtype='>f4').astype(np.dtype('f4'))
             elif data_id & 0xfff0 == 0x8020:
-                avel = np.frombuffer(data, dtype='>f4').byteswap()
+                avel = np.frombuffer(data, dtype='>f4').astype(np.dtype('f4'))
 
         return IMUData(rot=rot, acc=acc, avel=avel)  # type: ignore
