@@ -9,5 +9,5 @@ r"""Rover data collection platform.
 
 from .control import Controller
 
-_scripts = ["run", "start", "stop", "exit", "get_config"]
+_scripts = sorted(["run", "start", "stop", "exit", "get_config", "info"])
 __all__ = ["Controller"]

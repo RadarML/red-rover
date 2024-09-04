@@ -18,7 +18,7 @@ class LidarCapture(Capture):
 
     def __init__(
         self, path: str, shape: tuple[int, int] = (64, 2048),
-        compression: int = 0, fps: float = 1.0,
+        compression: int = 0, batch: int = 8, fps: float = 1.0,
         report_interval: float = 5.0, log: Optional[logging.Logger] = None
     ) -> None:
         super().__init__(
@@ -27,18 +27,19 @@ class LidarCapture(Capture):
         self.outputs: dict[str, Queue] = {
             channel: Queue() for channel in ["rfl", "nir", "rng"]}
 
+        kwargs = {"preset": compression, "batch": batch}
         cast(channels.LzmaFrameChannel, self.sensor.create("rfl", {
             "format": "lzmaf", "type": "u1", "shape": shape,
             "desc": "Object NIR reflectivity"}
-        )).consume(self.outputs["rfl"], thread=True, preset=compression)
+        )).consume(self.outputs["rfl"], thread=True, **kwargs)
         cast(channels.LzmaFrameChannel, self.sensor.create("nir", {
             "format": "lzmaf", "type": "u2", "shape": shape,
             "desc": "Near infrared ambient photons"}
-        )).consume(self.outputs["nir"], thread=True, preset=compression)
+        )).consume(self.outputs["nir"], thread=True, **kwargs)
         cast(channels.LzmaFrameChannel, self.sensor.create("rng", {
             "format": "lzmaf", "type": "u2", "shape": shape,
             "desc": "Range, in millimeters"}
-        )).consume(self.outputs["rng"], thread=True, preset=compression)
+        )).consume(self.outputs["rng"], thread=True, **kwargs)
 
     def queue_length(self) -> int:
         return max(v.qsize() for v in self.outputs.values())

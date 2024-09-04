@@ -53,18 +53,29 @@ class Prefetch(Buffer):
     Args:
         iterator: any python iterator; must never yield `None`.
         size: prefetch buffer size.
+        batch: batch size; if 0 (default), no batching is performed.
     """
 
-    def __init__(self, iterator: Iterable, size: int = 64) -> None:
+    def __init__(
+        self, iterator: Iterable, size: int = 64, batch: int = 0
+    ) -> None:
         super().__init__(queue=Queue(maxsize=size))
         self.iterator = iterator
+        self.batch = batch
 
-        self.thread = Thread(target=self._prefetch, daemon=True)
-        self.thread.start()
+        Thread(target=self._prefetch, daemon=True).start()
 
     def _prefetch(self):
-        for item in self.iterator:
-            self.queue.put(item)
+        if self.batch == 0:
+            for item in self.iterator:
+                self.queue.put(item)
+        else:
+            buf = []
+            for item in self.iterator:
+                buf.append(item)
+                if len(buf) == self.batch:
+                    self.queue.put(buf)
+                    buf = []
         self.queue.put(None)
 
 

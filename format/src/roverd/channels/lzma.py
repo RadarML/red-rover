@@ -165,7 +165,7 @@ class LzmaFrameChannel(Channel):
 
     def consume(
         self, stream: Union[Iterable[Data], Queue],
-        thread: bool = False, preset: int = 0
+        thread: bool = False, preset: int = 0, batch: int = 8
     ) -> None:
         """Consume iterable or queue and write to file.
 
@@ -179,6 +179,9 @@ class LzmaFrameChannel(Channel):
             thread: whether to return immediately, and run in a separate thread
                 instead of returning immediately.
             preset: lzma compression preset to use.
+            batch: aggregate, then batch this many lzma compressions in
+                parallel. May be necessary for throughput reasons, since lzma
+                is only single (?) threaded.
         Raises:
             ValueError: data type/shape does not match channel specifications.
         """
@@ -202,4 +205,4 @@ class LzmaFrameChannel(Channel):
                     processes=data.shape[0]
                 ).map(lambda x: lzma.compress(x.data, preset=preset), data)
 
-        self._consume(Prefetch(compress(x) for x in stream))
+        self._consume(Prefetch((compress(x) for x in stream), batch=batch))
