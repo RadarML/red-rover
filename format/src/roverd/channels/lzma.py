@@ -6,7 +6,7 @@ from queue import Queue
 from threading import Thread
 
 import numpy as np
-from beartype.typing import Any, Callable, Iterable, Iterator, Optional, Union, cast
+from beartype.typing import Any, Callable, Iterable, Iterator, Optional, Union
 from jaxtyping import Shaped
 
 from .base import Buffer, Channel, Data
@@ -174,25 +174,29 @@ class LzmaFrameChannel(Channel):
                 kwargs={"stream": stream, "preset": preset}).start()
             return
 
-        offsets = [0]
-        with open(self.path, 'wb') as f:
-            for data in stream:
-                if not isinstance(data, np.ndarray):
-                    raise ValueError("LzmaFrame does not allow raw data.")
+        main = open(self.path, 'wb')
+        offsets = open(self.path + "_i", 'wb')
+        tail = 0
+        offsets.write(np.array(tail, dtype=np.uint64).tobytes())
 
-                self._verify_type(data)
-                if len(data.shape) == len(self.shape):
-                    compressed: bytes = lzma.compress(data.data, preset=preset)
-                    f.write(compressed)
-                    offsets.append(offsets[-1] + len(compressed))
-                else:
-                    batch: list[bytes] = ThreadPool(
-                        processes=data.shape[0]
-                    ).map(lambda x: lzma.compress(x.data, preset=preset), data)
-                    for frame in batch:
-                        f.write(frame)
-                        offsets.append(offsets[-1] + len(frame))
+        for data in stream:
+            if not isinstance(data, np.ndarray):
+                raise ValueError("LzmaFrame does not allow raw data.")
 
-        offsets_np = np.array(offsets, dtype=np.uint64)
-        with open(self.path + "_i", 'wb') as f:
-            f.write(offsets_np.data)
+            self._verify_type(data)
+            if len(data.shape) == len(self.shape):
+                compressed: bytes = lzma.compress(data.data, preset=preset)
+                main.write(compressed)
+                tail += len(compressed)
+                offsets.write(np.array(tail, dtype=np.uint64).tobytes())
+            else:
+                batch: list[bytes] = ThreadPool(
+                    processes=data.shape[0]
+                ).map(lambda x: lzma.compress(x.data, preset=preset), data)
+                for frame in batch:
+                    main.write(frame)
+                    tail += len(frame)
+                    offsets.write(
+                        np.array(tail, dtype=np.uint64).tobytes())
+
+        offsets.close()
