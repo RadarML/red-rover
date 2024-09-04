@@ -10,6 +10,16 @@ import numpy as np
 from beartype.typing import Any, Callable, Iterable, Iterator, Optional, Union
 from jaxtyping import Shaped
 
+Data = Union[Shaped[np.ndarray, "..."], bytes, bytearray]
+"""Generic writable data.
+
+Should generally behave as follows:
+- If `Shaped[np.ndarray, "..."]`, the shape and dtype are assumed to have
+  semantic meaning, and are verified.
+- If `bytes` or `bytearray`, we assume that the caller has already done any
+  necessary binary conversion. No type or shape verification is performed.
+"""
+
 
 class Buffer:
     """Simple queue buffer (i.e. queue to iterator).
@@ -100,8 +110,11 @@ class Channel(ABC):
         raise NotImplementedError(
             "`.read()` is not implemented for this channel type.")
 
-    def _verify_type(self, data: Shaped[np.ndarray, "..."]) -> None:
+    def _verify_type(self, data: Data) -> None:
         """Verify data shape and type."""
+        if not isinstance(data, np.ndarray):
+            return
+
         if (
                 len(self.shape) > 0 and
                 tuple(data.shape[-len(self.shape):]) != tuple(self.shape)
@@ -143,8 +156,7 @@ class Channel(ABC):
             "`.stream()` is not implemented for this channel type.")
 
     def consume(
-        self, stream: Union[Iterable[Shaped[np.ndarray, "..."]], Queue],
-        thread: bool = False
+        self, stream: Union[Iterable[Data], Queue], thread: bool = False
     ) -> None:
         """Consume iterable or queue and write to file.
 

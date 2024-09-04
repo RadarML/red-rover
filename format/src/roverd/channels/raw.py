@@ -7,7 +7,7 @@ import numpy as np
 from beartype.typing import Any, Callable, Iterable, Iterator, Optional, Union, cast
 from jaxtyping import Shaped
 
-from .base import Buffer, Channel
+from .base import Buffer, Channel, Data
 
 
 class RawChannel(Channel):
@@ -85,7 +85,7 @@ class RawChannel(Channel):
                     np.frombuffer(data, dtype=self.type).reshape(shape))
 
     def consume(
-        self, stream: Union[Iterable[Shaped[np.ndarray, "..."]], Queue],
+        self, stream: Union[Iterable[Data], Queue],
         thread: bool = False
     ) -> None:
         """Consume iterable or queue and write to file.
@@ -112,7 +112,10 @@ class RawChannel(Channel):
         with self._FOPEN(self.path, 'wb') as f:  # type: ignore
             for data in stream:
                 self._verify_type(data)
-                f.write(data.tobytes())  # type: ignore
+                if isinstance(data, np.ndarray):
+                    f.write(data.tobytes())  # type: ignore
+                else:
+                    f.write(data)  # type: ignore
 
     def memmap(self) -> np.memmap:
         """Open memory mapped array."""

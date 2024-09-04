@@ -6,10 +6,10 @@ from queue import Queue
 from threading import Thread
 
 import numpy as np
-from beartype.typing import Any, Callable, Iterable, Iterator, Optional, Union
+from beartype.typing import Any, Callable, Iterable, Iterator, Optional, Union, cast
 from jaxtyping import Shaped
 
-from .base import Buffer, Channel
+from .base import Buffer, Channel, Data
 from .raw import RawChannel
 
 
@@ -148,7 +148,7 @@ class LzmaFrameChannel(Channel):
             yield transform(np.concatenate(frames, axis=0))
 
     def consume(
-        self, stream: Union[Iterable[Shaped[np.ndarray, "..."]], Queue],
+        self, stream: Union[Iterable[Data], Queue],
         thread: bool = False, preset: int = 0
     ) -> None:
         """Consume iterable or queue and write to file.
@@ -177,6 +177,9 @@ class LzmaFrameChannel(Channel):
         offsets = [0]
         with open(self.path, 'wb') as f:
             for data in stream:
+                if not isinstance(data, np.ndarray):
+                    raise ValueError("LzmaFrame does not allow raw data.")
+
                 self._verify_type(data)
                 if len(data.shape) == len(self.shape):
                     compressed: bytes = lzma.compress(data.data, preset=preset)

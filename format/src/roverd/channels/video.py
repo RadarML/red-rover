@@ -8,7 +8,7 @@ import numpy as np
 from beartype.typing import Any, Callable, Iterable, Iterator, Optional, Union
 from jaxtyping import Shaped
 
-from .base import Buffer, Channel
+from .base import Buffer, Channel, Data
 
 
 class VideoChannel(Channel):
@@ -111,7 +111,7 @@ class VideoChannel(Channel):
         return
 
     def consume(
-        self, stream: Union[Iterable[Shaped[np.ndarray, "..."]], Queue],
+        self, stream: Union[Iterable[Data], Queue],
         thread: bool = False, fps: float = 10.0
     ) -> None:
         """Consume iterable or queue and write to file.
@@ -141,6 +141,8 @@ class VideoChannel(Channel):
         cap = self._cv2_module.VideoWriter(
             self.path, fourcc, fps, (self.shape[1], self.shape[0]))
         for frame in stream:
+            if not isinstance(frame, np.ndarray):
+                raise ValueError("LzmaFrame does not allow raw data.")
             self._verify_type(frame)
             cap.write(frame)
         cap.release()
