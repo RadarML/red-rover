@@ -9,7 +9,7 @@ import numpy as np
 from beartype.typing import Any, Callable, Iterable, Iterator, Optional, Union
 from jaxtyping import Shaped
 
-from .base import Buffer, Channel, Data
+from .base import Buffer, Channel, Data, Prefetch
 from .raw import RawChannel
 
 
@@ -147,6 +147,22 @@ class LzmaFrameChannel(Channel):
         if len(frames) > 0:
             yield transform(np.concatenate(frames, axis=0))
 
+    def _consume(self, stream: Iterable[list[bytes]]) -> None:
+        """Consume pre-compressed stream."""
+        main = open(self.path, 'wb')
+        offsets = open(self.path + "_i", 'wb')
+        tail = 0
+        offsets.write(np.array(tail, dtype=np.uint64).tobytes())
+
+        for frame in stream:
+            for x in frame:
+                main.write(x)
+                tail += len(x)
+                offsets.write(np.array(tail, dtype=np.uint64).tobytes())
+
+        main.close()
+        offsets.close()
+
     def consume(
         self, stream: Union[Iterable[Data], Queue],
         thread: bool = False, preset: int = 0
@@ -174,29 +190,16 @@ class LzmaFrameChannel(Channel):
                 kwargs={"stream": stream, "preset": preset}).start()
             return
 
-        main = open(self.path, 'wb')
-        offsets = open(self.path + "_i", 'wb')
-        tail = 0
-        offsets.write(np.array(tail, dtype=np.uint64).tobytes())
-
-        for data in stream:
+        def compress(data: Data):
             if not isinstance(data, np.ndarray):
                 raise ValueError("LzmaFrame does not allow raw data.")
-
             self._verify_type(data)
+
             if len(data.shape) == len(self.shape):
-                compressed: bytes = lzma.compress(data.data, preset=preset)
-                main.write(compressed)
-                tail += len(compressed)
-                offsets.write(np.array(tail, dtype=np.uint64).tobytes())
+                return [lzma.compress(data.data, preset=preset)]
             else:
-                batch: list[bytes] = ThreadPool(
+                return ThreadPool(
                     processes=data.shape[0]
                 ).map(lambda x: lzma.compress(x.data, preset=preset), data)
-                for frame in batch:
-                    main.write(frame)
-                    tail += len(frame)
-                    offsets.write(
-                        np.array(tail, dtype=np.uint64).tobytes())
 
-        offsets.close()
+        self._consume(Prefetch(compress(x) for x in stream))
