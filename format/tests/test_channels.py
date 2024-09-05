@@ -3,6 +3,7 @@
 import os
 import shutil
 import unittest
+
 import numpy as np
 
 from roverd import channels
@@ -14,7 +15,7 @@ class RawTestCase(unittest.TestCase):
     PATH = '/tmp/rawchanneltest'
 
     def setUp(self):
-        os.mkdir(self.PATH)
+        os.makedirs(self.PATH, exist_ok=True)
 
     def tearDown(self):
         shutil.rmtree(self.PATH)
@@ -84,7 +85,7 @@ class LzmafTestCase(unittest.TestCase):
     PATH = '/tmp/lzmafchanneltest'
 
     def setUp(self):
-        os.mkdir(self.PATH)
+        os.makedirs(self.PATH, exist_ok=True)
 
     def tearDown(self):
         shutil.rmtree(self.PATH)

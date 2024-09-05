@@ -7,10 +7,20 @@ from queue import Queue
 from threading import Thread
 
 import numpy as np
-from beartype.typing import Any, Callable, Iterable, Iterator, Optional, Union, cast
+from beartype.typing import (
+    Any,
+    Callable,
+    Generic,
+    Iterable,
+    Iterator,
+    Optional,
+    Sequence,
+    TypeVar,
+    cast,
+)
 from jaxtyping import Shaped
 
-Data = Union[Shaped[np.ndarray, "..."], bytes, bytearray, list["Data"]]
+Data = np.ndarray | bytes | bytearray
 """Generic writable data.
 
 Should generally behave as follows:
@@ -21,7 +31,13 @@ Should generally behave as follows:
 """
 
 
-class Buffer:
+T = TypeVar("T")
+
+Streamable = Iterator[T] | Iterable[T] | Queue[T]
+"""Any stream-like container."""
+
+
+class Buffer(Generic[T]):
     """Simple queue buffer (i.e. queue to iterator) with batching.
 
     Args:
@@ -29,13 +45,13 @@ class Buffer:
             is complete (i.e. `StopIteration`).
     """
 
-    def __init__(self, queue: Queue) -> None:
+    def __init__(self, queue: Queue[T]) -> None:
         self.queue = queue
 
     def __iter__(self):
         return self
 
-    def __next__(self):
+    def __next__(self) -> T:
         item = self.queue.get()
         if item is None:
             raise StopIteration
@@ -55,22 +71,24 @@ class Prefetch(Buffer):
         size: prefetch buffer size.
     """
 
-    def __init__(self, iterator: Iterable, size: int = 64) -> None:
+    def __init__(
+        self, iterator: Iterable[T] | Iterator[T], size: int = 64
+    ) -> None:
         super().__init__(queue=Queue(maxsize=size))
         self.iterator = iterator
 
         Thread(target=self._prefetch, daemon=True).start()
 
-    def _prefetch(self):
+    def _prefetch(self) -> None:
         for item in self.iterator:
             self.queue.put(item)
         self.queue.put(None)
 
 
-def batch_iterator(iterator: Iterable, size: int = 8):
+def batch_iterator(
+    iterator: Iterator[T] | Iterable[T], size: int = 8
+) -> Iterator[list[T]]:
     """Convert an iterator into a batched version.
-
-    NOTE: any excess values (modulo `size`) are discarded.
 
     Args:
         iterator: input iterator/iterable.
@@ -82,6 +100,8 @@ def batch_iterator(iterator: Iterable, size: int = 8):
         if len(buf) == size:
             yield buf
             buf = []
+    if len(buf) != 0:
+        yield buf
 
 
 class Channel(ABC):
@@ -94,16 +114,26 @@ class Channel(ABC):
     """
 
     def __init__(
-        self, path: str, dtype: Union[str, type, np.dtype], shape: list[int]
+        self, path: str, dtype: str | type | np.dtype, shape: list[int]
     ) -> None:
         self.path = path
         self.type = np.dtype(dtype)
         self.shape = shape
         self.size = int(np.prod(shape) * np.dtype(self.type).itemsize)
 
-    def buffer_to_array(self, data: bytes) -> Shaped[np.ndarray, "n ..."]:
+    def buffer_to_array(
+        self, data: bytes, batch: bool = True
+    ) -> Shaped[np.ndarray, "n ..."]:
         """Convert raw buffer to the appropriate type and shape."""
-        return np.frombuffer(data, self.type).reshape(-1, *self.shape)
+        arr = np.frombuffer(data, self.type).reshape(-1, *self.shape)
+        if batch:
+            return arr
+        else:
+            if arr.shape[0] != 1:
+                raise ValueError(
+                    "`batch=False`, but received `data` which contains more "
+                    "than one item.")
+            return arr[0]
 
     @cached_property
     def filesize(self) -> int:
@@ -126,8 +156,18 @@ class Channel(ABC):
         raise NotImplementedError(
             "`.read()` is not implemented for this channel type.")
 
-    def _verify_type(self, data: Data) -> None:
-        """Verify data shape and type."""
+    def _verify_type(self, data: Data | Sequence[Data]) -> None:
+        """Verify data shape and type.
+
+        Implementation notes:
+        - If `data` is batched as a `list | tuple`, only the first element is
+          checked.
+        - If `data` (or its contents) are not a `np.ndarray`, (i.e. is
+          `bytes | bytearray`), we assume the caller has correctly serialized
+           the data, and type checking always succeeds.
+        """
+        if isinstance(data, (list, tuple)):
+            data = data[0]
         if not isinstance(data, np.ndarray):
             return
 
@@ -141,8 +181,21 @@ class Channel(ABC):
             raise ValueError(f"Data type {data.dtype} does not match channel "
                 f"type {self.type}.")
 
+    def _serialize(
+        self, data: Data | Sequence[Data]
+    ) -> bytes | bytearray:
+        """Serialize data into a binary format for writing."""
+        if isinstance(data, (list, tuple)):
+            return b''.join(self._serialize(x) for x in data)
+
+        data = cast(Data, data)
+        if isinstance(data, np.ndarray):
+            return data.data
+        else:
+            return data
+
     def write(
-        self, data: Shaped[np.ndarray, "..."], mode: str = 'wb'
+        self, data: Data, mode: str = 'wb'
     ) -> None:
         """Write data.
 
@@ -156,7 +209,7 @@ class Channel(ABC):
         self, transform: Optional[
             Callable[[Shaped[np.ndarray, "..."]], Any]
         ] = None, batch: int = 0
-    ) -> Iterator[np.ndarray]:
+    ) -> Iterator[Shaped[np.ndarray, "..."]]:
         """Get iterable data stream.
 
         Args:
@@ -172,7 +225,7 @@ class Channel(ABC):
             "`.stream()` is not implemented for this channel type.")
 
     def consume(
-        self, stream: Union[Iterable[Data], Queue], thread: bool = False
+        self, stream: Streamable[Data | Sequence[Data]], thread: bool = False
     ) -> None:
         """Consume iterable or queue and write to file.
 
@@ -195,7 +248,7 @@ class Channel(ABC):
         self, transform: Optional[
             Callable[[Shaped[np.ndarray, "..."]], Any]
         ] = None, size: int = 64, batch: int = 0
-    ) -> Iterator[np.ndarray]:
+    ) -> Iterator[Shaped[np.ndarray, "..."]]:
         """Stream with multi-threaded prefetching.
 
         Args:
@@ -209,9 +262,8 @@ class Channel(ABC):
             Iterator which yields successive frames, with core computations
             running in a separate thread.
         """
-        return cast(
-            Iterator[np.ndarray],
-            Prefetch(self.stream(transform=transform, batch=batch), size=size))
+        return Prefetch(
+            self.stream(transform=transform, batch=batch), size=size)
 
     def __repr__(self):
         """Get string representation."""

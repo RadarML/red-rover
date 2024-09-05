@@ -18,7 +18,7 @@ class LidarCapture(Capture):
 
     def __init__(
         self, path: str, shape: tuple[int, int] = (64, 2048),
-        compression: int = 0, batch: int = 8, fps: float = 1.0,
+        compression: int = 0, batch: int = 12, fps: float = 1.0,
         report_interval: float = 5.0, log: Optional[logging.Logger] = None
     ) -> None:
         super().__init__(

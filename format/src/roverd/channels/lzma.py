@@ -6,10 +6,18 @@ from queue import Queue
 from threading import Thread
 
 import numpy as np
-from beartype.typing import Any, Callable, Iterable, Iterator, Optional, Union, cast
+from beartype.typing import (
+    Any,
+    Callable,
+    Iterable,
+    Iterator,
+    Optional,
+    Sequence,
+    cast,
+)
 from jaxtyping import Shaped
 
-from .base import Buffer, Channel, Data, Prefetch, batch_iterator
+from .base import Buffer, Channel, Data, Prefetch, Streamable, batch_iterator
 from .raw import RawChannel
 
 
@@ -31,7 +39,7 @@ class LzmaChannel(RawChannel):
         return super().read(start=0, samples=samples)
 
     def write(
-        self, data: Shaped[np.ndarray, "..."], mode: str = 'wb'
+        self, data: Data, mode: str = 'wb'
     ) -> None:
         """Write data."""
         if mode != 'wb':
@@ -95,14 +103,16 @@ class LzmaFrameChannel(Channel):
         return np.concatenate(data, axis=0)
 
     def write(
-        self, data: Shaped[np.ndarray, "n ..."], mode: str = 'wb',
-        preset: int = 0
+        self, data: Data, mode: str = 'wb', preset: int = 0
     ) -> None:
         """Write data.
 
         Raises:
             ValueError: data type/shape does not match channel specifications.
         """
+        if not isinstance(data, np.ndarray):
+            raise ValueError("LzmaFrame does not support writing raw data.")
+
         self._verify_type(data)
         if mode != 'wb':
             raise ValueError("Only overwriting is currently supported.")
@@ -164,7 +174,7 @@ class LzmaFrameChannel(Channel):
         offsets.close()
 
     def consume(
-        self, stream: Union[Iterable[Data], Queue[Data]],
+        self, stream: Streamable[Data | Sequence[Data]],
         thread: bool = False, preset: int = 0, batch: int = 8
     ) -> None:
         """Consume iterable or queue and write to file.
@@ -188,19 +198,28 @@ class LzmaFrameChannel(Channel):
         """
         if isinstance(stream, Queue):
             stream = Buffer(stream)
+        # => stream is Iterator | Iterable
+
         if thread:
             Thread(target=self.consume, kwargs={
                 "stream": stream, "preset": preset, "batch": batch
             }).start()
             return
 
-        def compress(data: list[np.ndarray]):
-            if not isinstance(data, np.ndarray):
-                raise ValueError("LzmaFrame does not allow raw data.")
+        if batch != 0:
+            stream_not_batched = cast(Iterable[Data] | Iterator[Data], stream)
+            stream = batch_iterator(stream_not_batched, size=batch)
+
+        def _compress_batch(data: Sequence[Data]):
             self._verify_type(data)
+            if not isinstance(data[0], np.ndarray):
+                raise ValueError("LzmaFrame does not allow raw data.")
 
-            return ThreadPool(
-                processes=data.shape[0]
-            ).map(lambda x: lzma.compress(x.data, preset=preset), data)
+            with ThreadPool(processes=len(data)) as p:
+                return p.map(
+                    lambda x: lzma.compress(x.data, preset=preset),
+                    cast(Sequence[np.ndarray], data))
 
-        self._consume(Prefetch(compress(x) for x in batch_iterator(stream)))
+        self._consume(Prefetch(
+            _compress_batch(x) for x in
+            cast(Iterable[Sequence[Data]] | Iterator[Sequence[Data]], stream)))

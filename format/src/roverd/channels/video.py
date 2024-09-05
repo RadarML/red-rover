@@ -5,10 +5,18 @@ from queue import Queue
 from threading import Thread
 
 import numpy as np
-from beartype.typing import Any, Callable, Iterable, Iterator, Optional, Union, cast
+from beartype.typing import (
+    Any,
+    Callable,
+    Iterable,
+    Iterator,
+    Optional,
+    Sequence,
+    cast,
+)
 from jaxtyping import Shaped
 
-from .base import Buffer, Channel, Data
+from .base import Buffer, Channel, Data, Streamable
 
 
 class VideoChannel(Channel):
@@ -111,7 +119,7 @@ class VideoChannel(Channel):
         return
 
     def consume(
-        self, stream: Union[Iterable[Data], Queue[Data]],
+        self, stream: Streamable[Data | Sequence[Data]],
         thread: bool = False, fps: float = 10.0
     ) -> None:
         """Consume iterable or queue and write to file.

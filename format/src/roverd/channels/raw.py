@@ -1,19 +1,25 @@
 """Raw, uncompressed binary data."""
 
+from io import BytesIO
 from queue import Queue
 from threading import Thread
 
 import numpy as np
-from beartype.typing import Any, Callable, Iterable, Iterator, Optional, Union, cast
+from beartype.typing import Any, Callable, Iterator, Optional, Sequence, cast
 from jaxtyping import Shaped
 
-from .base import Buffer, Channel, Data
+from .base import Buffer, Channel, Data, Streamable
 
 
 class RawChannel(Channel):
     """Raw (uncompressed) data."""
 
     _FOPEN = staticmethod(open)
+
+    def _open(self, path: str, mode: str) -> BytesIO:
+        """Open file, and handle type assertions."""
+        return cast(BytesIO, self._FOPEN(path, mode))  # type: ignore
+
 
     def read(
         self, start: int = 0, samples: int = -1
@@ -28,15 +34,15 @@ class RawChannel(Channel):
             Read frames as an array, with a leading axis corresponding to
             the number of `samples`.
         """
-        with self._FOPEN(self.path, 'rb') as f:  # type: ignore
+        with self._open(self.path, 'rb') as f:
             if start > 0:
-                f.seek(self.size * start, 0)  # type: ignore
+                f.seek(self.size * start, 0)
             size = -1 if samples == -1 else samples * self.size
             data = cast(bytes, f.read(size))
         return np.frombuffer(data, dtype=self.type).reshape(-1, *self.shape)
 
     def write(
-        self, data: Shaped[np.ndarray, "..."], mode: str = 'wb'
+        self, data: Data, mode: str = 'wb'
     ) -> None:
         """Write data.
 
@@ -44,14 +50,14 @@ class RawChannel(Channel):
             ValueError: data type/shape does not match channel specifications.
         """
         self._verify_type(data)
-        with self._FOPEN(self.path, mode) as f:  # type: ignore
-            f.write(data.tobytes())  # type: ignore
+        with self._open(self.path, mode) as f:
+            f.write(self._serialize(data))
 
     def stream(
         self, transform: Optional[
             Callable[[Shaped[np.ndarray, "..."]], Any]
         ] = None, batch: int = 0
-    ) -> Iterator[np.ndarray]:
+    ) -> Iterator[Shaped[np.ndarray, "..."]]:
         """Get iterable data stream.
 
         Args:
@@ -63,30 +69,25 @@ class RawChannel(Channel):
         Returns:
             Iterator which yields successive frames.
         """
-        shape = self.shape if batch == 0 else [batch, *self.shape]
         size = self.size if batch == 0 else batch * self.size
 
         if transform is None:
             transform = lambda x: x
 
-        with self._FOPEN(self.path, 'rb') as fp:  # type: ignore
+        with self._open(self.path, 'rb') as fp:
             while True:
-                data = cast(bytes, fp.read(size))  # type: ignore
+                data = cast(bytes, fp.read(size))
                 if len(data) < size:
                     fp.close()
                     partial_batch = len(data) // self.size
                     if partial_batch > 0:
-                        yield transform(
-                            np.frombuffer(
-                                data[:partial_batch * size], dtype=self.type
-                            ).reshape([partial_batch, *self.shape]))
+                        yield transform(self.buffer_to_array(
+                            data[:partial_batch * size], batch=(batch != 0)))
                     return
-                yield transform(
-                    np.frombuffer(data, dtype=self.type).reshape(shape))
+                yield transform(self.buffer_to_array(data, batch=(batch != 0)))
 
     def consume(
-        self, stream: Union[Iterable[Data], Queue[Data]],
-        thread: bool = False
+        self, stream: Streamable[Data | Sequence[Data]], thread: bool = False
     ) -> None:
         """Consume iterable or queue and write to file.
 
@@ -104,18 +105,15 @@ class RawChannel(Channel):
             ValueError: data type/shape does not match channel specifications.
         """
         if isinstance(stream, Queue):
-            stream = cast(Iterable[Data], Buffer(stream))
+            stream = Buffer(stream)
         if thread:
             Thread(target=self.consume, kwargs={"stream": stream}).start()
             return
 
-        with self._FOPEN(self.path, 'wb') as f:  # type: ignore
+        with self._open(self.path, 'wb') as f:
             for data in stream:
                 self._verify_type(data)
-                if isinstance(data, np.ndarray):
-                    f.write(data.tobytes())  # type: ignore
-                else:
-                    f.write(data)  # type: ignore
+                f.write(self._serialize(data))
 
     def memmap(self) -> np.memmap:
         """Open memory mapped array."""
