@@ -6,13 +6,13 @@ jax will not be imported until a function which requires it is called.
 """
 
 from functools import partial
-import numpy as np
-import jax
-from jax.scipy.signal import convolve2d
-from jax import numpy as jnp
 
-from jaxtyping import Float32, Array, Complex64, Float
-from beartype.typing import Union, Optional
+import jax
+import numpy as np
+from beartype.typing import Optional, Union
+from jax import numpy as jnp
+from jax.scipy.signal import convolve2d
+from jaxtyping import Array, Complex64, Float, Float32
 
 
 def doppler_range_azimuth(

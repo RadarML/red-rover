@@ -1,7 +1,6 @@
 {
   "do_normalize": true,
   "do_resize": true,
-  "feature_extractor_type": "SegformerFeatureExtractor",
   "image_mean": [
     0.485,
     0.456,

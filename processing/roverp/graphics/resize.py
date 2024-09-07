@@ -2,7 +2,6 @@
 
 
 from jax import numpy as jnp
-
 from jaxtyping import Array, Num
 
 

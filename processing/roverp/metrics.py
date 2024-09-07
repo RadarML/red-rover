@@ -1,10 +1,9 @@
 """Jax jit+vmap-friendly metrics."""
 
 import jax
-from jax import numpy as jnp
 import jax.scipy as jsp
-
-from jaxtyping import Float, Array
+from jax import numpy as jnp
+from jaxtyping import Array, Float
 
 
 def mse(

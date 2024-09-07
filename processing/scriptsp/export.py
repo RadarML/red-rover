@@ -17,6 +17,7 @@ Outputs:
 import os
 import re
 import shutil
+
 from tqdm import tqdm
 
 
@@ -33,7 +34,7 @@ def _parse(p):
 
 RE = re.compile(r"""^(
     [^_](.*) |                     # original data (doesn't start with '#')
-    _camera/clip |                 # clip embeddings
+    _camera/(.*) |                 # synthetic camera labels
     _(.*).(json|yaml|csv|npz) |    # metadata, generated data formats
     _(.*)/_report/(.*)             # any reports
 )$""", re.VERBOSE)

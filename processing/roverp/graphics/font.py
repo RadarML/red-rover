@@ -1,12 +1,12 @@
 """GPU-accelerated font rendering."""
 
 import os
-from jax import numpy as jnp
-import numpy as np
-from PIL import Image, ImageDraw, ImageFont
 
-from beartype.typing import Iterable, Union, Optional
+import numpy as np
+from beartype.typing import Iterable, Optional, Union
+from jax import numpy as jnp
 from jaxtyping import Array, UInt8
+from PIL import Image, ImageDraw, ImageFont
 
 
 class JaxFont:

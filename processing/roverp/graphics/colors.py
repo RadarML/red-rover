@@ -1,7 +1,7 @@
 """JAX-native color conversions for GPU acceleration."""
 
 from jax import numpy as jnp
-from jaxtyping import Float, Array, Num
+from jaxtyping import Array, Float, Num
 
 
 def hsv_to_rgb(
@@ -41,7 +41,7 @@ def lut(
     colors: Num[Array, "n d"], data: Float[Array, "..."]
 ) -> Num[Array, "... 3"]:
     """Apply a discrete lookup table (e.g. colormap).
-    
+
     Args:
         colors: list of discrete colors to apply (e.g. 0-255 RGB values). Can
             be an arbitrary number of channels, not just RGB.

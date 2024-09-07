@@ -2,13 +2,11 @@
 
 import numpy as np
 import pandas as pd
-
 from beartype.typing import NamedTuple
-from jaxtyping import Bool, Float64, Float, Integer
-
-from scipy.interpolate import splprep, splev
-from scipy.spatial.transform import Rotation, Slerp
+from jaxtyping import Bool, Float, Float64, Integer
+from scipy.interpolate import splev, splprep
 from scipy.signal import medfilt
+from scipy.spatial.transform import Rotation, Slerp
 
 
 class Poses(NamedTuple):

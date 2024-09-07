@@ -2,11 +2,10 @@
 
 import matplotlib
 import numpy as np
-from scipy.signal import convolve as default_conv
-from einops import einsum, rearrange
-
-from jaxtyping import Float, Array, Bool, UInt8
 from beartype.typing import NamedTuple, Optional
+from einops import einsum, rearrange
+from jaxtyping import Array, Bool, Float, UInt8
+from scipy.signal import convolve as default_conv
 
 
 class VoxelGrid(NamedTuple):

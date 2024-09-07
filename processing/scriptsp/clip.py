@@ -8,7 +8,7 @@ These dependencies are not installed by `make env` by default, since they are
 rather heavy and used only for this script.
 
 Models and checkpoints for `open_clip` can be found
-`here <https://github.com/mlfoundations/open_clip/blob/main/docs/openclip_results.csv>`_.
+`here <https://github.com/mlfoundations/open_clip/blob/main/docs/openclip_results.csv>`__.
 The model selected will be downloaded the first time it is used.
 
 Inputs:
@@ -21,9 +21,8 @@ Outputs:
 import cv2
 import numpy as np
 from einops import rearrange
-from tqdm import tqdm
-
 from roverd import Dataset
+from tqdm import tqdm
 
 
 def _parse(p):
@@ -38,7 +37,7 @@ def _main(args):
     # Ignore for type checking since torch & open_clip aren't shipped by default.
     try:
         import open_clip  # type: ignore
-        import torch      # type: ignore
+        import torch  # type: ignore
 
         mean = np.array(open_clip.constants.OPENAI_DATASET_MEAN)
         std = np.array(open_clip.constants.OPENAI_DATASET_STD)

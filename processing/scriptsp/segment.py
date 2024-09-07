@@ -8,22 +8,22 @@ These dependencies are not installed by `make env` by default, since they are
 rather heavy and used only for this script.
 
 By default, we use `segformer-b5-finetuned-ade-640-640`, which can be found
-`here <https://huggingface.co/nvidia/segformer-b5-finetuned-ade-640-640>`_;
+`here <https://huggingface.co/nvidia/segformer-b5-finetuned-ade-640-640>`__;
 the `pytorch_model.bin` weights should be downloaded and placed in
 `processing/models/segformer-b5-finetuned-ade-640-640`. The original `class
-definitions <https://github.com/CSAILVision/sceneparsing/blob/master/objectInfo150.csv>`_
+definitions <https://github.com/CSAILVision/sceneparsing/blob/master/objectInfo150.csv>`__
 have been reduced into 8 classes (indexed in alphabetical order), as specified in
 `models/segformer-b5-finetuned-ade-640-640/classes.yaml`:
 
-- `0:ceiling`: ceiling, roofs, etc viewed from underneath.
-- `1:flat`: flat ground such as roads, paths, floors, etc.
-- `2:nature`: plants of all kinds such as trees, grass, and bushes.
-- `3:object`: any free-standing objects other than plants which are not
+- `0=ceiling`: ceiling, roofs, etc viewed from underneath.
+- `1=flat`: flat ground such as roads, paths, floors, etc.
+- `2=nature`: plants of all kinds such as trees, grass, and bushes.
+- `3=object`: any free-standing objects other than plants which are not
   building-scale such as furniture, signs, and poles.
-- `4:person`: any person who is not inside a vehicle.
-- `5:sky`: the sky or other background.
-- `6:structure`: buildings, fences, and other structures.
-- `7:vehicle`: cars, busses, vans, trucks, etc.
+- `4=person`: any person who is not inside a vehicle.
+- `5=sky`: the sky or other background.
+- `6=structure`: buildings, fences, and other structures.
+- `7=vehicle`: cars, busses, vans, trucks, etc.
 
 Inputs:
     - `camera/*`
@@ -33,13 +33,12 @@ Outputs:
 """
 
 import os
-import yaml
-from tqdm import tqdm
+
 import numpy as np
-
+import yaml
 from jaxtyping import UInt8
-
 from roverd import Dataset
+from tqdm import tqdm
 
 
 def _get_classmap(path: str) -> UInt8[np.ndarray, "8"]:
@@ -67,14 +66,15 @@ def _main(args):
     # Ignore for type checking since torch & transformers aren't shipped by
     # default.
     try:
+        import torch  # type: ignore
         import transformers  # type: ignore
-        import torch         # type: ignore
     except ImportError:
         raise Exception(
             "Must have `torch` and `transformers` installed (not included in "
             "default installation).")
 
-    path = os.path.join("models", args.model)
+    path = os.path.join(
+        os.path.dirname(os.path.dirname(__file__)), "models", args.model)
     feature_extractor = (
         transformers.SegformerImageProcessor.from_pretrained(path))
     model = transformers.SegformerForSemanticSegmentation.from_pretrained(

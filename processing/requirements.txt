@@ -15,11 +15,10 @@ jaxtyping
 tqdm-stubs
 pandas-stubs
 types-PyYAML
+types-Pillow
 mypy
 
-# Sensor-specific
-opencv-python-headless  # Reading video
-ouster-sdk==0.11.1      # Interpreting Lidar data (destagger, range lut)
+# Script-specific
 rosbags==0.9.19         # Writing bags for the ROS converter
 plyfile                 # Cartographer point clouds
 h5py                    # Legacy Rover 1 data format

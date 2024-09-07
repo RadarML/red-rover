@@ -39,11 +39,11 @@ def _main(args):
 
     for k, v in lidar.config.items():
         v = dict(**v)
-        v["format"] = "raw"
         if k == 'ts':
             _lidar.create(k, v).write(lidar[k].read())
         elif k in args.channels:
             print("Decompressing:", k)
+            v["format"] = "lzmaf"
             _lidar.create(k, v).consume(lidar[k].stream())
         else:
             print("Skipping:", k)

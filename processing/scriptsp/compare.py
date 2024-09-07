@@ -9,16 +9,16 @@ Outputs:
 """
 
 import os
-import imageio
-from tqdm import tqdm
 from functools import partial
-import matplotlib as mpl
 
+import imageio
 import jax
-from jax import numpy as jnp
+import matplotlib as mpl
 import numpy as np
-
+from jax import numpy as jnp
 from roverd import Dataset, channels
+from tqdm import tqdm
+
 from roverp import graphics
 
 

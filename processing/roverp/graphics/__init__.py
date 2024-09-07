@@ -4,8 +4,8 @@
     https://matplotlib.org/3.1.1/_modules/matplotlib/colors.html#hsv_to_rgb
 """
 
-from .font import JaxFont
 from .colors import hsv_to_rgb, lut
+from .font import JaxFont
 from .resize import resize
 
 __all__ = ["JaxFont", "hsv_to_rgb", "lut", "resize"]
