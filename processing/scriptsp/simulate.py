@@ -10,13 +10,13 @@ Outputs:
 """
 
 import os
-from tqdm import tqdm
 from functools import partial
 
 import jax
+import numpy as np
 from jax import numpy as jnp
-
 from roverd import Dataset
+from tqdm import tqdm
 
 
 def _parse(p):
@@ -29,7 +29,7 @@ def _parse(p):
 def _main(args):
 
     try:
-        from arrow import ReflectanceGrid, Arrow, rover_intrinsics, types
+        from arrow import Arrow, ReflectanceGrid, rover_intrinsics, types
     except ImportError:
         print("Must have arrow installed to run simulation.")
         exit(1)
@@ -53,7 +53,7 @@ def _main(args):
     seeds = jax.random.split(jax.random.PRNGKey(args.key), pose.x.shape[0])
 
     def render(i):
-        return _render(seeds[i], params, pose[i:i+1])
+        return np.array(_render(seeds[i], params, pose[i:i+1]))
 
     out = Dataset(args.path)["_radar"].create(f"sim_{args.mode}", {
         "format": "raw", "type": "f4",

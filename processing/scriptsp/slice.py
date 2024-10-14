@@ -8,13 +8,13 @@ Outputs:
 """
 
 import os
-import imageio
-from tqdm import tqdm
 
+import imageio
 import jax
-from jax import numpy as jnp
-import numpy as np
 import matplotlib as mpl
+import numpy as np
+from jax import numpy as jnp
+from tqdm import tqdm
 
 from roverp import graphics
 

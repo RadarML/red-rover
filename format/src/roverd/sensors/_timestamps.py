@@ -35,7 +35,7 @@ def smooth_timestamps(
 
 
 def discretize_timestamps(
-    x: Float64[np.ndarray, "n"], interval: float = 10.
+    x: Float64[np.ndarray, "n"], interval: float = 10., eps: float = 0.05
 ) -> Float64[np.ndarray, "n"]:
     """Apply timestamp difference discretization.
 
@@ -43,17 +43,27 @@ def discretize_timestamps(
     fixed rate (which may vary slightly over time), but may be randomly dropped
     with some (small) probability.
 
+    Note that the interval is always assumed to be at least one time step:
+    if the received time difference is less than half a time step, it is
+    rounded up to one time step.
+
     Applies to: Lidar
 
     Args:
         x: input timestamp array.
         interval: interpolation interval, in seconds.
+        nudge: only rounds up (assuming a frame drop) if the interframe time
+            exceeds `1.5 + eps` time steps.
 
     Returns:
         Discretized timestamp array.
     """
     continuous = np.diff(x)
-    discrete = np.round(continuous / np.median(continuous))
+    global_step = np.median(continuous)
+    discrete = np.where(
+        continuous / global_step > 1.5 + eps,
+        np.round(continuous / np.median(continuous)),
+        1.0)
 
     blocksize = int(interval * (len(x) / (x[-1] - x[0])))
     start = 0

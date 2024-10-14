@@ -61,13 +61,16 @@ class LidarData(SensorData):
         """Point cloud LUT."""
         return self._ouster_client.XYZLut(self.lidar_metadata)  # type: ignore
 
-    def pointcloud(self, arr):
+    def pointcloud(self, arr) -> Float32[np.ndarray, "?n xyz"]:
         """Convert to pointcloud."""
-        return self.xyzlut(arr).astype(np.float32)
+        points = self.xyzlut(arr).astype(np.float32)
+        valid = np.any(
+            points != 0, axis=-1) | np.any(np.isnan(points), axis=-1)
+        return points.reshape(-1, 3)[valid.reshape(-1)]
 
     def pointcloud_stream(
         self, prefetch: bool = True
-    ) -> Iterator[Float32[np.ndarray, "..."]]:
+    ) -> Iterator[Float32[np.ndarray, "?n xyz"]]:
         """Get an iterator which returns point clouds."""
         if prefetch:
             return self.channels["rng"].stream_prefetch(

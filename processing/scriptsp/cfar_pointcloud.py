@@ -13,11 +13,12 @@ Keys:
     - `cfar`: CFAR threshold associated with each point.
 """
 
-import numpy as np
-import os, json
-from tqdm import tqdm
+import json
+import os
 
+import numpy as np
 from roverd import Dataset
+from tqdm import tqdm
 
 
 def _parse(p):

@@ -12,16 +12,16 @@ Channels:
     - `{mode}`: see `--mode`.
 """
 
-import os
 import math
+import os
+
+import jax
+import numpy as np
+from beartype.typing import cast
+from jax import numpy as jnp
+from roverd import Dataset, sensors
 from tqdm import tqdm
 
-import numpy as np
-import jax
-from jax import numpy as jnp
-from beartype.typing import cast
-
-from roverd import Dataset, sensors
 from roverp import RadarProcessing
 
 
@@ -110,7 +110,8 @@ def _main(args):
         mask = np.load(os.path.join(args.path, "_radar", "pose.npz"))["mask"]
         ts_out.write(ts[mask])
         rda_out.consume(
-            _process(frame)[mask[i * args.batch:(i + 1) * args.batch]]
+            np.array(
+                _process(frame)[mask[i * args.batch:(i + 1) * args.batch]])
             for i, frame in enumerate(stream))
     else:
-        rda_out.consume(_process(frame) for frame in stream)
+        rda_out.consume(np.array(_process(frame)) for frame in stream)

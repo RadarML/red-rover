@@ -9,9 +9,9 @@ Outputs:
 """
 
 import os
+
 import numpy as np
 from beartype.typing import cast
-
 from roverd import Dataset, channels
 
 

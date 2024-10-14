@@ -21,8 +21,8 @@ options = {
   pipeline = {
     {
       action = "min_max_range_filter",
-      min_range = 0.3,
-      max_range = 10.,
+      min_range = 0.5,
+      max_range = 20.,
     },
     {
       action = "dump_num_points",

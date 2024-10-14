@@ -64,7 +64,7 @@ def _main(args):
         ) / std[None, :, None, None]).astype(np.float16)
 
     def _apply_image(img):
-        with torch.no_grad(), torch.amp.autocast('cuda'):
+        with torch.no_grad(), torch.amp.autocast('cuda'):  # type: ignore
             features = model.encode_image(torch.Tensor(img).to('cuda'))
         return rearrange(features.cpu().numpy(), "(h w) c -> h w c", h=2, w=4)
 

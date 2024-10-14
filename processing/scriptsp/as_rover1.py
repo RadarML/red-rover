@@ -12,12 +12,12 @@ Outputs:
     - `_rover1/*`
 """
 
-import os
 import json
-import numpy as np
-from scipy.ndimage import binary_dilation
+import os
 
+import numpy as np
 from roverd import Dataset
+from scipy.ndimage import binary_dilation
 
 
 def _parse(p):

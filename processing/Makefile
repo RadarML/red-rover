@@ -15,7 +15,7 @@ VENV=./env/bin
 
 env:
 	$(PYTHON) -m venv env
-	pip install ../format[ouster,video]
+	$(VENV)/pip install ../format[ouster,video]
 	$(VENV)/pip install -r requirements.txt
 
 # ------------------------------ Docker Config ------------------------------ #

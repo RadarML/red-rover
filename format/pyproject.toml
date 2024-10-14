@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "roverd"
-version = "0.0.3"
+version = "0.1.0"
 authors = [
   { name="Tianshu Huang", email="tianshu2@andrew.cmu.edu" },
 ]
@@ -22,6 +22,9 @@ dependencies = [
     "beartype",
     "jaxtyping"
 ]
+
+[project.scripts]
+roverd = "roverd:_cli_main"
 
 [project.optional-dependencies]
 video = ["opencv-python-headless"]

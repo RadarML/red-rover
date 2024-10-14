@@ -10,17 +10,18 @@ Outputs:
 """
 
 import os
-import matplotlib as mpl
 from functools import partial
+
 import imageio
+import jax
+import matplotlib as mpl
+import numpy as np
+from beartype.typing import cast
+from jax import numpy as jnp
+from jaxtyping import Array, Bool, Shaped
+from roverd import Dataset, sensors
 from tqdm import tqdm
 
-import numpy as np
-import jax
-from jax import numpy as jnp
-from beartype.typing import cast
-
-from roverd import Dataset, sensors
 from roverp import graphics
 
 
@@ -63,12 +64,33 @@ def _load(path: str, radar: str):
     return timestamps, streams
 
 
+def _mask(
+    img: Shaped[Array, "w h 3"], mask: Bool[Array, "w h"],
+    color: tuple[int, int, int]
+) -> Shaped[Array, "w h 3"]:
+    return cast(Shaped[Array, "w h 3"], jnp.where(
+        mask[:, :, None],
+        jnp.array(color, dtype=np.uint8)[None, None, :], img))
+
+
 def _transforms():
     """Initialize (and close on) transforms."""
     viridis = (
         jnp.array(mpl.colormaps['viridis'].colors) * 255   # type: ignore
     ).astype(jnp.uint8)
     greys = jnp.array([jnp.arange(255, dtype=np.uint8) for _ in range(3)]).T
+
+    @jax.jit
+    def rng_tf(x):
+        x_norm = jnp.clip(x / 20000, 0, 1)
+        img = graphics.lut(greys, x_norm)
+        # No return
+        img = _mask(img, x == 0, (199, 50, 40))
+        # Infinite return
+        img = _mask(img, x == 65536, (48, 199, 40))
+        # >20m
+        img = _mask(img, x > 20000, (40, 103, 199))
+        return graphics.resize(img, 480, 1920)
 
     @jax.jit
     def lidar_tf(x):
@@ -88,7 +110,7 @@ def _transforms():
 
     return {
         "radar": radar_tf, "camera": jnp.array,
-        "rng": lidar_tf, "rfl": lidar_tf, "nir": lidar_tf}
+        "rng": rng_tf, "rfl": lidar_tf, "nir": lidar_tf}
 
 
 def _renderer(dataset_path, font_path):
@@ -99,7 +121,7 @@ def _renderer(dataset_path, font_path):
     def _render_frame(active, text):
         frame = (
             jnp.zeros((2160, 3840, 3), dtype=jnp.uint8)
-            .at[360:360 + 1080, :1920].set(active["camera"][:, :, [2, 1, 0]])
+            .at[360:360 + 1080, :1920].set(active["camera"])
             .at[:480, 1920:].set(active["rng"])
             .at[480:960, 1920:].set(active["rfl"])
             .at[960:1440, 1920:].set(active["nir"]))

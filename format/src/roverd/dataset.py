@@ -23,10 +23,41 @@ class Dataset:
         path: file path; should be a directory.
 
     Attributes:
+        DEFAULT_SCHEMA: default schema of expected sensors and channels.
         cfg: the original configuraton associated with collecting this dataset.
         sensors: dictionary of each non-virtual sensor in the dataset. The
             value is an initialized `SensorData` (or subclass).
     """
+
+    DEFAULT_SCHEMA = {
+        "lidar": ["ts", "rfl", "nir", "rng"],
+        "radar": ["ts", "iq", "valid"],
+        "camera": ["ts", "video.avi"],
+        "imu": ["ts", "rot", "acc", "avel"]
+    }
+
+    @staticmethod
+    def find(*paths: list[str], follow_symlinks: bool = False) -> list[str]:
+        """Walk a directory (or list of directories) to find all datasets.
+
+        - Datasets are defined by directories containing a `config.yaml` file.
+        - This method does not follow symlinks.
+
+        Args:
+            paths: a (list) of filepaths.
+            follow_symlinks: whether to follow symlinks. If you have a circular
+                symlink, and this is `True`, this method will loop infinitely!
+        """
+        def _find(path) -> list[str]:
+            if os.path.exists(os.path.join(path, "config.yaml")):
+                return [path]
+            else:
+                contents = (
+                    os.path.join(path, s.name) for s in os.scandir(path)
+                    if s.is_dir(follow_symlinks=follow_symlinks))
+                return sum((_find(c) for c in contents), start=[])
+
+        return sum((_find(p) for p in paths), start=[])
 
     def __init__(self, path: str) -> None:
         self.path = path
@@ -104,6 +135,10 @@ class Dataset:
             return SENSOR_TYPES.get(
                     self.cfg.get(key, {}).get("type", "u1"), SensorData
                 )(os.path.join(self.path, key))
+
+    def __contains__(self, key: str) -> bool:
+        """Test whether this dataset contains the given sensor."""
+        return os.path.exists(os.path.join(self.path, key, "meta.json"))
 
     def __repr__(self):
         """Get string representation."""

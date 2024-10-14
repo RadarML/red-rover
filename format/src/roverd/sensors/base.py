@@ -104,6 +104,10 @@ class SensorData(ABC):
         """Alias for `SensorData.channels[key]`."""
         return self.channels[key]
 
+    def __contains__(self, key: str) -> bool:
+        """Check whether this sensor contains the given channel."""
+        return key in self.channels
+
     def __repr__(self):
         """Get string representation."""
         return "{}({}: [{}])".format(

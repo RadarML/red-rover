@@ -12,12 +12,13 @@ Outputs:
     - `_nerfstudio`
 """
 
-import os, json
-import numpy as np
-import cv2
-from tqdm import tqdm
+import json
+import os
 
+import cv2
+import numpy as np
 from roverd import Dataset
+from tqdm import tqdm
 
 
 def _parse(p):

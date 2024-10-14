@@ -27,11 +27,11 @@ radar:
     radar:
       port: /dev/ttyACM0
       frequency: 77.0
-      idle_time: 30.0
+      idle_time: 6.0
       adc_start_time: 5.7
       ramp_end_time: 34.00
       tx_start_time: 1.0
-      freq_slope: 33.506
+      freq_slope: 67.012
       adc_samples: 256
       sample_rate: 10000
       frame_length: 64

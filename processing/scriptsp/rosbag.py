@@ -8,16 +8,15 @@ Outputs:
 """
 
 import os
-from tqdm import tqdm
-import numpy as np
-from scipy.spatial.transform import Rotation
-from beartype.typing import cast
 
+import numpy as np
+from beartype.typing import cast
 from rosbags.rosbag1 import Writer
 from rosbags.serde import cdr_to_ros1, serialize_cdr
 from rosbags.typesys import types
-
 from roverd import Dataset, sensors
+from scipy.spatial.transform import Rotation
+from tqdm import tqdm
 
 
 def ts_sec_ns(t):
@@ -62,7 +61,6 @@ def sensor_msgs_pointcloud2(points, sec, nsec):
     ts = types.builtin_interfaces__msg__Time(sec=sec, nanosec=nsec)
     header = types.std_msgs__msg__Header(frame_id="os_sensor", stamp=ts)
 
-    points = points.reshape(-1, 3)
     data = np.frombuffer(points.tobytes(), dtype=np.uint8)
     return types.sensor_msgs__msg__PointCloud2(
         header=header, height=1, width=points.shape[0],
@@ -75,6 +73,10 @@ def _parse(p):
     p.add_argument(
         "-o", "--out", default=None, help="Output path; defaults to "
         "`_scratch/lidar.bag` in the dataset folder.")
+    p.add_argument(
+        "-m", "--min_range", default=None, type=float,
+        help="Minimum range (in meters) to pre-filter points (and reduce "
+        "storage/memory usage).")
 
 
 def _main(args):
@@ -108,6 +110,11 @@ def _main(args):
         connection = writer.add_connection("/points2", msgtype, latching=True)
         data = zip(lidar.pointcloud_stream(), *ts_sec_ns(lidar.timestamps()))
         for points, sec, nsec, ts in tqdm(data, total=len(lidar)):
+
+            if args.min_range is not None:
+                mask = np.linalg.norm(points, axis=-1) > args.min_range
+                points = points[mask]
+
             msg = sensor_msgs_pointcloud2(points, sec, nsec)
             writer.write(
                 connection, ts,

@@ -16,8 +16,8 @@ Keys:
 
 import os
 import time
-import numpy as np
 
+import numpy as np
 from roverd import Dataset
 
 
@@ -64,7 +64,7 @@ def _main(args):
             mask = np.load(
                 os.path.join(args.path, '_' + s, "pose.npz"))["mask"]
             _start.append(t[np.argmax(mask)])
-            _end.append(t[-np.argmax(mask[::-1])])
+            _end.append(t[-max(1, np.argmax(mask[::-1]))])
         start = max(_start)
         end = min(_end)
     else:

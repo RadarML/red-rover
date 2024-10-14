@@ -11,8 +11,8 @@ r"""Rover dataset file format python API.
 from jaxtyping import install_import_hook
 
 with install_import_hook("deepradar", "beartype.beartype"):
-
     from . import channels, sensors
+    from .cli import _cli_main
     from .dataset import Dataset
 
-__all__ = ["channels", "sensors", "Dataset"]
+__all__ = ["_cli_main", "channels", "sensors", "Dataset"]

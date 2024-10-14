@@ -82,7 +82,7 @@ def _main(args):
     classmap = torch.from_numpy(_get_classmap(path)).to('cuda')
 
     def _apply_image(imgs):
-        with torch.no_grad(), torch.amp.autocast('cuda'):
+        with torch.no_grad(), torch.amp.autocast('cuda'):  # type: ignore
             inputs = feature_extractor(  # type: ignore
                 images=imgs, return_tensors='pt').to('cuda')
             outputs = model(**inputs)

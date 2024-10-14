@@ -14,11 +14,12 @@ Keys:
     - `shape`: original `grid` shape for unpacking the packed bit array.
 """
 
-import os
 import math
-from tqdm import tqdm
+import os
+
 import numpy as np
 from plyfile import PlyData
+from tqdm import tqdm
 
 from roverp import RawTrajectory
 

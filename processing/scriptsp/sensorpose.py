@@ -16,9 +16,10 @@ Keys:
 """
 
 import os
-import numpy as np
 
+import numpy as np
 from roverd import Dataset
+
 from roverp import Trajectory
 
 

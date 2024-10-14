@@ -20,17 +20,16 @@ Channels:
 """
 
 import math
-from tqdm import tqdm
 
 import jax
-from jax import numpy as jnp
-
 from beartype.typing import cast
-from jaxtyping import Float, Array
-
+from jax import numpy as jnp
+from jaxtyping import Array, Float
 from roverd import Dataset, sensors
-from roverp import RadarProcessing, AOAEstimation, CFAR
+from tqdm import tqdm
+
 from arrow import AWR1843Boost
+from roverp import CFAR, AOAEstimation, RadarProcessing
 
 
 def _parse(p):

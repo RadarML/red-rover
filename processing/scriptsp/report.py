@@ -8,14 +8,15 @@ Outputs:
     - `_report/speed.pdf`
 """
 
-import os, json
+import json
 import math
+import os
+
 import numpy as np
-from tqdm import tqdm
+from beartype.typing import cast
 from matplotlib import pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
-
-from beartype.typing import cast
+from tqdm import tqdm
 
 from roverp import RawTrajectory
 
