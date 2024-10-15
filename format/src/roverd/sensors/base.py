@@ -72,6 +72,15 @@ class SensorData(ABC):
         """Total data rate, in bytes/sec."""
         return self.filesize / self.duration
 
+    def _flush_config(self) -> None:
+        """Flush configuration to disk.
+
+        **NOTE**: this is an inherently dangerous operation -- call with
+        extreme caution!
+        """
+        with open(os.path.join(self.path, "meta.json"), 'w') as f:
+            json.dump(self.config, f, indent=4)
+
     def create(self, channel: str, meta: dict) -> Channel:
         """Create and open new channel.
 
@@ -87,8 +96,7 @@ class SensorData(ABC):
         self.channels[channel] = CHANNEL_TYPES.get(meta["format"], Channel)(
             os.path.join(self.path, channel),
             dtype=meta["type"], shape=meta["shape"])
-        with open(os.path.join(self.path, "meta.json"), 'w') as f:
-            json.dump(self.config, f, indent=4)
+        self._flush_config()
         return self.channels[channel]
 
     def timestamps(
