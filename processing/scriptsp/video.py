@@ -12,9 +12,7 @@ Outputs:
 import os
 from functools import partial
 
-import imageio
 import jax
-import matplotlib as mpl
 import numpy as np
 from beartype.typing import cast
 from jax import numpy as jnp
@@ -64,26 +62,21 @@ def _load(path: str, radar: str):
     return timestamps, streams
 
 
-def _mask(
-    img: Shaped[Array, "w h 3"], mask: Bool[Array, "w h"],
-    color: tuple[int, int, int]
-) -> Shaped[Array, "w h 3"]:
-    return cast(Shaped[Array, "w h 3"], jnp.where(
-        mask[:, :, None],
-        jnp.array(color, dtype=np.uint8)[None, None, :], img))
-
-
-def _transforms():
-    """Initialize (and close on) transforms."""
-    viridis = (
-        jnp.array(mpl.colormaps['viridis'].colors) * 255   # type: ignore
-    ).astype(jnp.uint8)
+def _renderer(dataset_path, font_path):
+    """Create (and close on) renderer."""
+    viridis = graphics.mpl_colormap('viridis')
     greys = jnp.array([jnp.arange(255, dtype=np.uint8) for _ in range(3)]).T
 
-    @jax.jit
+    def _mask(
+        img: Shaped[Array, "w h 3"], mask: Bool[Array, "w h"],
+        color: tuple[int, int, int]
+    ) -> Shaped[Array, "w h 3"]:
+        return cast(Shaped[Array, "w h 3"], jnp.where(
+            mask[:, :, None],
+            jnp.array(color, dtype=np.uint8)[None, None, :], img))
+
     def rng_tf(x):
-        x_norm = jnp.clip(x / 20000, 0, 1)
-        img = graphics.lut(greys, x_norm)
+        img = graphics.render_image(x, greys, scale=20000)
         # No return
         img = _mask(img, x == 0, (199, 50, 40))
         # Infinite return
@@ -92,63 +85,43 @@ def _transforms():
         img = _mask(img, x > 20000, (40, 103, 199))
         return graphics.resize(img, 480, 1920)
 
-    @jax.jit
     def lidar_tf(x):
-        p1, p99 = jnp.percentile(x, jnp.array((1, 99)))
-        x_norm = (x - p1) / p99
-        return graphics.resize(graphics.lut(greys, x_norm), 480, 1920)
+        return graphics.render_image(
+            x, greys, pmin=1.0, pmax=99.0, resize=(480, 1920))
 
-    @jax.jit
     def radar_tf(x):
-        x = jnp.swapaxes(x, 0, 1)
-        p1, p99 = jnp.percentile(x, jnp.array((1, 99.9)))
-        x_norm = (jnp.clip(x, p1, p99) - p1) / p99
-        return jax.vmap(
-            partial(graphics.resize, width=480, height=720),
-            in_axes=2, out_axes=2
-        )(graphics.lut(viridis, x_norm))
+        # doppler-range-azimuth -> azimuth-range-doppler
+        x = jnp.moveaxis(x, (0, 1, 2), (2, 1, 0))
 
-    return {
-        "radar": radar_tf, "camera": jnp.array,
-        "rng": rng_tf, "rfl": lidar_tf, "nir": lidar_tf}
+        stack = jax.vmap(partial(
+            graphics.render_image, colors=viridis,
+            resize=(720, 480), pmin=1.0, pmax=99.9
+        ))(x)
+        return jnp.concatenate(list(stack), axis=1)
 
-
-def _renderer(dataset_path, font_path):
-    """Create (and close on) renderer."""
-    font = graphics.JaxFont(font_path, size=80)
-
-    @jax.jit
-    def _render_frame(active, text):
-        frame = (
-            jnp.zeros((2160, 3840, 3), dtype=jnp.uint8)
-            .at[360:360 + 1080, :1920].set(active["camera"])
-            .at[:480, 1920:].set(active["rng"])
-            .at[480:960, 1920:].set(active["rfl"])
-            .at[960:1440, 1920:].set(active["nir"]))
-
-        for i in range(8):
-            frame = frame.at[1440:, i * 480:(i + 1) * 480].set(
-                active["radar"][:, :, i])
-
-        white = jnp.array([255, 255, 255], dtype=np.uint8)
-        for k, v in text.items():
-            frame = font.render(v, frame, white, x=k[0], y=k[1])
-
-        return frame
-
-    def render_frame(active, ii, dt):
-        text =  {
-            (40, 20): "red-rover",
-            (40, 120): dataset_path[:18],
-            (40, 220): "+{:02d}:{:05.2f}s".format(int(dt / 60), dt % 60),
-            (1000, 20): "radar   {:06d}".format(ii["radar"]),
-            (1000, 120): "lidar   {:06d}".format(ii["rng"]),
-            (1000, 220): "camera  {:06d}".format(ii["camera"])
-        }
-        return np.array(_render_frame(
-            active, {k: font.encode(v) for k, v in text.items()}))
-
-    return render_frame
+    return graphics.Render(
+        size=(2160, 3840),
+        channels={
+            (360, 360 + 1080, 0, 1920): "camera",
+            (0, 480, 1920, 3840): "rng",
+            (480, 960, 1920, 3840): "rfl",
+            (960, 1440, 1920, 3840): "nir",
+            (1440, 2160, 0, 3840): "radar"
+        },
+        transforms={
+            "radar": radar_tf, "rng": rng_tf, "rfl": lidar_tf, "nir": lidar_tf
+        },
+        text={
+            (20, 40): "red-rover",
+            (120, 40): dataset_path[:18],
+            (220, 40): "+{mm:02d}:{ss:05.2f}s",
+            (20, 1000): "radar   {radar:06d}",
+            (120, 1000): "lidar   {rng:06d}",
+            (220, 1000): "camera  {camera:06d}"
+        },
+        font=graphics.JaxFont(font_path, size=80),
+        textcolor=(255, 255, 255)
+    ).render
 
 
 def _main(args):
@@ -158,33 +131,19 @@ def _main(args):
     os.makedirs(os.path.dirname(args.out), exist_ok=True)
 
     timestamps, streams = _load(args.path, args.radar)
-    transforms = _transforms()
     render_func = _renderer(args.path, args.font)
     frame_time = 1 / args.fps * args.timescale
 
-    ii = {k: 0 for k in timestamps}
-    start_time = max(v[0] for v in timestamps.values()) // 1 + 1
-    ts = start_time
-    active = {k: next(v) for k, v in streams.items()}
+    est_n_frames = int((
+        min(v[-1] for v in timestamps.values())
+        - max(v[0] for v in timestamps.values())
+    ) / frame_time)
 
-    # Note: we don't use nvenc because the quality is terrible
-    writer = imageio.get_writer(args.out, fps=args.fps, codec="h264")
-    pbar = tqdm(total=sum(v.shape[0] for v in timestamps.values()))
-    try:
-        while True:
-            # Advance index
-            for k in timestamps:
-                while timestamps[k][ii[k]] < ts:
-                    ii[k] += 1
-                    active[k] = transforms[k](next(streams[k]))
-                    pbar.update(1)
+    synced = graphics.synchronize(
+        streams, timestamps, period=frame_time, round=1.0)
+    render_iter = (
+        render_func(frameset, {"mm": int(t / 60), "ss": (t % 60), **ii})
+        for t, ii, frameset in tqdm(synced, total=est_n_frames))
 
-            # Write frame
-            frame = render_func(active, ii, ts - start_time)
-            writer.append_data(frame)
-
-            ts += frame_time
-    except StopIteration:
-        pass
-
-    writer.close()
+    graphics.write_consume(
+        render_iter, out=args.out, fps=args.fps, codec="h264")

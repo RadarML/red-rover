@@ -108,7 +108,9 @@ def doppler_range_azimuth_elevation(
             zeros = jnp.zeros(shape, dtype=jnp.complex64)
             iqa = jnp.concatenate([iqa, zeros], axis=i)
 
-    rda = jnp.fft.fftn(iqa, axes=(0, 1, 2, 3))
+    # Jax only allows up to 3D FFTs, so we need to do 2 FFTs here.
+    rda = jnp.fft.fftn(iqa, axes=(0, 1, 2))
+    rda = jnp.fft.fftn(rda, axes=(3,))
     rda_shf = jnp.fft.fftshift(rda, axes=(0, 2, 3))
     return jnp.abs(rda_shf)
 

@@ -20,16 +20,21 @@ class SensorData(ABC):
     Args:
         path: file path; should be a directory containing a `meta.json` file.
         create: whether we are creating a new sensor.
+        exist_ok: whether to raise an error (as a safety feature) if this
+            channel already exists. Otherwise, if `create=True` and
+            `exist_ok=True`, the existing channel is simply opened instead.
 
     Attributes:
         channels: dictionary of each channel in this sensor. Each value is an
             initialized :py:class:`Channel`.
     """
 
-    def __init__(self, path: str, create: bool = False) -> None:
+    def __init__(
+        self, path: str, create: bool = False, exist_ok: bool = False
+    ) -> None:
         self.path = path
 
-        if not create:
+        if not create or (os.path.exists(self.path) and exist_ok):
             try:
                 with open(os.path.join(path, "meta.json")) as f:
                     self.config = json.load(f)

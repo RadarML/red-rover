@@ -17,7 +17,8 @@ Scripts are categorized as follows:
 
 _scripts = sorted([
     "rosbag", "info", "sensorpose", "fft", "as_rover1", "lidarmap",
-    "report", "video", "simulate", "compare", "nearest", "slice", "export",
+    "report", "video", "simulate", "compare", "compare2",
+    "nearest", "slice", "export",
     "align", "decompress", "cfar", "cfar_pointcloud", "cfar_map",
     "as_nerfstudio", "clip", "segment"
 ])

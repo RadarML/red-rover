@@ -98,9 +98,8 @@ class RawChannel(Channel):
 
         Args:
             stream: stream to consume.
-            thread: whether to return immediately, and run in a separate thread
+            thread: if `True`, return immediately, and run in a separate thread
                 instead of returning immediately.
-            preset: lzma compression preset to use.
         Raises:
             ValueError: data type/shape does not match channel specifications.
         """

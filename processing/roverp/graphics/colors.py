@@ -1,7 +1,11 @@
 """JAX-native color conversions for GPU acceleration."""
 
+import matplotlib
+from beartype.typing import Optional, cast
 from jax import numpy as jnp
-from jaxtyping import Array, Float, Num
+from jaxtyping import Array, Float, Num, UInt8
+
+from .resize import resize as resize_func
 
 
 def hsv_to_rgb(
@@ -39,7 +43,7 @@ def hsv_to_rgb(
 
 def lut(
     colors: Num[Array, "n d"], data: Float[Array, "..."]
-) -> Num[Array, "... 3"]:
+) -> Num[Array, "... d"]:
     """Apply a discrete lookup table (e.g. colormap).
 
     Args:
@@ -53,3 +57,54 @@ def lut(
     """
     fidx = jnp.clip(data, 0.0, 1.0) * (colors.shape[0] - 1)
     return jnp.take(colors, fidx.astype(int), axis=0)
+
+
+def mpl_colormap(cmap: str = "viridis") -> UInt8[Array, "n 3"]:
+    """Get color LUT from matplotlib colormap.
+
+    Use with :py:func:`graphics.lut`.
+    """
+    # For some reason, mypy does not recognize `colors` as an attribute of mpl.
+    colors = cast(
+        matplotlib.colors.ListedColormap,  # type: ignore
+        matplotlib.colormaps[cmap]).colors
+    return (jnp.array(colors) * 255).astype(jnp.uint8)
+
+
+def render_image(
+    data: Num[Array, "h w"],
+    colors: Optional[Num[Array, "n d"]] = None,
+    resize: Optional[tuple[int, int]] = None,
+    scale: Optional[float | int] = None,
+    pmin: Optional[float] = None, pmax: Optional[float] = None
+) -> UInt8[Array, "h2 w2 d"]:
+    """Apply colormap with specified scaling, clipping, and sizing.
+
+    Args:
+        colors: colormap (e.g. output of :py:func:`mpl_colormap`).
+        data: input data to map.
+        resize: resize inputs to specified size.
+        scale: if specified, use this exact scale to normalize the data to
+            `[0, 1]`, with clipping applied.
+        pmin, pmax: if specified, use this percentile as the minimum and
+            maximum for normalization instead of the actual min and max.
+
+    Returns:
+        Rendered RGB image.
+    """
+    if colors is None:
+        raise ValueError("Must specify input colormap.")
+
+    if scale is not None:
+        data = jnp.clip(data / scale, 0.0, 1.0)
+    else:
+        left = (
+            jnp.percentile(data, pmin) if pmin is not None else jnp.min(data))
+        right = (
+            jnp.percentile(data, pmax) if pmax is not None else jnp.max(data))
+        data = jnp.clip((data - left) / (right - left), 0.0, 1.0)
+
+    if resize is not None:
+        data = resize_func(data, height=resize[0], width=resize[1])
+
+    return lut(colors, data)

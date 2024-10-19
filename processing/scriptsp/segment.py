@@ -36,8 +36,9 @@ import os
 
 import numpy as np
 import yaml
+from beartype.typing import cast
 from jaxtyping import UInt8
-from roverd import Dataset
+from roverd import Dataset, channels
 from tqdm import tqdm
 
 
@@ -99,6 +100,9 @@ def _main(args):
         "desc": "Image segmentation with 640x640 resize and 4x downsample."})
     stream = camera["video.avi"].stream_prefetch(batch=args.batch)
 
-    output.consume(
+    frame_stream = (
         _apply_image(frame) for frame in
         tqdm(stream, total=int(np.ceil(len(camera) / args.batch))))
+
+    # frame_stream is already batched
+    cast(channels.LzmaFrameChannel, output).consume(frame_stream, batch=0)

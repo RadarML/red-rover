@@ -91,7 +91,7 @@ class LzmaFrameChannel(Channel):
                     f.read((samples + 1) * 8), dtype=np.uint64)
 
         if len(indices) < 2:
-            raise ValueError("Could not read indices.")
+            raise ValueError(f"Could not read indices: {self.path}_i.")
 
         data = []
         with open(self.path, 'rb') as f:
@@ -185,13 +185,14 @@ class LzmaFrameChannel(Channel):
           return.
 
         Args:
-            stream: stream to consume.
+            stream: stream to consume; possibly already batched (see `batch`).
             thread: whether to return immediately, and run in a separate thread
                 instead of returning immediately.
             preset: lzma compression preset to use.
             batch: aggregate, then batch this many lzma compressions in
                 parallel. Necessary for throughput reasons, since lzma
-                is only single (?) threaded.
+                is only single (?) threaded. If `batch=0`, we assume that
+                the input stream is already batched.
 
         Raises:
             ValueError: data type/shape does not match channel specifications.

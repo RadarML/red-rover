@@ -59,7 +59,9 @@ class JaxFont:
             text: character bytes (ASCII-encoded)
             canvas: array to write to. Must be a jax array.
             color: color to apply, with the same number of channels as `canvas`.
-            x, y: position to write text at. Must be constant!
+            x, y: position to write text at. Must be constant! **NOTE**:
+                following pixel indexing convention, +x is down, and +y is
+                right.
 
         Returns:
             Rendered canvas. If the original is no longer used (e.g. all
@@ -68,16 +70,16 @@ class JaxFont:
         """
         indices = jnp.clip(text - 32, 0, self.raster.shape[0] - 1)
         mask = jnp.concatenate(self.raster[indices], axis=1)
-        b = y + mask.shape[0]
-        r = x + mask.shape[1]
+        b = x + mask.shape[0]
+        r = y + mask.shape[1]
         mask = mask[
-            :min(canvas.shape[0] - y, mask.shape[0]),
-            :min(canvas.shape[1] - x, mask.shape[1])
+            :min(canvas.shape[0] - x, mask.shape[0]),
+            :min(canvas.shape[1] - y, mask.shape[1])
         ] / 255
 
-        return canvas.at[y:b, x:r].set(
+        return canvas.at[x:b, y:r].set(
             ((1 - mask)[:, :, None] * color[None, None, :]).astype(jnp.uint8)
-            + (mask[:, :, None] * canvas[y: b, x: r]).astype(jnp.uint8))
+            + (mask[:, :, None] * canvas[x: b, y: r]).astype(jnp.uint8))
 
     def encode(
         self, text: Union[str, Iterable[str]]

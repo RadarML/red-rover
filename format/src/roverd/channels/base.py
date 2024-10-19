@@ -121,6 +121,10 @@ class Channel(ABC):
         self.shape = shape
         self.size = int(np.prod(shape) * np.dtype(self.type).itemsize)
 
+    def open_like(self, path: str) -> "Channel":
+        """Open a channel with the same metadata, but different data."""
+        return self.__class__(path=path, dtype=self.type, shape=self.shape)
+
     def buffer_to_array(
         self, data: bytes, batch: bool = True
     ) -> Shaped[np.ndarray, "n ..."]:
