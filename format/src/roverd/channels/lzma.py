@@ -214,7 +214,9 @@ class LzmaFrameChannel(Channel):
         def _compress_batch(data: Sequence[Data]):
             self._verify_type(data)
             if not isinstance(data[0], np.ndarray):
-                raise ValueError("LzmaFrame does not allow raw data.")
+                raise ValueError(
+                    "LzmaFrame requires in put data to be a `np.ndarray`. "
+                    "In particular, raw data (bytes) is not allowed.")
 
             with ThreadPool(processes=len(data)) as p:
                 return p.map(

@@ -12,7 +12,7 @@ import numpy as np
 from beartype.typing import Optional, Union
 from jax import numpy as jnp
 from jax.scipy.signal import convolve2d
-from jaxtyping import Array, Complex64, Float, Float32
+from jaxtyping import Array, Complex64, Float, Float32, Int
 
 
 def doppler_range_azimuth(
@@ -235,7 +235,7 @@ class CFAR:
         self.mask = jnp.array(mask)
 
     def __call__(self, x: Float[Array, "d r ..."]) -> Float[Array, "d r"]:
-        """Get CFAR mask.
+        """Get CFAR thresholds.
 
         Args:
             x: input. If more than 2 axes are present, the additional axes
@@ -263,12 +263,16 @@ class AOAEstimation:
 
     Args:
         bins: number of angular bins to span `(-pi, pi)` during AOA estimation.
+        angle: whether to return the angle or bin index.
     """
 
-    def __init__(self, bins: int = 128) -> None:
+    def __init__(self, bins: int = 128, angle: bool = True) -> None:
         self.bins = bins
+        self.angle = angle
 
-    def __call__(self, x: Float[Array, "a"]) -> Float[Array, ""]:
+    def __call__(
+        self, x: Float[Array, "a"]
+    ) -> Float[Array, ""] | Int[Array, ""]:
         """Estimate angle of arrival for a planar antenna array.
 
         Args:
@@ -276,7 +280,7 @@ class AOAEstimation:
                 FFTs applied.
 
         Returns:
-            Estimated AOA in `(-pi, pi)`.
+            Estimated AOA in `(-pi, pi)` or bin in `(-bins / 2, bins / 2 - 1)`.
         """
         assert self.bins % x.shape[0] == 0
 
@@ -290,4 +294,7 @@ class AOAEstimation:
         aoavec = jnp.abs(jnp.fft.fftshift(
             jnp.fft.ifft(jnp.fft.fft(upsampled) * jnp.fft.fft(lobes))))
 
-        return (jnp.argmax(aoavec) / self.bins - 0.5) * np.pi
+        if self.angle:
+            return (jnp.argmax(aoavec) / self.bins - 0.5) * np.pi
+        else:
+            return jnp.argmax(aoavec) - self.bins // 2
