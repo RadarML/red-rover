@@ -12,7 +12,8 @@ from jaxtyping import install_import_hook
 
 with install_import_hook("deepradar", "beartype.beartype"):
     from . import channels, sensors
-    from .cli import _cli_main
+    from .cli import _cli_main, _cli_parser
     from .dataset import Dataset
 
-__all__ = ["_cli_main", "channels", "sensors", "Dataset"]
+# We need to expose `_cli_parser` for sphinx.
+__all__ = ["_cli_main", "_cli_parser", "channels", "sensors", "Dataset"]

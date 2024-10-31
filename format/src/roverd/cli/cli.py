@@ -7,7 +7,7 @@ from typing import cast
 from . import info, validate
 
 
-def _parser():
+def _cli_parser():
     commands = {"info": info, "validate": validate}
     parser = ArgumentParser(
         description="Rover Dataset CLI.",
@@ -27,7 +27,7 @@ def _parser():
 
 def _cli_main() -> None:
     """Dispatch scripts."""
-    parser = _parser()
+    parser = _cli_parser()
     if len(sys.argv) == 1:
         parser.print_help(sys.stderr)
         sys.exit(1)
