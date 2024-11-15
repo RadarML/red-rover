@@ -70,11 +70,13 @@ class Render:
             return frame
 
         self._render_func = jax.jit(_render_func)
+        self._vrender_func = jax.jit(jax.vmap(_render_func))
 
     def render(
-        self, data: dict[str, Shaped[Array, "..."]], meta: dict[str, Any]
-    ) -> UInt8[np.ndarray, "h w 3"]:
-        """Render frame.
+        self, data: dict[str, Shaped[Array, "..."]],
+        meta: dict[str, Any] | list[dict[str, Any]]
+    ) -> UInt8[Array, "*batch h w 3"]:
+        """Render (possibly batched) frame.
 
         Args:
             data: input data, organized into channels by name. Must have
@@ -82,9 +84,17 @@ class Render:
             meta: metadata for text captions/labels.
 
         Returns:
-            Rendered RGB frame.
+            Rendered RGB frame (or batch of frames).
         """
-        encoded_text = {
-            k: self.font.encode(v.format(**meta))
-            for k, v in self.text.items()}
-        return np.array(self._render_func(data, encoded_text))
+        # Batched
+        if isinstance(meta, list):
+            encoded_text = {
+                k: jnp.stack([self.font.encode(v.format(**m)) for m in meta])
+                for k, v in self.text.items()}
+            return self._vrender_func(data, encoded_text)
+        # Non-batched
+        else:
+            encoded_text = {
+                k: self.font.encode(v.format(**meta))
+                for k, v in self.text.items()}
+            return self._render_func(data, encoded_text)

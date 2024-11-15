@@ -10,7 +10,13 @@ def synchronize(
     timestamps: dict[str, Float[np.ndarray, "?T"]],
     period: float = 1 / 30.0,
     round: Optional[float] = None,
-) -> Iterator[tuple[float, dict[str, int], Any]]:
+    duplicate: dict[str, str] = {},
+    batch: int = 0,
+    stop_at: float = 0.0
+) -> Iterator[
+    tuple[float, dict[str, int], Any]
+    | list[tuple[float, dict[str, int], Any]]
+]:
     """Sychronize asynchronous video/data streams.
 
     Args:
@@ -19,6 +25,11 @@ def synchronize(
         period: query period, in seconds.
         round: if specified, round the start time up to the nearest `round`
             seconds.
+        duplicate: duplicate selected streams (values) into the specified keys.
+        batch: batch size for parallelized pipelines. If `batch=0` (default),
+            no batching is applied.
+        stop_at: terminate early after this many seconds. If `0.0` (default),
+            plays back the full provided streams.
 
     Returns:
         Yields a tuple with the current timestamp relative to the start time,
@@ -26,6 +37,12 @@ def synchronize(
         values at that timestamp. The active values are given by reference
         only, and should not be modified.
     """
+    def handle_duplicates(t, ii, active):
+        for k, v in duplicate.items():
+            ii[k] = ii[v]
+            active[k] = active[v]
+        return t, ii, active
+
     if set(streams.keys()) != set(timestamps.keys()):
         raise ValueError("Streams and timestamps do not have matching keys.")
 
@@ -37,6 +54,7 @@ def synchronize(
         start_time = start_time // round + round
     ts = start_time
 
+    _batch: list = []
     try:
         while True:
             for k in timestamps:
@@ -51,7 +69,20 @@ def synchronize(
                         print(f"Exhausted: {k}")
                         raise StopIteration
 
-            yield (ts - start_time, ii, active)
+            if batch == 0:
+                yield handle_duplicates(ts - start_time, ii, active)
+            else:
+                # Need to make sure we get a copy of ii and active!
+                _batch.append(handle_duplicates(
+                    ts - start_time, dict(**ii), dict(**active)))
+                if len(_batch) == batch:
+                    yield _batch
+                    _batch = []
             ts += period
+
+            if stop_at > 0 and ts > start_time + stop_at:
+                print(f"Stopping early: t=+{ts - start_time:.3f}s")
+                raise StopIteration
+
     except StopIteration:
         pass

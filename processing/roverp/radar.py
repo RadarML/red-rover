@@ -9,16 +9,19 @@ from functools import partial
 
 import jax
 import numpy as np
-from beartype.typing import Optional, Union
+from beartype.typing import Optional, Sequence, Union
+from einops import rearrange
 from jax import numpy as jnp
 from jax.scipy.signal import convolve2d
 from jaxtyping import Array, Complex64, Float, Float32, Int
+from scipy.stats import norm
 
 
 def doppler_range_azimuth(
-    iq: Complex64[Array, "doppler tx rx range"],
-    hanning: Union[list[int], bool] = False, pad: list[int] = []
-) -> Float32[Array, "doppler range antenna"]:
+    iq: Complex64[Array, "d tx rx rng"],
+    hanning: Union[list[int], bool] = False, pad: list[int] = [],
+    complex: bool = False
+) -> Float32[Array, "d rng antenna"] | Complex64[Array, "d rng antenna"]:
     """Compute doppler-range-azimuth FFTs with optional hanning window(s).
 
     - The (virtual) antenna must be arranged in a line on the same elevation.
@@ -38,6 +41,7 @@ def doppler_range_azimuth(
             `[0, 2]` (i.e. range-doppler). Must be closed on in order to
             jit-compile.
         pad: padding to apply in the (doppler, range, azimuth) axes.
+        complex: whether to return a complex number, or take the magnitude.
 
     Returns:
         (doppler, range, antenna) post-FFT radar data cube, with the
@@ -64,13 +68,17 @@ def doppler_range_azimuth(
 
     rda = jnp.fft.fftn(iqa, axes=(0, 1, 2))
     rda_shf = jnp.fft.fftshift(rda, axes=(0, 2))
-    return jnp.abs(rda_shf)
+    return rda_shf if complex else jnp.abs(rda_shf)
 
 
 def doppler_range_azimuth_elevation(
-    iq: Complex64[Array, "doppler 4 3 range"],
-    hanning: Union[list[int], bool] = False, pad: list[int] = []
-) -> Float32[Array, "doppler range azimuth elevation"]:
+    iq: Complex64[Array, "doppler 3 4 range"],
+    raw_elevation: bool = False, hanning: Union[list[int], bool] = False,
+    pad: list[int] = [], complex: bool = False
+) -> (
+    Float32[Array, "doppler range azimuth elevation"]
+    | Complex64[Array, "doppler range azimuth elevation"]
+):
     """Compute doppler-range-azimuth-elevation FFTs for the 3x4 TI AWR1843.
 
     See `doppler_range_azimuth` for additional documentation.
@@ -79,23 +87,22 @@ def doppler_range_azimuth_elevation(
         iq: input IQ array, in doppler-tx-rx-range order.
         hanning: list of indices to apply a Hanning window to.
         pad: padding to apply in the (doppler, range, azimuth, elevation) axes.
+        complex: whether to return a complex number, or take the magnitude.
 
     Returns:
         (doppler, range, azimuth, elevation) radar data cube.
     """
-    iqa_raw: Complex64[Array, "doppler range 12"] = jnp.swapaxes(
-        iq.reshape(iq.shape[0], -1, iq.shape[-1]), -2, -1)
-
+    iq = rearrange(iq, "d tx rx r -> d tx r rx")
     iqa: Complex64[Array, "doppler range 8 2"] = jnp.zeros(
-        (iq.shape[0], iq.shape[-1], 8, 2), dtype=jnp.complex64
-    ).at[:, :, 2:6, 0].set(iqa_raw[:, :, 0:4]
-    ).at[:, :, 0:4, 1].set(iqa_raw[:, :, 4:8]
-    ).at[:, :, 4:8, 1].set(iqa_raw[:, :, 8:12])
+        (iq.shape[0], iq.shape[2], 8, 2), dtype=jnp.complex64
+    ).at[:, :, 2:6, 0].set(iq[:, 1, :, :]
+    ).at[:, :, 0:4, 1].set(iq[:, 0, :, :]
+    ).at[:, :, 4:8, 1].set(iq[:, 2, :, :])
 
     if isinstance(hanning, bool):
         hanning = [0, 1] if hanning else []
     for axis in hanning:
-        shape = [1, 1, 1]
+        shape = [1, 1, 1, 1]
         shape[axis] = -1
         hann = jnp.hanning(iqa.shape[axis])
         window = hann.reshape(shape) / jnp.mean(hann)
@@ -111,8 +118,33 @@ def doppler_range_azimuth_elevation(
     # Jax only allows up to 3D FFTs, so we need to do 2 FFTs here.
     rda = jnp.fft.fftn(iqa, axes=(0, 1, 2))
     rda = jnp.fft.fftn(rda, axes=(3,))
-    rda_shf = jnp.fft.fftshift(rda, axes=(0, 2, 3))
-    return jnp.abs(rda_shf)
+    rda = jnp.fft.fftshift(rda, axes=(0, 2, 3))
+    return rda if complex else jnp.abs(rda)
+
+
+def elevation_aoa(
+    iq: Complex64[Array, "doppler 3 4 range"]
+) -> Float[Array, "doppler range"]:
+    """Calculate elevation  AOA and range-doppler intensity.
+
+    Args:
+        iq: input data. Must be in 3x4 mode. The median across the 4 central
+            RX antenna is returned.
+
+    Returns:
+        Elevation AoA for the input dat.
+    """
+    iq_az: Complex64[Array, "doppler range 4 2"] = jnp.zeros(
+        (iq.shape[0], iq.shape[-1], 4, 2), dtype=jnp.complex64
+    ).at[:, :, :, 0].set(rearrange(iq[:, 1, :, :], "d rx r -> d r rx")
+    ).at[:, :, 0:2, 1].set(rearrange(iq[:, 0, 2:, :], "d rx r -> d r rx")
+    ).at[:, :, 2:4, 1].set(rearrange(iq[:, 2, :2, :], "d rx r -> d r rx"))
+
+    angle = jnp.angle(iq_az)
+    phase_diff = jnp.median(angle[..., 0] - angle[..., 1], axis=-1)
+    el_angle = jnp.arcsin((phase_diff / jnp.pi + 1) % 2 - 1)
+
+    return el_angle
 
 
 class RadarProcessing:
@@ -298,3 +330,66 @@ class AOAEstimation:
             return (jnp.argmax(aoavec) / self.bins - 0.5) * np.pi
         else:
             return jnp.argmax(aoavec) - self.bins // 2
+
+
+class CFARProcessing:
+    """CFAR + 3D AoA Processing Pipeline.
+
+    Args:
+        sample: sample data for zero-doppler artifact correction.
+        guard: guard band size for CFAR.
+        window: test window size for CFAR.
+        bins: azimuth Angle of Arrival estimation resolution (-pi/2 to pi/2).
+        cfar_threshold: CFAR p-value threshold.
+        n_points: number of CFAR points to return. If more CFAR points are
+            detected, the top `n_points` are returned; if fewer, the points
+            are zero-padded.
+    """
+
+    def __init__(
+        self, sample: Complex64[Array, "batch doppler tx rx range"],
+        guard: tuple[int, int] = (5, 5), window: tuple[int, int] = (10, 10),
+        bins: int = 256, cfar_threshold: float = 0.005, max_points: int = 256
+    ) -> None:
+        self.cfar_threshold = cfar_threshold
+        self.max_points = max_points
+
+        self.proc = RadarProcessing(
+            sample, hanning=True, antenna=[0, 2], pad=[0, 0, bins - 8, 0])
+        self.cfar = CFAR(guard=guard, window=window)
+        self.aoa = AOAEstimation(bins=bins, angle=True)
+
+    def __call__(
+        self, iq: Complex64[Array, "batch doppler tx rx range"]
+    ) -> tuple[
+        Float[Array, "N"], Float[Array, "N"],
+        Float[Array, "N"], Float[Array, "N"]
+    ]:
+        """Apply CFAR-AoA pipeline to obtain polar points.
+
+        Args:
+            iq: 3x4 IQ data.
+
+        Returns:
+            A tuple with the `rng` (range), `az` (azimuth angle),
+            `el` (elevation angle), and `intensity`. Exactly `max_points`
+            CFAR points are returned.
+        """
+        rda = self.proc(iq)
+        cfar = jax.vmap(self.cfar)(rda) > norm.isf(self.cfar_threshold)
+        az_angle = jax.vmap(jax.vmap(jax.vmap(self.aoa)))(rda)
+        el_angle = jax.vmap(elevation_aoa)(iq)
+        intensity = cfar * jnp.linalg.norm(rda, axis=-1)
+
+        def top_n(az, el, x):# -> tuple[Array, Any, Any, Any]:
+            Nd, Nr = x.shape
+            i_doppler, i_range = jnp.meshgrid(jnp.arange(Nd), jnp.arange(Nr))
+
+            keep = jnp.argsort(
+                x[i_doppler.reshape(-1), i_range.reshape(-1)], descending=True
+            )[:self.max_points][::-1]
+            d = i_doppler.reshape(-1)[keep]
+            r = i_range.reshape(-1)[keep]
+            return r, az[d, r], el[d, r], x[d, r]
+
+        return jax.vmap(top_n)(az_angle, el_angle, intensity)

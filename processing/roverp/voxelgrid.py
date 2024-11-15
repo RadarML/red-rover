@@ -150,7 +150,7 @@ class VoxelGrid(NamedTuple):
             path: output path (ending with .ply).
             mask, cmap: pointcloud mask and colors.
         """
-        from plyfile import PlyData, PlyElement
+        from plyfile import PlyData, PlyElement  # type: ignore
 
         xyz, rgb = self.as_pointcloud(mask, cmap=cmap)
 

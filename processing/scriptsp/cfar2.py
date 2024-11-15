@@ -52,7 +52,8 @@ def cfar_pipeline(source, args):
     _, _, tx, _, _ = sample.shape
     antenna = None if tx == 2 else [0, 2]
 
-    proc = RadarProcessing(jnp.array(sample), hanning=False, antenna=antenna)
+    proc = RadarProcessing(
+        jnp.array(sample), pad=[0, 0, 120], hanning=False, antenna=antenna)
     shape = proc.shape[:-1]
     cfar = CFAR(guard=(5, 5), window=(10, 10))
     cfar_threshold = norm.isf(args.cfar_threshold)

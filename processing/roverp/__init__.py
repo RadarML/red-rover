@@ -8,12 +8,17 @@ r"""Rover data processing and loading library.
 .
 """  # noqa: D205
 
-from .slam import Poses, Trajectory, RawTrajectory
-from .radar import (
-    doppler_range_azimuth, doppler_range_azimuth_elevation,
-    RadarProcessing, CFAR, AOAEstimation)
-from .metrics import mse, ssim
 from . import graphics
+from .metrics import mse, ssim
+from .radar import (
+    CFAR,
+    AOAEstimation,
+    CFARProcessing,
+    RadarProcessing,
+    doppler_range_azimuth,
+    doppler_range_azimuth_elevation,
+)
+from .slam import Poses, RawTrajectory, Trajectory
 from .voxelgrid import VoxelGrid
 
 __all__ = [
@@ -21,7 +26,7 @@ __all__ = [
     "Poses", "Trajectory", "RawTrajectory",
     # Radar processing
     "doppler_range_azimuth", "doppler_range_azimuth_elevation",
-    "RadarProcessing", "CFAR", "AOAEstimation",
+    "RadarProcessing", "CFAR", "AOAEstimation", "CFARProcessing",
     # Metrics
     "mse", "ssim",
     # Graphics & visualization

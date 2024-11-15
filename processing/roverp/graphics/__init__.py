@@ -6,6 +6,7 @@
 
 from .colors import hsv_to_rgb, lut, mpl_colormap, render_image
 from .font import JaxFont
+from .pointcloud import Dilate, Scatter
 from .render import Render
 from .resize import resize
 from .sync import synchronize
@@ -13,6 +14,7 @@ from .writer import write_buffered, write_consume
 
 __all__ = [
     "hsv_to_rgb", "mpl_colormap", "lut", "render_image",
+    "Dilate", "Scatter",
     "JaxFont", "Render",
     "resize", "synchronize",
     "write_buffered", "write_consume"]
