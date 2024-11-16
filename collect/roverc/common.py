@@ -116,9 +116,9 @@ class Capture:
         log_msg = (
             f"f: {freq:.2f} u: {util * 100:.0f}% "
             f"w: {wcet * 1000:.1f} q: {self.qlen}")
-        if (freq < self.fps * 0.9) or (wcet > 1.0):
+        if (freq < self.fps * 0.9) or (wcet * self.fps > 1.0):
             self.log.error(log_msg)
-        elif (freq < self.fps * 0.99) or (wcet > 0.9):
+        elif (freq < self.fps * 0.99) or (wcet * self.fps > 0.9):
             self.log.warning(log_msg)
         else:
             self.log.info(log_msg)

@@ -66,7 +66,7 @@ class HPFCornerFreq1(Enum):
 
 
 class HPFCornerFreq2(Enum):
-    """High pass filter 1 corner frequency."""
+    """High pass filter 2 corner frequency."""
 
     KHZ350 = 0
     KHZ700 = 1

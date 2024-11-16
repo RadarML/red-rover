@@ -117,13 +117,13 @@ class Request(NamedTuple):
         Data format: `<HHH{}sH`.
 
         - < : assumed to be little endian. Not documented anywhere, but implied
-            since mmWave API uses native linux/x86 structs, which are little
-            endian.
-        - H : Header is always `0xA55A` (Table 13, [1]).
-        - H : Command code (Table 12, [1]).
-        - H : Data size; must be between 0 and 504 (Section 5.1, [1]).
+          since mmWave API uses native linux/x86 structs, which are little
+          endian.
+        - H : Header is always `0xA55A` (Table 13, [R1]_).
+        - H : Command code (Table 12, [R1]_).
+        - H : Data size; must be between 0 and 504 (Section 5.1, [R1]_).
         - {}s : Payload; can be empty.
-        - H : Footer is always `0xEEAA` (Table 13, [1]).
+        - H : Footer is always `0xEEAA` (Table 13, [R1]_).
         """
         assert len(self.data) < 504
         return struct.pack(
