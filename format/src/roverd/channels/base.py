@@ -111,6 +111,12 @@ class Channel(ABC):
         path: file path.
         dtype: data type, or string name of dtype (e.g. `u1`, `f4`).
         shape: data shape.
+
+    Attributes:
+        path: file path.
+        type: numpy data type.
+        shape: sample data shape.
+        size: total file size, in bytes.
     """
 
     def __init__(

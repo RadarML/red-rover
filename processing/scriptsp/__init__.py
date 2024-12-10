@@ -16,7 +16,7 @@ Scripts are categorized as follows:
 """  # noqa: D205
 
 _scripts = sorted([
-    "rosbag", "sensorpose", "fft", "as_rover1", "lidarmap",
+    "rosbag", "sensorpose", "fft", "fft2", "as_rover1", "lidarmap",
     "report", "video", "simulate", "compare", "compare2",
     "nearest", "slice", "export",
     "align", "cfar", "cfar2", "cfar_pointcloud", "cfar_map",
