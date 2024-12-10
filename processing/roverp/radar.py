@@ -9,7 +9,7 @@ from functools import partial
 
 import jax
 import numpy as np
-from beartype.typing import Optional, Sequence, Union
+from beartype.typing import Optional, Union
 from einops import rearrange
 from jax import numpy as jnp
 from jax.scipy.signal import convolve2d
@@ -95,9 +95,9 @@ def doppler_range_azimuth_elevation(
     iq = rearrange(iq, "d tx rx r -> d tx r rx")
     iqa: Complex64[Array, "doppler range 8 2"] = jnp.zeros(
         (iq.shape[0], iq.shape[2], 8, 2), dtype=jnp.complex64
-    ).at[:, :, 2:6, 0].set(iq[:, 1, :, :]
-    ).at[:, :, 0:4, 1].set(iq[:, 0, :, :]
-    ).at[:, :, 4:8, 1].set(iq[:, 2, :, :])
+    ).at[:, :, 2:6, 1].set(iq[:, 1, :, :]
+    ).at[:, :, 0:4, 0].set(iq[:, 0, :, :]
+    ).at[:, :, 4:8, 0].set(iq[:, 2, :, :])
 
     if isinstance(hanning, bool):
         hanning = [0, 1] if hanning else []
