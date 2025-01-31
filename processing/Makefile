@@ -99,3 +99,7 @@ $(BAG_DIR)/pose.bag: $(PBSTREAM)
 $(TRAJ): $(BAG_DIR)/pose.bag
 	$(call docker_run, rostopic echo -b $(D_BAG_DIR)/pose.bag -p trajectory_0 \
 		> $(D_OUT_DIR)/trajectory.csv)
+
+tmp:
+	$(call docker_run, rostopic echo -b $(D_BAG_DIR)/pose.bag -p trajectory_0 \
+                > $(D_OUT_DIR)/trajectory.csv)

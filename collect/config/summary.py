@@ -8,15 +8,15 @@ import yaml
 if sys.path[0] != '':
     sys.path.insert(0, '')
 
-from roverc import radar_api
+from awr_api import CaptureConfig, RadarConfig
 
 
 def _print_cfg(name):
     with open(os.path.join("config", name)) as f:
         cfg = yaml.load(f, Loader=yaml.FullLoader)
 
-    radar = radar_api.RadarConfig(**cfg["radar"]["args"]["radar"])
-    capture = radar_api.CaptureConfig(**cfg["radar"]["args"]["capture"])
+    radar = RadarConfig(**cfg["radar"]["args"]["radar"])
+    capture = CaptureConfig(**cfg["radar"]["args"]["capture"])
     intrinsics = radar.as_intrinsics()
     rr = intrinsics['range_resolution']
     nd, tx, rx, nr = intrinsics['shape']

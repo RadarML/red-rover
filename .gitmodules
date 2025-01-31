@@ -6,4 +6,4 @@
 	url = https://github.com/ouster-lidar/ouster-ros.git
 [submodule "processing/arrow"]
 	path = processing/arrow
-	url = git@github.com:WiseLabCMU/arrow.git
+	url = ../arrow.git

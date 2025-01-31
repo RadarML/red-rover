@@ -6,10 +6,10 @@ import os
 from queue import Queue
 
 import numpy as np
+from awr_api import AWRSystem, CaptureConfig, RadarConfig, dca_types
 from beartype.typing import Optional
 
 from .common import Capture, Sensor
-from .radar_api import AWRSystem, CaptureConfig, RadarConfig, dca_types
 
 
 class RadarCapture(Capture):

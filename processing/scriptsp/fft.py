@@ -52,7 +52,7 @@ def _main(args):
 
     radar = cast(sensors.RadarData, ds["radar"])
     stream = tqdm(
-        radar.iq_stream(batch=args.batch), desc=args.mode,
+        radar.iq_stream(batch=args.batch),
         total=math.ceil(len(ds["radar"]) / args.batch))
 
     # Grab the first sample

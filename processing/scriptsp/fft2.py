@@ -4,10 +4,11 @@ Inputs:
     - `radar/iq`
 
 Outputs:
-    - `_radar/cube`. WARNING: this will take double the disk space of `iq`!
+    - `_radar/cube`. WARNING: this will take 2.66X the disk space of `iq`!
 """
 
 import math
+from functools import partial
 
 import jax
 import numpy as np
@@ -56,7 +57,9 @@ def _main(args):
     @jax.jit
     def _process(frame):
         return rearrange(
-            doppler_range_azimuth_elevation(frame) * args.scale,
-            "d r a e -> d a e r")
+            jax.vmap(partial(
+                doppler_range_azimuth_elevation, complex=True
+            ))(frame) * args.scale,
+            "b d r a e -> b d a e r")
 
     out.consume(np.array(_process(frame)) for frame in stream)

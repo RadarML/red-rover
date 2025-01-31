@@ -73,7 +73,7 @@ def doppler_range_azimuth(
 
 def doppler_range_azimuth_elevation(
     iq: Complex64[Array, "doppler 3 4 range"],
-    raw_elevation: bool = False, hanning: Union[list[int], bool] = False,
+    hanning: Union[list[int], bool] = False,
     pad: list[int] = [], complex: bool = False
 ) -> (
     Float32[Array, "doppler range azimuth elevation"]
