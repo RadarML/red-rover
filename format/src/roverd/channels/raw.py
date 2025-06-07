@@ -1,28 +1,39 @@
 """Raw, uncompressed binary data."""
 
-from io import BytesIO
 from queue import Queue
 from threading import Thread
+from typing import Any, Callable, Iterator, Optional, Sequence, cast
 
 import numpy as np
-from beartype.typing import Any, Callable, Iterator, Optional, Sequence, cast
 from jaxtyping import Shaped
 
-from .base import Buffer, Channel, Data, Streamable
+from .base import Channel
+from .utils import Buffer, Data, Streamable
 
 
 class RawChannel(Channel):
-    """Raw (uncompressed) data."""
+    """Raw (uncompressed) data.
+
+    Args:
+        path: file path.
+        dtype: data type, or string name of dtype (e.g. `u1`, `f4`).
+        shape: data shape.
+
+    Attributes:
+        path: file path.
+        type: numpy data type.
+        shape: sample data shape.
+        size: total file size, in bytes.
+    """
 
     _FOPEN = staticmethod(open)
 
-    def _open(self, path: str, mode: str) -> BytesIO:
+    def _open(self, path: str, mode: str):
         """Open file, and handle type assertions."""
-        return cast(BytesIO, self._FOPEN(path, mode))  # type: ignore
-
+        return self._FOPEN(path, mode)  # type: ignore
 
     def read(
-        self, start: int = 0, samples: int = -1
+        self, start: int | np.integer = 0, samples: int | np.integer = -1
     ) -> Shaped[np.ndarray, "..."]:
         """Read data.
 
@@ -32,7 +43,7 @@ class RawChannel(Channel):
 
         Returns:
             Read frames as an array, with a leading axis corresponding to
-            the number of `samples`.
+                the number of `samples`.
         """
         with self._open(self.path, 'rb') as f:
             if start > 0:
@@ -51,7 +62,7 @@ class RawChannel(Channel):
         """
         self._verify_type(data)
         with self._open(self.path, mode) as f:
-            f.write(self._serialize(data))
+            f.write(self._serialize(data))  # type: ignore
 
     def stream(
         self, transform: Optional[
@@ -100,6 +111,7 @@ class RawChannel(Channel):
             stream: stream to consume.
             thread: if `True`, return immediately, and run in a separate thread
                 instead of returning immediately.
+
         Raises:
             ValueError: data type/shape does not match channel specifications.
         """
@@ -112,7 +124,7 @@ class RawChannel(Channel):
         with self._open(self.path, 'wb') as f:
             for data in stream:
                 self._verify_type(data)
-                f.write(self._serialize(data))
+                f.write(self._serialize(data))  # type: ignore
 
     def memmap(self) -> np.memmap:
         """Open memory mapped array."""

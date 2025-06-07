@@ -1,17 +1,11 @@
-"""Sensor types."""
+"""Rover Sensors."""
 
-from ._timestamps import discretize_timestamps, smooth_timestamps
-from .base import SensorData
-from .lidar import LidarData
-from .radar import RadarData
-
-SENSOR_TYPES: dict[str, type[SensorData]] = {
-    "lidar": LidarData,
-    "_lidar": LidarData,
-    "radar": RadarData,
-}
+from .camera import Camera, Semseg
+from .generic import DynamicSensor, Sensor
+from .lidar import OS0Lidar, OS0LidarDepth
+from .radar import XWRRadar
 
 __all__ = [
-    "SensorData", "LidarData", "RadarData",
-    "smooth_timestamps", "discretize_timestamps"
+    "DynamicSensor", "Sensor", "XWRRadar", "OS0LidarDepth", "OS0Lidar",
+    "Camera", "Semseg"
 ]

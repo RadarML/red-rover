@@ -4,9 +4,7 @@ import lzma
 from multiprocessing.pool import ThreadPool
 from queue import Queue
 from threading import Thread
-
-import numpy as np
-from beartype.typing import (
+from typing import (
     Any,
     Callable,
     Iterable,
@@ -15,14 +13,29 @@ from beartype.typing import (
     Sequence,
     cast,
 )
+
+import numpy as np
 from jaxtyping import Shaped
 
-from .base import Buffer, Channel, Data, Prefetch, Streamable, batch_iterator
+from .base import Channel
 from .raw import RawChannel
+from .utils import Buffer, Data, Prefetch, Streamable, batch_iterator
 
 
 class LzmaChannel(RawChannel):
-    """LZMA-compressed binary data."""
+    """LZMA-compressed binary data.
+
+    Args:
+        path: file path.
+        dtype: data type, or string name of dtype (e.g. `u1`, `f4`).
+        shape: data shape.
+
+    Attributes:
+        path: file path.
+        type: numpy data type.
+        shape: sample data shape.
+        size: total file size, in bytes.
+    """
 
     _FOPEN = staticmethod(lzma.open)  # type: ignore
 
@@ -31,7 +44,7 @@ class LzmaChannel(RawChannel):
         raise Exception("Cannot mem-map a compressed channel.")
 
     def read(
-        self, start: int = 0, samples: int = -1
+        self, start: int | np.integer = 0, samples: int | np.integer = 1
     ) -> Shaped[np.ndarray, "..."]:
         """Read data."""
         if start != 0:
@@ -56,13 +69,15 @@ class LzmaFrameChannel(Channel):
 
     This file should have the offset for the next unwritten frame as well.
     As an example, for a channel `example` with compressed frame sizes
-    `[2, 5, 3]`, `example_i` should be::
+    `[2, 5, 3]`, `example_i` should be:
 
-        [0, 2, 7, 10].
+    ```python
+    [0, 2, 7, 10]
+    ```
     """
 
     def read(
-        self, start: int = 0, samples: int = -1
+        self, start: int | np.integer = 0, samples: int | np.integer = -1
     ) -> Shaped[np.ndarray, "samples ..."]:
         """Read data.
 
@@ -72,9 +87,9 @@ class LzmaFrameChannel(Channel):
 
         Returns:
             Read frames as an array, with a leading axis corresponding to
-            the number of `samples`. If only a subset of frames are readable
-            (e.g. due to reaching the end of the video), the result is
-            truncated.
+                the number of `samples`. If only a subset of frames are
+                readable (e.g. due to reaching the end of the video), the
+                result is truncated.
 
         Raises:
             ValueError: None of the frames could be read, possibly due to

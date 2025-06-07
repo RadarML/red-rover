@@ -1,62 +1,97 @@
-"""TI radar sensor."""
+"""Radar sensor."""
+
+import json
+import os
+import warnings
+from dataclasses import dataclass
+from functools import partial
+from typing import Callable, overload
 
 import numpy as np
-from beartype.typing import Iterator
-from jaxtyping import Complex64, Int16
+from jaxtyping import Float32, Float64
 
-from .base import SensorData
+from roverd import channels, timestamps, types
+
+from .generic import Sensor
 
 
-class RadarData(SensorData):
-    """TI Radar sensor.
+@dataclass
+class RadarMetadata:
+    """Radar metadata.
 
-    Radar data are stored in a non-standard `IIQQ int16` format; see
-    `collect.radar_api.dca_types.RadarFrame` for details. Radar data should
-    be converted to `complex64` in order to be used::
-
-        radar = Dataset(path)["radar]
-        raw = radar["iq"].read(1)
-        sample = radar.iiqq16_to_iq64(raw)
-        # or
-        sample = RadarData.iiqq16_to_iq64(raw)
-        # or
-        for sample in radar["iq"].iq_stream():
-            ...
-
-    Note that the `IIQQ int16` format uses only 32-bytes per sample, while
-    `complex64` uses 64-bytes per sample, so should not be used for storage.
+    Attributes:
+        range_resolution: range resolution for the modulation used; nominally
+            in meters.
+        doppler_resolution: doppler resolution; nominally in m/s.
+        timestamps: timestamp for each frame; nominally in seconds.
     """
 
-    @staticmethod
-    def iiqq16_to_iq64(
-        iiqq: Int16[np.ndarray, "... iiqq"]
-    ) -> Complex64[np.ndarray, "... iq"]:
-        """Convert IIQQ int16 to float64 IQ."""
-        iq = np.zeros(
-            (*iiqq.shape[:-1], iiqq.shape[-1] // 2), dtype=np.complex64)
-        iq[..., 0::2] = 1j * iiqq[..., 0::4] + iiqq[..., 2::4]
-        iq[..., 1::2] = 1j * iiqq[..., 1::4] + iiqq[..., 3::4]
+    range_resolution: Float32[np.ndarray, "1"]
+    doppler_resolution: Float32[np.ndarray, "1"]
+    timestamps: Float64[np.ndarray, "N"]
 
-        return iq
 
-    def iq_stream(
-        self, batch: int = 64, prefetch: bool = False
-    ) -> Iterator[Complex64[np.ndarray, "..."]]:
-        """Get an iterator which returns a Complex64 stream of IQ frames.
+class XWRRadar(Sensor[types.XWRRadarIQ[np.ndarray], RadarMetadata]):
+    """Full spectrum 4D radar sensor.
 
-        NOTE: TI, for some reason, streams data in IIQQ order instead of IQIQ.
-        This special stream (instead of a generic `.stream()`) handles this.
+    Args:
+        path: path to sensor data directory. Must contain a `radar.json`
+            file with `range_resolution` and `doppler_resolution` keys.
+        timestamp_interpolation: timestamp smoothing function to apply.
+    """
+
+    def __init__(
+        self, path: str, timestamp_interpolation: Callable[
+            [Float64[np.ndarray, "N"]], Float64[np.ndarray, "N"]] | None = None
+    ) -> None:
+        if timestamp_interpolation is None:
+            timestamp_interpolation = partial(timestamps.smooth, interval=30.)
+
+        super().__init__(path, timestamp_interpolation)
+
+        try:
+            with open(os.path.join(path, "radar.json")) as f:
+                radar_cfg = json.load(f)
+                dr = radar_cfg["range_resolution"]
+                dd = radar_cfg["doppler_resolution"]
+        except KeyError as e:
+            raise KeyError(
+                f"{os.path.join(path, 'radar.json')} is missing a required "
+                f"key: {str(e)}") from e
+        except FileNotFoundError:
+            warnings.warn(
+                "No `radar.json` found; setting `dr=0` and `dd=0`. "
+                "This may cause problems for radar processing later!")
+            dr, dd = 0.0, 0.0
+
+        self.metadata = RadarMetadata(
+            doppler_resolution=np.array([dd], dtype=np.float32),
+            range_resolution=np.array([dr], dtype=np.float32),
+            timestamps=self.channels['ts'].read(start=0, samples=-1))
+
+    @overload
+    def __getitem__(self, index: int | np.integer) -> types.XWRRadarIQ: ...
+
+    @overload
+    def __getitem__(self, index: str) -> channels.Channel: ...
+
+    def __getitem__(
+        self, index: int | np.integer | str
+    ) -> types.XWRRadarIQ[np.ndarray] | channels.Channel:
+        """Fetch IQ data by index.
 
         Args:
-            batch: batch size.
-            prefetch: whether to prefetch data from another thread.
+            index: frame index, or channel name.
 
         Returns:
-            Possibly prefetched iterator yielding complex IQ frames.
+            Radar data, or channel object if `index` is a string.
         """
-        if prefetch:
-            return self.channels["iq"].stream_prefetch(
-                batch=batch, transform=self.iiqq16_to_iq64)
-        else:
-            return self.channels["iq"].stream(
-                batch=batch, transform=self.iiqq16_to_iq64)
+        if isinstance(index, str):
+            return self.channels[index]
+        else: # int | np.integer
+            return types.XWRRadarIQ(
+                iq=self.channels['iq'][index],
+                timestamps=self.metadata.timestamps[index][None],
+                range_resolution=self.metadata.range_resolution,
+                doppler_resolution=self.metadata.doppler_resolution,
+                valid=self.channels['valid'][index])

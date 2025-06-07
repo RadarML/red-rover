@@ -1,99 +1,140 @@
-"""Ouster lidar."""
+"""Lidar sensor."""
 
 import os
-from functools import cached_property
+import warnings
+from dataclasses import dataclass
+from functools import partial
+from typing import Callable, overload
 
 import numpy as np
-from beartype.typing import Iterator
-from jaxtyping import Float32, Float64, UInt16
+from jaxtyping import Float64
 
-from ._timestamps import discretize_timestamps
-from .base import SensorData
+from roverd import channels, timestamps, types
+
+from .generic import Sensor
 
 
-class LidarData(SensorData):
-    """Ouster Lidar sensor.
+@dataclass
+class LidarMetadata:
+    """Lidar metadata.
 
-    Note that Lidar data are stored in a "staggered" format, and must be
-    destaggered when used::
-
-        lidar = Dataset(path)["lidar"]
-        raw = lidar['rng'].read(1)
-        sample = lidar.destagger(raw)
-
-    To get a pointcloud, the ouster-supplied API is wrapped in `pointcloud`::
-
-        points = lidar.pointcloud(raw)
-
-    Use `*_stream` versions of `destagger` and `stream` to get an iterator
-    of the transformed data::
-
-        for depthmaps in lidar.destaggered_stream():
-            ...
-
-        for points in lidar.pointcloud_stream():
-            ...
+    Attributes:
+        timestamps: timestamp for each frame; nominally in seconds.
+        intrinics: lidar intrinsics file; see the ouster sdk [`SensorInfo`](
+            https://static.ouster.dev/sdk-docs/python/api/client.html#ouster.sdk.client.SensorInfo)
+            documentation.
     """
 
-    @cached_property
-    def _ouster_client(self):
-        from ouster.sdk import client
-        return client
+    timestamps: Float64[np.ndarray, "N"]
+    intrinsics: str
 
-    @cached_property
-    def lidar_metadata(self):
-        """Get sensor metadata."""
-        with open(os.path.join(self.path, "lidar.json")) as f:
-            info_json = f.read()
 
-        # ouster-sdk is a naughty, noisy library
-        # it is in fact so noisy, that we have cut it off at the os level...
-        stdout = os.dup(1)
-        os.close(1)
-        info = self._ouster_client.SensorInfo(info_json)  # type: ignore
-        os.dup2(stdout, 1)
-        os.close(stdout)
+class OS0LidarDepth(Sensor[types.OS0Depth[np.ndarray], LidarMetadata]):
+    """Ouster OS0 lidar sensor, depth/rng only.
 
-        return info
+    Args:
+        path: path to sensor data directory. Must contain a `lidar.json` file
+            with ouster lidar intrinsics.
+        timestamp_interpolation: timestamp smoothing function to apply.
+    """
 
-    @cached_property
-    def xyzlut(self):
-        """Point cloud LUT."""
-        return self._ouster_client.XYZLut(self.lidar_metadata)  # type: ignore
+    def __init__(self, path: str, timestamp_interpolation: Callable[
+        [Float64[np.ndarray, "N"]], Float64[np.ndarray, "N"]] | None = None
+    ) -> None:
+        if timestamp_interpolation is None:
+            timestamp_interpolation = partial(
+                timestamps.discretize, interval=10., eps=0.05)
 
-    def pointcloud(self, arr) -> Float32[np.ndarray, "?n xyz"]:
-        """Convert to pointcloud."""
-        points = self.xyzlut(arr).astype(np.float32)
-        valid = np.any(
-            points != 0, axis=-1) | np.any(np.isnan(points), axis=-1)
-        return points.reshape(-1, 3)[valid.reshape(-1)]
+        super().__init__(path, timestamp_interpolation)
 
-    def pointcloud_stream(
-        self, prefetch: bool = True
-    ) -> Iterator[Float32[np.ndarray, "?n xyz"]]:
-        """Get an iterator which returns point clouds."""
-        if prefetch:
-            return self.channels["rng"].stream_prefetch(
-                transform=self.pointcloud)
+        if not os.path.exists(os.path.join(path, 'lidar.json')):
+            warnings.warn(
+                f"No 'lidar.json' found in {path}; using '' as a placeholder.")
+            intrinsics = ""
         else:
-            return self.channels["rng"].stream(transform=self.pointcloud)
+            intrinsics = os.path.join(path, "lidar.json")
 
-    def destagger(self, arr):
-        """Destagger data."""
-        return self._ouster_client.destagger(  # type: ignore
-            self.lidar_metadata, arr)
+        self.metadata = LidarMetadata(
+            timestamps=self.channels['ts'].read(start=0, samples=-1),
+            intrinsics=intrinsics)
 
-    def destaggered_stream(
-        self, key: str = 'rng'
-    ) -> Iterator[UInt16[np.ndarray, "..."]]:
-        """Get iterator which returns a destaggered range stream."""
-        return self.channels[key].stream_prefetch(self.destagger)
+    @overload
+    def __getitem__(self, index: int | np.integer) -> types.OS0Depth: ...
 
-    def timestamps(
-        self, interval: float = 30.0, smooth: bool = True, **kwargs
-    ) -> Float64[np.ndarray, "n"]:
-        """Get smoothed timestamps."""
-        if smooth:
-            return discretize_timestamps(self.channels["ts"].read(), interval)
+    @overload
+    def __getitem__(self, index: str) -> channels.Channel: ...
+
+    def __getitem__(
+        self, index: int | np.integer | str
+    ) -> types.OS0Depth[np.ndarray] | channels.Channel:
+        """Read lidar data by index.
+
+        Args:
+            index: frame index, or channel name.
+
+        Returns:
+            Radar data, or channel object if `index` is a string.
+        """
+        if isinstance(index, str):
+            return self.channels[index]
+        else: # int | np.integer
+            return types.OS0Depth(
+                rng=self.channels['rng'][index],
+                timestamps=self.metadata.timestamps[index][None],
+                intrinsics=self.metadata.intrinsics)
+
+
+class OS0Lidar(Sensor[types.OS0Data[np.ndarray], LidarMetadata]):
+    """Ouster OS0 lidar sensor, all channels.
+
+    Args:
+        path: path to sensor data directory. Must contain a `lidar.json` file
+            with ouster lidar intrinsics.
+        timestamp_interpolation: timestamp smoothing function to apply.
+    """
+
+    def __init__(self, path: str, timestamp_interpolation: Callable[
+        [Float64[np.ndarray, "N"]], Float64[np.ndarray, "N"]] | None = None
+    ) -> None:
+        if timestamp_interpolation is None:
+            timestamp_interpolation = timestamps.smooth
+
+        super().__init__(path, timestamp_interpolation)
+
+        if not os.path.exists(os.path.join(path, 'lidar.json')):
+            warnings.warn(
+                f"No 'lidar.json' found in {path}; using '' as a placeholder.")
+            intrinsics = ""
         else:
-            return self.channels["ts"].read()
+            intrinsics = os.path.join(path, "lidar.json")
+
+        self.metadata = LidarMetadata(
+            timestamps=self.channels['ts'].read(start=0, samples=-1),
+            intrinsics=intrinsics)
+
+    @overload
+    def __getitem__(self, index: int | np.integer) -> types.OS0Data: ...
+
+    @overload
+    def __getitem__(self, index: str) -> channels.Channel: ...
+
+    def __getitem__(
+        self, index: int | np.integer | str
+    ) -> types.OS0Data[np.ndarray] | channels.Channel:
+        """Read lidar data by index.
+
+        Args:
+            index: frame index, or channel name.
+
+        Returns:
+            Radar data, or channel object if `index` is a string.
+        """
+        if isinstance(index, str):
+            return self.channels[index]
+        else: # int | np.integer
+            return types.OS0Data(
+                rng=self.channels['rng'][index],
+                rfl=self.channels['rfl'][index],
+                nir=self.channels['nir'][index],
+                timestamps=self.metadata.timestamps[index][None],
+                intrinsics=self.metadata.intrinsics)

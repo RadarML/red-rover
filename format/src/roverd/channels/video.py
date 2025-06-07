@@ -16,16 +16,30 @@ from beartype.typing import (
 )
 from jaxtyping import Shaped
 
-from .base import Buffer, Channel, Data, Streamable
+from .base import Channel
+from .utils import Buffer, Data, Streamable
 
 
 class VideoChannel(Channel):
     """Video data.
 
-    NOTE: while opencv is a heavy dependency, it seems to have very efficient
-    seeking for mjpeg compared to `imageio`, the other library that I tested.
-    Using `opencv-python-headless` instead of the default opencv should
-    alleviate some of these issues.
+    !!! warning
+
+        While opencv is a heavy dependency, it seems to have very efficient
+        seeking for mjpeg compared to `imageio`, the other library that I
+        tested. Using `opencv-python-headless` instead of the default opencv
+        should alleviate some of these issues.
+
+    Args:
+        path: file path.
+        dtype: data type, or string name of dtype (e.g. `u1`, `f4`).
+        shape: data shape.
+
+    Attributes:
+        path: file path.
+        type: numpy data type.
+        shape: sample data shape.
+        size: total file size, in bytes.
     """
 
     @cached_property
@@ -40,7 +54,7 @@ class VideoChannel(Channel):
                 "video encoding or decoding.")
 
     def read(
-        self, start: int = 0, samples: int = -1
+        self, start: int | np.integer = 0, samples: int | np.integer = -1
     ) -> Shaped[np.ndarray, "samples ..."]:
         """Read data.
 
@@ -50,9 +64,9 @@ class VideoChannel(Channel):
 
         Returns:
             Read frames as an array, with a leading axis corresponding to
-            the number of `samples`. If only a subset of frames are readable
-            (e.g. due to reaching the end of the video), the result is
-            truncated.
+                the number of `samples`. If only a subset of frames are
+                readable (e.g. due to reaching the end of the video), the
+                result is truncated.
 
         Raises:
             ValueError: None of the frames could be read, possibly due to
@@ -134,6 +148,7 @@ class VideoChannel(Channel):
             fps: video framerate.
             thread: whether to return immediately, and run in a separate thread
                 instead of returning immediately.
+
         Raises:
             ValueError: data type/shape does not match channel specifications.
         """

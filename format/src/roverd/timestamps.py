@@ -1,17 +1,29 @@
-"""Timestamp interpolation."""
+"""Timestamp interpolation.
+
+Timestamps which are recorded when a sample is read by the collection computer
+may suffer from jitter due to scheduling noise and other timing effects.
+Assuming the sensor clock is *locally* stable, we can interpolate or smooth the
+timestamps to reduce this jitter.
+
+This module provides two timestamp models:
+
+- `smooth`: Each timestamp is jittered by some IID noise.
+- `discretize`: Frames arrive at a fixed rate with minor discrepancies, but may
+    be randomly dropped.
+"""
 
 import numpy as np
 from jaxtyping import Float64
 
 
-def smooth_timestamps(
+def smooth(
     x: Float64[np.ndarray, "n"], interval: float = 30.
 ) -> Float64[np.ndarray, "n"]:
     """Apply piecewise linear smoothing to system timestamps.
 
     Corresponds to a "independent jitter" timestamp model, where each timestamp
-    is jittered by some IID noise relative to a base frequency which may
-    drift over time.
+    is jittered by some IID noise relative to a base sampling frequency which
+    may drift slightly over time.
 
     Applies to: Radar, Camera, IMU
 
@@ -34,7 +46,7 @@ def smooth_timestamps(
     return out
 
 
-def discretize_timestamps(
+def discretize(
     x: Float64[np.ndarray, "n"], interval: float = 10., eps: float = 0.05
 ) -> Float64[np.ndarray, "n"]:
     """Apply timestamp difference discretization.
@@ -43,16 +55,18 @@ def discretize_timestamps(
     fixed rate (which may vary slightly over time), but may be randomly dropped
     with some (small) probability.
 
-    Note that the interval is always assumed to be at least one time step:
-    if the received time difference is less than half a time step, it is
-    rounded up to one time step.
-
     Applies to: Lidar
+
+    !!! note
+
+        The interval is always assumed to be at least one time step:
+        if the received time difference is less than half a time step, it is
+        rounded up to one time step.
 
     Args:
         x: input timestamp array.
         interval: interpolation interval, in seconds.
-        nudge: only rounds up (assuming a frame drop) if the interframe time
+        eps: only rounds up (assuming a frame drop) if the interframe time
             exceeds `1.5 + eps` time steps.
 
     Returns:

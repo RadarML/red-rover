@@ -1,52 +1,179 @@
-"""Dataset loading utilities."""
+"""High level API for trace & dataset loading."""
 
-import json
 import os
 from functools import cached_property
+from typing import Callable, Mapping, TypeVar, cast, overload
 
-import yaml
+import numpy as np
+from abstract_dataloader import abstract, spec
 
-from .sensors import SENSOR_TYPES, SensorData
+from roverd.sensors import DynamicSensor, Sensor
+
+TSample = TypeVar("TSample")
 
 
-class Dataset:
-    """A dataset with multiple sensors.
+class Trace(abstract.Trace[TSample]):
+    """A single trace, containing multiple sensors.
 
-    Create a `Dataset` for the trace path; then, use `Dataset[...]` to
-    fetch the associated sensors, then channels::
-
-        ds = Dataset(path)
-        radar = ds['radar']
-        iq = radar['iq']
+    Type Parameters:
+        - `Sample`: sample data type which this `Sensor` returns. As a
+            convention, we suggest returning "batched" data by default, i.e.
+            with a leading singleton axis.
 
     Args:
-        path: file path; should be a directory.
-
-    Attributes:
-        DEFAULT_SCHEMA: default schema of expected sensors and channels.
-        cfg: the original configuraton associated with collecting this dataset.
-        sensors: dictionary of each non-virtual sensor in the dataset. The
-            value is an initialized `SensorData` (or subclass).
+        sensors: sensors which make up this trace.
+        sync: synchronization protocol used to create global samples from
+            asynchronous time series. If `Mapping`; the provided indices are
+            used directly; if `None`, sensors are expected to already be
+            synchronous (equivalent to passing `{k: np.arange(N), ...}`).
+        name: friendly name; should only be used for debugging and inspection.
     """
 
-    DEFAULT_SCHEMA = {
-        "lidar": ["ts", "rfl", "nir", "rng"],
-        "radar": ["ts", "iq", "valid"],
-        "camera": ["ts", "video.avi"],
-        "imu": ["ts", "rot", "acc", "avel"]
-    }
+    @staticmethod
+    def find_sensors(path: str, virtual: bool = False) -> list[str]:
+        """Find all (non-virtual) sensors in a given directory."""
+        def is_valid(p: str) -> bool:
+            return (
+                os.path.isdir(os.path.join(path, p))
+                and (virtual or not p.startswith('_'))
+                and os.path.exists(os.path.join(path, p, "meta.json")))
+
+        return [p for p in os.listdir(path) if is_valid(p)]
+
+    @classmethod
+    def from_config(
+        cls, path: str, sync: spec.Synchronization, sensors: Mapping[
+            str, Sensor | Callable[[str], Sensor] | None] | None = None,
+        include_virtual: bool = False, name: str | None = None
+    ) -> "Trace":
+        """Create a trace from a directory containing a single recording.
+
+        Sensor types can be specified by:
+
+        - `None`: use the [`DynamicSensor`][roverd.sensors.DynamicSensor] type.
+        - `Callable[[str], Sensor]`: a sensor constructor, which has all
+            non-path arguments closed on.
+        - `Sensor`: an already initialized sensor instance.
+
+        !!! info
+
+            Sensors can also be inferred automatically (`sensors: None`), in
+            which case we ind and load all sensors in the directory, excluding
+            virtual sensors (those starting with `_`) unless
+            `include_virtual=True`. Each sensor is then initialized as a
+            `DynamicSensor`.
+
+        Args:
+            path: path to trace directory.
+            sync: synchronization protocol.
+            sensors: sensor types to use.
+            include_virtual: if `True`, include virtual sensors as well.
+            name: friendly name; if not provided, defaults to the given `path`.
+        """
+        if sensors is None:
+            _sensors = Trace.find_sensors(path, virtual=include_virtual)
+            sensors = {k: None for k in _sensors}
+
+        initialized = {}
+        for k, v in sensors.items():
+            if isinstance(v, Sensor):
+                initialized[k] = v
+            elif v is None:
+                initialized[k] = DynamicSensor(os.path.join(path, k))
+            else:
+                initialized[k] = v(os.path.join(path, k))
+
+        # Ignore this type error here until abstract-dataloader switches to
+        # `Mapping`.
+        return cls(
+            sensors=initialized, sync=sync,  # type: ignore
+            name=path if name is None else name)
+
+    @cached_property
+    def filesize(self):
+        """Total filesize, in bytes.
+
+        !!! warning
+
+            The trace must be initialized with all sensors for this
+            calculation to be correct.
+        """
+        return sum(getattr(s, 'filesize', 0) for s in self.sensors.values())
+
+    @cached_property
+    def datarate(self):
+        """Total data rate, in bytes/sec.
+
+        !!! warning
+
+            The trace must be initialized with all sensors for this
+            calculation to be correct.
+        """
+        return sum(getattr(s, 'datarate', 0) for s in self.sensors.values())
+
+    @overload
+    def __getitem__(self, index: str) -> Sensor: ...
+
+    @overload
+    def __getitem__(self, index: int | np.integer) -> TSample: ...
+
+    def __getitem__(
+        self, index: int | np.integer | str
+    ) -> TSample | spec.Sensor:
+        """Get sample from sychronized index (or fetch a sensor by name).
+
+        !!! tip
+
+            For convenience, traces can be indexed by a `str` sensor name,
+            returning that [`Sensor`][abstract_dataloader.spec.].
+
+        Args:
+            index: sample index, or sensor name.
+
+        Returns:
+            Loaded sample if `index` is an integer type, or the appropriate
+                [`Sensor`][abstract_dataloader.spec.] if `index` is a `str`.
+        """
+        # We just want to overwrite the docstring.
+        return super().__getitem__(index)
+
+    def __len__(self) -> int:
+        """Total number of sensor-tuple samples."""
+        return super().__len__()
+
+
+class Dataset(abstract.Dataset[TSample]):
+    """A dataset, consisting of multiple traces.
+
+    Type Parameters:
+        - `Sample`: sample data type which this `Dataset` returns. As a
+            convention, we suggest returning "batched" data by default, i.e.
+            with a leading singleton axis.
+
+    Args:
+        traces: traces which make up this dataset.
+    """
+
+    def __init__(self, traces: list[spec.Trace[TSample]]) -> None:
+        self.traces = traces
 
     @staticmethod
-    def find(*paths: list[str], follow_symlinks: bool = False) -> list[str]:
+    def find_traces(
+        *paths: str, follow_symlinks: bool = False
+    ) -> list[str]:
         """Walk a directory (or list of directories) to find all datasets.
 
-        - Datasets are defined by directories containing a `config.yaml` file.
-        - This method does not follow symlinks.
+        Datasets are defined by directories containing a `config.yaml` file.
+
+        !!! warning
+
+            This method does not follow symlinks by default. If you have a
+            cirular symlink, and `follow_symlinks=True`, this method will loop
+            infinitely!
 
         Args:
             paths: a (list) of filepaths.
-            follow_symlinks: whether to follow symlinks. If you have a circular
-                symlink, and this is `True`, this method will loop infinitely!
+            follow_symlinks: whether to follow symlinks.
         """
         def _find(path) -> list[str]:
             if os.path.exists(os.path.join(path, "config.yaml")):
@@ -59,88 +186,43 @@ class Dataset:
 
         return sum((_find(p) for p in paths), start=[])
 
-    def __init__(self, path: str) -> None:
-        self.path = path
+    @classmethod
+    def from_config(
+        cls, paths: list[str], sync: spec.Synchronization, sensors: Mapping[
+            str, Sensor | Callable[[str], Sensor] | None] | None = None,
+        include_virtual: bool = False
+    ) -> "Dataset":
+        """Create a dataset from a list of directories containing recordings.
 
-        with open(os.path.join(self.path, "config.yaml")) as f:
-            self.cfg = yaml.load(f, Loader=yaml.FullLoader)
-
-        self.sensors = {
-            k: SENSOR_TYPES.get(
-                self.cfg.get(k, {}).get("type", ""), SensorData
-            )(os.path.join(self.path, k))
-            for k in self.cfg.keys()}
-
-    @cached_property
-    def filesize(self):
-        """Total filesize, iin bytes."""
-        return sum(s.filesize for _, s in self.sensors.items())
-
-    @cached_property
-    def datarate(self):
-        """Total data rate, in bytes/sec."""
-        return sum(s.datarate for _, s in self.sensors.items())
-
-    def create(
-        self, key: str, exist_ok: bool = False,
-        allow_physical: bool = True
-    ) -> SensorData:
-        """Intialize new sensor with an empty `meta.json` file.
+        Constructor arguments are forwarded to [`Trace.from_config`][^^.].
 
         Args:
-            key: sensor name.
-            exist_ok: if `exist_ok=True` and the sensor already exists, that
-                sensor is simply returned instead (similar to `os.mkdir`).
+            paths: paths to dataset directories.
+            sync: synchronization protocol.
+            sensors: sensor types to use.
+            include_virtual: if `True`, include virtual sensors as well.
+        """
+        traces = [
+            Trace.from_config(
+                p, sync=sync, sensors=sensors, include_virtual=include_virtual)
+            for p in paths]
+        return cls(traces=cast(list[Trace[TSample]], traces))  # type: ignore
+
+    def __getitem__(self, index: int | np.integer) -> TSample:
+        """Fetch item from this dataset by global index.
+
+        Args:
+            index: sample index.
 
         Returns:
-            Created sensor (or fetched, if it already exists and `exist_ok`).
+            loaded sample.
+
+        Raises:
+            IndexError: provided index is out of bounds.
         """
-        if not allow_physical and not key.startswith('_'):
-            raise ValueError(
-                "Sensors must start with '_' unless they contain original "
-                "collected data. If this is the case, you can override "
-                "this error by setting `allow_physical=True`.")
+        # We just want to overwrite the docstring.
+        return super().__getitem__(index)
 
-        if os.path.exists(os.path.join(self.path, key, "meta.json")):
-            if exist_ok:
-                return self[key]
-            else:
-                raise ValueError("Sensor already exists: {}".format(key))
-
-        os.makedirs(os.path.join(self.path, key), exist_ok=True)
-        with open(os.path.join(self.path, key, "meta.json"), 'w') as f:
-            json.dump({}, f)
-        return self[key]
-
-    def virtual_copy(
-        self, key: str, exist_ok: bool = False
-    ) -> SensorData:
-        """Create a virtual sensor corresponding to an existing sensor.
-
-        The virtual sensor will have the same name as the specified `key`, with
-        a prepended `_`; timestamp data is copied as well.
-        """
-        original = self.sensors[key]
-        copy = self.create(key='_' + key, exist_ok=exist_ok)
-        if "ts" not in copy.channels:
-            ts = copy.create("ts", original.config["ts"])
-            ts.write(original["ts"].read())
-        return copy
-
-    def __getitem__(self, key: str) -> SensorData:
-        """Alias for `self.sensors[...]`."""
-        if key in self.sensors:
-            return self.sensors[key]
-        else:
-            return SENSOR_TYPES.get(
-                    self.cfg.get(key, {}).get("type", "u1"), SensorData
-                )(os.path.join(self.path, key))
-
-    def __contains__(self, key: str) -> bool:
-        """Test whether this dataset contains the given sensor."""
-        return os.path.exists(os.path.join(self.path, key, "meta.json"))
-
-    def __repr__(self):
-        """Get string representation."""
-        return "{}({}: [{}])".format(
-            self.__class__.__name__, self.path, ", ".join(self.cfg.keys()))
+    def __len__(self) -> int:
+        """Total number of samples in this dataset."""
+        return super().__len__()

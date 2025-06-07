@@ -3,105 +3,12 @@
 import os
 from abc import ABC
 from functools import cached_property
-from queue import Queue
-from threading import Thread
+from typing import Any, Callable, Iterator, Optional, Sequence, cast
 
 import numpy as np
-from beartype.typing import (
-    Any,
-    Callable,
-    Generic,
-    Iterable,
-    Iterator,
-    Optional,
-    Sequence,
-    TypeVar,
-    cast,
-)
 from jaxtyping import Shaped
 
-Data = np.ndarray | bytes | bytearray
-"""Generic writable data.
-
-Should generally behave as follows:
-- If `Shaped[np.ndarray, "..."]`, the shape and dtype are assumed to have
-  semantic meaning, and are verified.
-- If `bytes` or `bytearray`, we assume that the caller has already done any
-  necessary binary conversion. No type or shape verification is performed.
-"""
-
-
-T = TypeVar("T")
-
-Streamable = Iterator[T] | Iterable[T] | Queue[T]
-"""Any stream-like container."""
-
-
-class Buffer(Generic[T]):
-    """Simple queue buffer (i.e. queue to iterator) with batching.
-
-    Args:
-        queue: queue to use as a buffer. Should return `None` when the stream
-            is complete (i.e. `StopIteration`).
-    """
-
-    def __init__(self, queue: Queue[T]) -> None:
-        self.queue = queue
-
-    def __iter__(self):
-        return self
-
-    def __next__(self) -> T:
-        item = self.queue.get()
-        if item is None:
-            raise StopIteration
-        else:
-            return item
-
-
-class Prefetch(Buffer):
-    """Simple prefetch queue wrapper (i.e. iterator to queue).
-
-    Can be used as a prefetched iterator (`for x in Prefetch(...)`), or as a
-    queue (`Prefetch(...).queue`). When used as a queue, `None` is put in the
-    queue to indicate that the iterator has terminated.
-
-    Args:
-        iterator: any python iterator; must never yield `None`.
-        size: prefetch buffer size.
-    """
-
-    def __init__(
-        self, iterator: Iterable[T] | Iterator[T], size: int = 64
-    ) -> None:
-        super().__init__(queue=Queue(maxsize=size))
-        self.iterator = iterator
-
-        Thread(target=self._prefetch, daemon=True).start()
-
-    def _prefetch(self) -> None:
-        for item in self.iterator:
-            self.queue.put(item)
-        self.queue.put(None)
-
-
-def batch_iterator(
-    iterator: Iterator[T] | Iterable[T], size: int = 8
-) -> Iterator[list[T]]:
-    """Convert an iterator into a batched version.
-
-    Args:
-        iterator: input iterator/iterable.
-        size: batch size.
-    """
-    buf = []
-    for item in iterator:
-        buf.append(item)
-        if len(buf) == size:
-            yield buf
-            buf = []
-    if len(buf) != 0:
-        yield buf
+from .utils import Data, Prefetch, Streamable
 
 
 class Channel(ABC):
@@ -120,12 +27,12 @@ class Channel(ABC):
     """
 
     def __init__(
-        self, path: str, dtype: str | type | np.dtype, shape: list[int]
+        self, path: str, dtype: str | type | np.dtype, shape: Sequence[int]
     ) -> None:
-        self.path = path
-        self.type = np.dtype(dtype)
-        self.shape = shape
-        self.size = int(np.prod(shape) * np.dtype(self.type).itemsize)
+        self.path: str = path
+        self.type: np.dtype = np.dtype(dtype)
+        self.shape: tuple[int, ...] = tuple(shape)
+        self.size: int = int(np.prod(shape) * np.dtype(self.type).itemsize)
 
     def open_like(self, path: str) -> "Channel":
         """Open a channel with the same metadata, but different data."""
@@ -150,8 +57,14 @@ class Channel(ABC):
         """Get file size on disk in bytes."""
         return os.stat(self.path).st_size
 
+    def __getitem__(
+        self, index: int | np.integer
+    ) -> Shaped[np.ndarray, "..."]:
+        """Read a single sample, i.e., `.read(start=index, samples=1)`."""
+        return self.read(start=index, samples=1)
+
     def read(
-        self, start: int = 0, samples: int = -1
+        self, start: int | np.integer = 0, samples: int | np.integer = -1
     ) -> Shaped[np.ndarray, "..."]:
         """Read data.
 
@@ -161,7 +74,7 @@ class Channel(ABC):
 
         Returns:
             Read frames as an array, with a leading axis corresponding to
-            the number of `samples`.
+                the number of `samples`.
         """
         raise NotImplementedError(
             "`.read()` is not implemented for this channel type.")
@@ -170,6 +83,7 @@ class Channel(ABC):
         """Verify data shape and type.
 
         Implementation notes:
+
         - If `data` is batched as a `list | tuple`, only the first element is
           checked.
         - If `data` (or its contents) are not a `np.ndarray`, (i.e. is
@@ -276,6 +190,5 @@ class Channel(ABC):
             self.stream(transform=transform, batch=batch), size=size)
 
     def __repr__(self):
-        """Get string representation."""
         return "{}({}: {} x {})".format(
             self.__class__.__name__, self.path, str(self.type), self.shape)
