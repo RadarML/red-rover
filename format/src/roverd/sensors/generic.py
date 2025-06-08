@@ -2,6 +2,7 @@
 
 import json
 import os
+import warnings
 from functools import cached_property
 from typing import Callable, Sequence, TypeVar, cast, overload
 
@@ -102,8 +103,9 @@ class DynamicSensor(Sensor[TGenericSample, generic.Metadata]):
     @cached_property
     def metadata(self) -> generic.Metadata:  # type: ignore
         if 'ts' not in self.channels:
-            raise ValueError(
+            warnings.warn(
                 f"Sensor metadata does not contain 'ts' channel: {self.path}.")
+            return generic.Metadata(timestamps=np.array([], dtype=np.float64))
 
         ts = self.channels['ts'].read(start=0, samples=-1)
         if self.timestamp_interpolation is not None:

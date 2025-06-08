@@ -1,18 +1,19 @@
-site_name: Rover
+site_name: Red Rover
 repo_url: https://github.com/WiseLabCMU/red-rover
 repo_name: WiseLabCMU/red-rover
 nav:
-  - Home: index.md
-  - Data Format: spec.md
-  - Roverd:
-    - API: api.md
+  - about: index.md
+  - roverd:
+    - About: roverd/index.md
+    - CLI: roverd/cli.md
+    - API: roverd/api.md
     - Sensors:
-      - Data Types: types.md
-      - Rover Sensors: sensors.md
-      - Timestamps: timestamps.md
+      - Data Types: roverd/types.md
+      - Rover Sensors: roverd/sensors.md
+      - Timestamps: roverd/timestamps.md
     - Channels:
-      - Channel Types: channels.md
-      - Utils: utils.md
+      - Channel Types: roverd/channels.md
+      - Utils: roverd/utils.md
 
 extra_css:
   - stylesheets/extra.css
@@ -20,15 +21,16 @@ extra_css:
 theme:
   name: material
   icon:
-    logo: fontawesome/solid/floppy-disk
+    logo: material/video-wireless-outline
     annotation: material/arrow-right-circle
   font:
     code: monospace
   features:
     - navigation.instant
     - navigation.expand
+    - navigation.tabs
   palette:
-    primary: light green
+    primary: red
     accent: light blue
 
 plugins:
@@ -38,6 +40,8 @@ plugins:
     default_handler: python_xref
     handlers:
       python_xref:
+        paths:
+        - format/src
         options:
           docstring_style: google
           relative_crossrefs: true

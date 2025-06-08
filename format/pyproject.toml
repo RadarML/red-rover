@@ -22,9 +22,11 @@ dependencies = [
     "numpy >= 1.19",
     "jaxtyping >= 0.3.2",
     "pyyaml",
+    "types-PyYaml",
     "beartype",
     "optree >= 0.16.0",
-    "abstract_dataloader == 0.3.*"
+    "abstract_dataloader == 0.3.*",
+    "tyro>=0.9.0",
 ]
 
 [project.urls]
@@ -33,20 +35,7 @@ Documentation = "https://wiselabcmu.github.io/red-rover/"
 Issues = "https://github.com/WiseLabCMU/red-rover/issues"
 
 [project.optional-dependencies]
-docs = [
-    # Most recent as of 16.04.2025; exact versions shouldn't matter unless the
-    # API is changed, so we pin here just in case.
-    "mkdocs == 1.6.*",
-    "mkdocs-material == 9.6.*",
-    "mkdocstrings-python-xref == 1.16.*",
-    "mkdocstrings-python == 1.16.6",
-    "mkdocstrings == 0.29.*",
-    "ruff"
-]
 video = ["opencv-python-headless"]
-ouster = ["ouster-sdk==0.14.0"]
-interactive = [
-    "matplotlib",
-    "ipykernel",
-    "ipywidgets"
-]
+
+[project.scripts]
+roverd = "roverd:_cli.cli_main"

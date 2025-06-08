@@ -1,8 +1,16 @@
-# Data Format Specifications
+# Roverd: data interface
 
 !!! abstract "TL;DR"
 
-    The `roverd` data format is an extremely simple, flexible, and extendable data storage format based on simple binary containers.
+    - The [`roverd` data format](#specifications) is an extremely simple, flexible, and extendable data storage format based on simple binary containers.
+    - The [`roverd` API](./api.md) provides an [abstract dataloader-compliant](https://wiselabcmu.github.io/abstract-dataloader/) data loading implementation.
+
+You can install the `roverd` library from github:
+```sh
+pip install "roverd[video]@git+ssh://git@github.com/WiseLabCMU/red-rover.git#subdirectory=format"
+```
+
+In addition to the `roverd` package, this also installs the [`roverd info` and `roverd validate` CLI tools](./cli.md).
 
 ## Design Goals
 

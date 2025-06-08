@@ -5,7 +5,7 @@ from functools import cached_property
 from typing import Callable, Mapping, TypeVar, cast, overload
 
 import numpy as np
-from abstract_dataloader import abstract, spec
+from abstract_dataloader import abstract, generic, spec
 
 from roverd.sensors import DynamicSensor, Sensor
 
@@ -42,7 +42,8 @@ class Trace(abstract.Trace[TSample]):
 
     @classmethod
     def from_config(
-        cls, path: str, sync: spec.Synchronization, sensors: Mapping[
+        cls, path: str, sync: spec.Synchronization = generic.Empty(),
+        sensors: Mapping[
             str, Sensor | Callable[[str], Sensor] | None] | None = None,
         include_virtual: bool = False, name: str | None = None
     ) -> "Trace":
@@ -188,7 +189,8 @@ class Dataset(abstract.Dataset[TSample]):
 
     @classmethod
     def from_config(
-        cls, paths: list[str], sync: spec.Synchronization, sensors: Mapping[
+        cls, paths: list[str], sync: spec.Synchronization = generic.Empty(),
+        sensors: Mapping[
             str, Sensor | Callable[[str], Sensor] | None] | None = None,
         include_virtual: bool = False
     ) -> "Dataset":

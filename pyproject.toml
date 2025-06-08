@@ -1,0 +1,39 @@
+[project]
+name = "red-rover"
+version = "0.1.0"
+authors = [
+  { name="Tianshu Huang", email="tianshu2@andrew.cmu.edu" },
+]
+
+requires-python = ">=3.12"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent"
+]
+license = "MIT"
+license-files = ["LICEN[CS]E*"]
+
+dependencies = [
+    "roverd[video]"
+]
+
+[tool.uv.sources]
+roverd = { path = "./format" }
+
+[project.optional-dependencies]
+interactive = [
+    "matplotlib",
+    "ipykernel",
+    "ipywidgets"
+]
+
+docs = [
+    # Most recent as of 16.04.2025; exact versions shouldn't matter unless the
+    # API is changed, so we pin here just in case.
+    "mkdocs == 1.6.*",
+    "mkdocs-material == 9.6.*",
+    "mkdocstrings-python-xref == 1.16.*",
+    "mkdocstrings-python == 1.16.6",
+    "mkdocstrings == 0.29.*",
+    "ruff"
+]
