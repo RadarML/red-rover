@@ -3,10 +3,10 @@
 import logging
 import os
 from queue import Queue
+from typing import cast
 
 import cv2
 import numpy as np
-from beartype.typing import Optional, cast
 from roverd import channels
 
 from .common import Capture, Sensor, SensorException
@@ -17,7 +17,7 @@ class CameraCapture(Capture):
 
     def __init__(
         self, path: str, fps: float = 1.0,
-        report_interval: float = 5.0, log: Optional[logging.Logger] = None,
+        report_interval: float = 5.0, log: logging.Logger | None = None,
         width: int = 1920, height: int = 1080
     ) -> None:
         super().__init__(
@@ -47,7 +47,8 @@ class Camera(Sensor):
 
     Args:
         idx: camera index in `/dev`, i.e. `/dev/video0`.
-        width, height: frame size, in pixels.
+        width: frame width, in pixels.
+        height: frame height, in pixels.
         fps: camera framerate. Make sure the camera/capture card supports this
             exact framerate!
         name: sensor name, i.e. "camera".

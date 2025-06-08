@@ -1,4 +1,27 @@
-# **Red Rover**: A Multimodal mmWave Radar Spectrum Data Collection Platform
+# **Red Rover**: A Multimodal mmWave Radar Spectrum Ecosystem
+
+<div class="grid cards" markdown>
+
+- [`roverc`](./roverc/index.md)
+
+    ---
+
+    radar + lidar + camera + imu data collection system
+
+- [`roverd`](./roverd/index.md)
+
+    ---
+
+    efficient recording and storage format with an adl-compliant dataloader
+
+- [`i/q-1m`](./iq1m/index.md)
+
+    ---
+
+    one million i/q frames across indoor, outdoor, and bike-mounted settings
+
+</div>
+
 
 ## See Also
 

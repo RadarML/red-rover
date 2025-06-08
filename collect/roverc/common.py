@@ -6,12 +6,13 @@ import os
 import socket
 import threading
 import traceback
+from abc import ABC, abstractmethod
 from queue import Queue
 from time import perf_counter, time
+from typing import Any
 
 import numpy as np
-from beartype.typing import Any, Optional
-from roverd import sensors
+from roverd.sensors import DynamicSensor
 
 
 class SensorException(Exception):
@@ -20,7 +21,7 @@ class SensorException(Exception):
     pass
 
 
-class Capture:
+class Capture(ABC):
     """Capture data for a generic sensor stream.
 
     Args:
@@ -32,9 +33,9 @@ class Capture:
 
     def __init__(
         self, path: str, fps: float = 1.0, report_interval: float = 5.0,
-        log: Optional[logging.Logger] = None
+        log: logging.Logger | None = None
     ) -> None:
-        self.sensor = sensors.SensorData(path=path, create=True)
+        self.sensor: DynamicSensor = DynamicSensor(path=path, create=True)
         self.ts: Queue = Queue()
         self.sensor.create("ts", {
             "format": "raw", "type": "f8", "shape": (),
@@ -47,7 +48,7 @@ class Capture:
         self.qlen: int = 0
 
         self.prev_time = self.start_time = self.trace_time = perf_counter()
-        self._ref_time: Optional[tuple[float, float]] = None
+        self._ref_time: tuple[float, float] | None = None
         self._first_loop = True
 
         self.fps = fps
@@ -58,11 +59,15 @@ class Capture:
         """Get queue length."""
         return self.ts.qsize()
 
-    def start(self, timestamp: Optional[float] = None) -> None:
+    def start(self, timestamp: float | None = None) -> None:
         """Mark start of current frame processing.
 
-        (1) Records the current time as the timestamp for this frame, and
-        (2) Marks the start of time utilization calculation for this frame.
+        1. Records the current time as the timestamp for this frame, and
+        2. Marks the start of time utilization calculation for this frame.
+
+        Args:
+            timestamp: timestamp to use; if `None`, uses the current system
+                time.
         """
         t = time() if timestamp is None else timestamp
         self.start_time = perf_counter()
@@ -85,9 +90,10 @@ class Capture:
             self._first_loop = False
             self.log.info("Receiving data.")
 
+    @abstractmethod
     def write(self, data: Any) -> None:
         """Write data."""
-        raise NotImplementedError()
+        ...
 
     def close(self) -> None:
         """Close files and clean up."""
@@ -96,7 +102,8 @@ class Capture:
     def reset_stats(self) -> None:
         """Reset (and log) tracked statistics.
 
-        Three values are logged:
+        Four values are logged:
+
         - `f`: frequency of the capture sensor, in Hz.
         - `u`: utilization of the capture, in percent.
         - `w`: WCET (worst-case execution time) of the capture, in ms.
@@ -128,18 +135,21 @@ class Capture:
         self.qlen = 0
 
 
-class Sensor:
+class Sensor(ABC):
     """Generic sensor channel.
 
     Communicates using local `AF_UNIX` sockets using the socket
     `/tmp/rover/{name}` with the provided sensor name.
 
-    NOTE: each sensor node should be initalized first.
+    !!! warning
+
+        Each sensor node should be initalized first.
 
     Args:
         name: sensor name, e.g. lidar, camera, radar
         addr: socket base address, i.e. `/tmp/rover`
         report_interval: logging interval for statistics
+        fps: expected framerate for this sensor, in frames per second.
     """
 
     def __init__(
@@ -162,18 +172,19 @@ class Sensor:
         self._socket.listen(1)
 
         self.active = False
-        self._thread: Optional[threading.Thread] = None
+        self._thread: threading.Thread | None = None
         self.frame_count = 0
 
+    @abstractmethod
     def capture(self, path: str) -> None:
         """Run capture; should check `self.active` on every loop."""
-        raise NotImplementedError()
+        ...
 
     def close(self) -> None:
         """Clean up sensor."""
         pass
 
-    def _start_capture(self, path: Optional[str]) -> None:
+    def _start_capture(self, path: str | None) -> None:
         """Start capture."""
         if self.active:
             self.log.error("Tried to start capture when another is active.")

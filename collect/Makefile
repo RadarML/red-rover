@@ -10,8 +10,8 @@ endif
 
 PYTHON?=python3.11
 VENV=./env/bin
-ROVERC=$(VENV)/python collect.py
-GETCONF=$(ROVERC) get_config -c $(ROVER_CFG) -p
+ROVERC=$(VENV)/python cli.py
+GETCONF=$(ROVERC) get-config -c $(ROVER_CFG) -p
 
 RADAR_SYS_IP=$(shell $(GETCONF) radar/args/capture/sys_ip)
 RADAR_IF=$(shell $(GETCONF) radar/interface)

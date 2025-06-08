@@ -1,22 +1,18 @@
 """Summarize available configurations."""
 
 import os
-import sys
 
+import tyro
 import yaml
-
-if sys.path[0] != '':
-    sys.path.insert(0, '')
-
-from awr_api import CaptureConfig, RadarConfig
+from xwr import DCAConfig, XWRConfig
 
 
 def _print_cfg(name):
-    with open(os.path.join("config", name)) as f:
-        cfg = yaml.load(f, Loader=yaml.FullLoader)
+    with open(name) as f:
+        cfg = yaml.safe_load(f)
 
-    radar = RadarConfig(**cfg["radar"]["args"]["radar"])
-    capture = CaptureConfig(**cfg["radar"]["args"]["capture"])
+    radar = XWRConfig(**cfg["radar"]["args"]["radar"])
+    capture = DCAConfig(**cfg["radar"]["args"]["capture"])
     intrinsics = radar.as_intrinsics()
     rr = intrinsics['range_resolution']
     nd, tx, rx, nr = intrinsics['shape']
@@ -35,6 +31,12 @@ Excess ramp   {(radar.ramp_end_time - radar.adc_start_time - radar.sample_time):
 """)
 
 
-for name in sorted(os.listdir("config")):
-    if name.endswith('.yaml'):
-        _print_cfg(name)
+def _cli_main(path: str, /,) -> None:
+
+    for name in sorted(os.listdir(path)):
+        if name.endswith('.yaml'):
+            _print_cfg(os.path.join(path, name))
+
+
+if __name__ == '__main__':
+    tyro.cli(_cli_main, description="Summarize available configurations.")

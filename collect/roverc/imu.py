@@ -4,8 +4,6 @@ import logging
 import os
 from queue import Queue
 
-from beartype.typing import Optional
-
 from .common import Capture, Sensor
 from .imu_api import IMUData, InvalidChecksum, XsensIMU
 
@@ -15,7 +13,7 @@ class IMUCapture(Capture):
 
     def __init__(
         self, path: str, fps: float = 1.0,
-        report_interval: float = 5.0, log: Optional[logging.Logger] = None
+        report_interval: float = 5.0, log: logging.Logger | None = None
     ) -> None:
         super().__init__(
             path=path, fps=fps, report_interval=report_interval, log=log)

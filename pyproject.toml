@@ -13,14 +13,29 @@ classifiers = [
 license = "MIT"
 license-files = ["LICEN[CS]E*"]
 
-dependencies = [
+[tool.uv.sources]
+roverd = { path = "./format" }
+xwr = { git = "ssh://git@github.com/WiseLabCMU/xwr.git" }
+
+[project.optional-dependencies]
+roverc = [
+    "numpy",
+    "pyyaml",
+    "flask",
+    "beartype",
+    "jaxtyping",
+    "types-PyYAML",
+    "types-pyserial",
+    "pyserial",
+    "opencv-python-headless",
+    "ouster-sdk",
+    "xwr",
+]
+
+roverd = [
     "roverd[video]"
 ]
 
-[tool.uv.sources]
-roverd = { path = "./format" }
-
-[project.optional-dependencies]
 interactive = [
     "matplotlib",
     "ipykernel",

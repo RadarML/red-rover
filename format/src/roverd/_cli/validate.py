@@ -70,7 +70,7 @@ def cli_validate(
 
     ```sh
     $ roverd validate /data/grt
-    Validate: 166 datasets with 0 containing errors.
+    Validate: 166 traces with 0 containing errors.
     $ echo $?
     0  # would be 1 if there were any errors
     ```
@@ -93,7 +93,7 @@ def cli_validate(
 
         ```sh title="/bin/sh"
         $ roverd validate /data/grt --schema grt.yaml
-        Validate: 166 datasets with 0 containing errors.
+        Validate: 166 traces with 0 containing errors.
         ```
 
     Args:
@@ -133,7 +133,7 @@ def cli_validate(
     if n_errors > 0:
         print("")
     print(
-        f"Validate: {len(datasets)} datasets with {n_errors} containing "
+        f"Validate: {len(datasets)} traces with {n_errors} containing "
         "errors.")
     if n_errors > 0:
         exit(1)

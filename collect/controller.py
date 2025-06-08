@@ -1,4 +1,4 @@
-"""Start data collection."""
+"""Simple socket-based controller."""
 
 import json
 import os

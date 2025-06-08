@@ -1,8 +1,4 @@
-"""Minimal implementation of the Xsens API.
-
-.. [I1] Xsens MT Low Level Documentation
-    https://www.xsens.com/hubfs/Downloads/Manuals/MT_Low-Level_Documentation.pdf
-"""
+"""Minimal implementation of the Xsens API."""
 
 import logging
 import struct
@@ -20,7 +16,13 @@ class InvalidChecksum(Exception):
 
 
 class IMUData(NamedTuple):
-    """IMU orientation, angular velocity, acceleration data."""
+    """IMU orientation, angular velocity, acceleration data.
+
+    Attributes:
+        rot: rotation in Euler angles (roll, pitch, yaw) in radians.
+        acc: acceleration in m/s^2.
+        avel: angular velocity in rad/s.
+    """
 
     rot: Float32[np.ndarray, "3"]
     acc: Float32[np.ndarray, "3"]
@@ -31,6 +33,7 @@ class XsensIMU:
     """Xsens MTi-3 IMU API.
 
     The IMU should be set up using MT Manager with the following:
+
     - Orientation: Euler Angles; Floating Point 32-bit; 100Hz
     - Inertial data: Rate of Turn, Acceleration; Floating Point 32-bit; 100Hz
 
@@ -57,7 +60,9 @@ class XsensIMU:
     def read(self) -> Optional[IMUData]:
         """Read a single data packet.
 
-        NOTE: Only handles MTData2 messages [I1]_ (p. 45).
+        Only handles MTData2 messages; [see the Xsens MT Low Level
+        Documentation.](
+        https://www.xsens.com/hubfs/Downloads/Manuals/MT_Low-Level_Documentation.pdf)
 
         Returns:
             IMUData on success; otherwise, returns None.

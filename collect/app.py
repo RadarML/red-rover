@@ -1,4 +1,10 @@
-"""Rover Control Server."""
+"""Rover Control Server.
+
+Run with
+```sh
+ROVER_CFG=/path/to/config flask run --host=0.0.0.0
+```
+"""
 
 import io
 import json
@@ -9,13 +15,16 @@ import threading
 from datetime import datetime
 
 import yaml
+from controller import Controller
 from flask import Flask, jsonify, render_template, request
-
-from scriptsc import Controller
 
 
 class RoverSensor:
-    """Data collection process wrapper."""
+    """Data collection process wrapper.
+
+    Args:
+        sensor: name of the sensor to collect data from (radar, lidar, etc).
+    """
 
     def __init__(self, sensor: str) -> None:
         self.name = sensor
@@ -44,8 +53,16 @@ class RoverSensor:
                 except json.JSONDecodeError:
                     print("Invalid json: {}".format(line.rstrip()))
 
-    def log_entries(self, start: float):
-        """Aggregate log entries more recent than the start time."""
+    def log_entries(self, start: float) -> list[tuple[float, dict]]:
+        """Aggregate log entries more recent than the start time.
+
+        Args:
+            start: timestamp in seconds since epoch; if `<=0`, return all.
+
+        Returns:
+            A list of tuples with timestamp and log entry, where the timestamp
+                is in seconds since epoch.
+        """
         return [(ts, entry) for ts, entry in self.log if ts > start]
 
 
@@ -59,8 +76,17 @@ class Rover:
         self.controller = Controller(list(self.cfg.keys()))
         self.sensors = {s: RoverSensor(s) for s in self.cfg}
 
-    def log(self, start: float):
-        """Get log entries."""
+    def log(self, start: float) -> dict:
+        """Get log entries.
+
+        Args:
+            start: timestamp in seconds since epoch; if `<=0`, return all.
+
+        Returns:
+            A dictionary with the log entries for each sensor
+                (`entries/<sensor_name>:dict`), and the timestamp of the
+                last entry (`ts:str`) in `%Y-%m-%dT%H:%M:%S,%f` format.
+        """
         if start < 0:
             msgs = {k: v.log for k, v in self.sensors.items()}
         else:
@@ -94,7 +120,12 @@ with app.app_context():
 
 @app.route('/')
 def index():
-    """Index page."""
+    """Index page.
+
+    App route: `GET:/`
+
+    Response: Rendered HTML.
+    """
     media = "/media/rover"
     disks = os.listdir(media)
     return render_template(
@@ -103,7 +134,15 @@ def index():
 
 @app.route('/command', methods=['POST'])
 def command():
-    """Issue command."""
+    """Issue command.
+
+    App route: `POST:/command`
+
+    Response:
+        - `200`: "ok" if command was accepted
+        - `400`: an error message with if the command is invalid or
+            arguments are missing.
+    """
     try:
         action = request.json['action']  # type: ignore
         if action == 'start':
@@ -128,13 +167,41 @@ def command():
 
 @app.route('/log')
 def log_all():
-    """Get all log messages."""
+    """Get all log messages.
+
+    App route: `GET:/log`
+
+    Response: JSON object with log entries for each sensor and the timestamp of
+    the last entry. The log entries are in the format
+    ```
+    {
+        "entries": {
+            "<sensor_name>": [
+                {
+                    "lvl": <log_level>,
+                    "msg": "<log_message>",
+                    "mod": "<module_name>"
+                },
+                ...
+            ],
+            ...
+        },
+        "ts": "<timestamp>"
+    }
+    ```
+    """
     return jsonify(rover.log(start=-1.))
 
 
 @app.route('/log/<start>')
 def log(start=None):
-    """Get log messages after start time."""
+    """Get log messages after start time.
+
+    App route: `GET:/log/<start>`
+
+    Response: JSON object with log entries for each sensor and the timestamp of
+    the last entry.
+    """
     try:
         ts_start = datetime.strptime(start, "%Y-%m-%dT%H:%M:%S,%f")  # type: ignore
         return jsonify(rover.log(start=ts_start.timestamp()))

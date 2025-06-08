@@ -6,8 +6,7 @@ import os
 from queue import Queue
 
 import numpy as np
-from awr_api import AWRSystem, CaptureConfig, RadarConfig, dca_types
-from beartype.typing import Optional
+from xwr import XWRSystem, capture
 
 from .common import Capture, Sensor
 
@@ -25,7 +24,7 @@ class RadarCapture(Capture):
 
     def __init__(
         self, path: str, fps: float = 1.0, report_interval: float = 5.0,
-        log: Optional[logging.Logger] = None, shape: list[int] = []
+        log: logging.Logger | None = None, shape: list[int] = []
     ) -> None:
         super().__init__(
             path=path, fps=fps, report_interval=report_interval, log=log)
@@ -45,7 +44,7 @@ class RadarCapture(Capture):
     def queue_length(self) -> int:
         return self.iq.qsize()
 
-    def write(self, data: dca_types.RadarFrame) -> None:
+    def write(self, data: capture.types.RadarFrame) -> None:
         """Write a single frame."""
         self.iq.put(data.data)
         self.valid.put(
@@ -62,15 +61,14 @@ class RadarCapture(Capture):
 class Radar(Sensor):
     """TI AWR1843Boost Radar Sensor & DCA1000EVM capture card.
 
-    See `AWRSystem` for arguments.
+    See [`XWRSystem`][xwr.] for arguments.
     """
 
     def __init__(
         self, name: str = "radar", radar: dict = {}, capture: dict = {}
     ) -> None:
         super().__init__(name=name)
-        self.radar = AWRSystem(
-            radar=RadarConfig(**radar), capture=CaptureConfig(**capture))
+        self.radar = XWRSystem(radar=radar, capture=capture)
 
     def capture(self, path: str) -> None:
         """Create capture (while `active` is set)."""

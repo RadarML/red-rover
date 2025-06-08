@@ -1,27 +1,26 @@
 r"""Rover data collection platform.
-::
-
-     ______  _____  _    _ _______  ______
-    |_____/ |     |  \  /  |______ |_____/
-    |    \_ |_____|   \/   |______ |    \_
-    Radar sensor fusion research platform
-
 
 Supported sensors:
 
-- Radar: TI AWR1843 / DCA1000EVM; full api implemented in :py:mod:`roverc.radar_api`.
-- IMU: XSens MTi-3; partial api implemented in :py:mod:`roverc.imu_api`.
-- Lidar: Ouster lidar; via the Ouster SDK.
+- Radar: TI AWR1843 / DCA1000EVM.
+- IMU: XSens MTi-3.
+- Lidar: Ouster lidar.
 - Camera: Any UVC camera.
-"""  # noqa: D205
+"""
 
-from .camera import Camera
-from .common import Sensor
-from .imu import IMU
-from .lidar import Lidar
-from .radar import Radar
+from .camera import Camera, CameraCapture
+from .common import Capture, Sensor, SensorException
+from .imu import IMU, IMUCapture
+from .lidar import Lidar, LidarCapture
+from .radar import Radar, RadarCapture
 
-__all__ = ["Sensor", "IMU", "Lidar", "Radar", "Camera"]
+__all__ = [
+    "Capture", "Sensor", "SensorException",
+    "IMU", "IMUCapture",
+    "Lidar", "LidarCapture",
+    "Radar", "RadarCapture",
+    "Camera", "CameraCapture"
+]
 
 
 SENSORS = {
