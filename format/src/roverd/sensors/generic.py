@@ -23,17 +23,11 @@ class Sensor(abstract.Sensor[TSample, TMetadata]):
     Args:
         path: path to sensor data directory. Must contain a `meta.json` file;
             see the dataset format specifications.
-        timestamp_interpolation: optional timestamp interpolation to apply;
-            see [`roverd.timestamps`][roverd.timestamps].
     """
 
-    def __init__(
-        self, path: str, timestamp_interpolation: Callable[
-            [Float64[np.ndarray, "N"]], Float64[np.ndarray, "N"]] | None = None
-    ) -> None:
+    def __init__(self, path: str) -> None:
 
         self.path = path
-        self.timestamp_interpolation = timestamp_interpolation
 
         try:
             with open(os.path.join(path, "meta.json")) as f:
@@ -96,8 +90,8 @@ class DynamicSensor(Sensor[TGenericSample, generic.Metadata]):
             with open(os.path.join(path, "meta.json"), 'w') as f:
                 json.dump({}, f)
 
-        super().__init__(
-            path=path, timestamp_interpolation=timestamp_interpolation)
+        super().__init__(path=path)
+        self.timestamp_interpolation = timestamp_interpolation
         self.subset = subset
 
     @cached_property

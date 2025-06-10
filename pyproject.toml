@@ -15,6 +15,7 @@ license-files = ["LICEN[CS]E*"]
 
 [tool.uv.sources]
 roverd = { path = "./format" }
+tss = { path = "./stats" }
 xwr = { git = "ssh://git@github.com/WiseLabCMU/xwr.git" }
 
 [project.optional-dependencies]
@@ -34,6 +35,10 @@ roverc = [
 
 roverd = [
     "roverd[video]"
+]
+
+stats = [
+    "tss"
 ]
 
 interactive = [

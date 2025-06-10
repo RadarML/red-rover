@@ -47,7 +47,7 @@ class XWRRadar(Sensor[types.XWRRadarIQ[np.ndarray], RadarMetadata]):
         if timestamp_interpolation is None:
             timestamp_interpolation = partial(timestamps.smooth, interval=30.)
 
-        super().__init__(path, timestamp_interpolation)
+        super().__init__(path)
 
         try:
             with open(os.path.join(path, "radar.json")) as f:
@@ -67,7 +67,8 @@ class XWRRadar(Sensor[types.XWRRadarIQ[np.ndarray], RadarMetadata]):
         self.metadata = RadarMetadata(
             doppler_resolution=np.array([dd], dtype=np.float32),
             range_resolution=np.array([dr], dtype=np.float32),
-            timestamps=self.channels['ts'].read(start=0, samples=-1))
+            timestamps=timestamp_interpolation(
+                self.channels['ts'].read(start=0, samples=-1)))
 
     @overload
     def __getitem__(self, index: int | np.integer) -> types.XWRRadarIQ: ...

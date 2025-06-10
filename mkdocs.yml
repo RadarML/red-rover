@@ -28,6 +28,9 @@ nav:
       - Utils: roverd/utils.md
   - i/q-1m:
     - About: iq1m/index.md
+  - tsms:
+    - About: tss/index.md
+    - API: tss/api.md
 
 extra_css:
   - stylesheets/extra.css
@@ -45,7 +48,7 @@ theme:
     - navigation.tabs
   palette:
     primary: red
-    accent: light blue
+    accent: purple
 
 plugins:
 - search
@@ -57,6 +60,7 @@ plugins:
         paths:
         - format/src
         - collect/
+        - stats/src
         options:
           docstring_style: google
           relative_crossrefs: true

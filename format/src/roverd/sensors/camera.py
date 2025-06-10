@@ -30,9 +30,10 @@ class Camera(Sensor[types.CameraData[np.ndarray], generic.Metadata]):
         if timestamp_interpolation is None:
             timestamp_interpolation = partial(timestamps.smooth, interval=30.)
 
-        super().__init__(path, timestamp_interpolation=timestamp_interpolation)
+        super().__init__(path)
         self.metadata = generic.Metadata(
-            timestamps=self.channels["ts"].read(start=0, samples=-1))
+            timestamps=timestamp_interpolation(
+                self.channels["ts"].read(start=0, samples=-1)))
         self.key = key
 
     @overload
@@ -78,9 +79,10 @@ class Semseg(Sensor[types.CameraSemseg[np.ndarray], generic.Metadata]):
         if timestamp_interpolation is None:
             timestamp_interpolation = partial(timestamps.smooth, interval=30.)
 
-        super().__init__(path, timestamp_interpolation=timestamp_interpolation)
+        super().__init__(path)
         self.metadata = generic.Metadata(
-            timestamps=self.channels["ts"].read(start=0, samples=-1))
+            timestamps=timestamp_interpolation(
+                self.channels["ts"].read(start=0, samples=-1)))
         self.key = key
 
     @overload

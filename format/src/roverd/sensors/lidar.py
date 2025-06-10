@@ -45,7 +45,7 @@ class OS0LidarDepth(Sensor[types.OS0Depth[np.ndarray], LidarMetadata]):
             timestamp_interpolation = partial(
                 timestamps.discretize, interval=10., eps=0.05)
 
-        super().__init__(path, timestamp_interpolation)
+        super().__init__(path)
 
         if not os.path.exists(os.path.join(path, 'lidar.json')):
             warnings.warn(
@@ -55,7 +55,8 @@ class OS0LidarDepth(Sensor[types.OS0Depth[np.ndarray], LidarMetadata]):
             intrinsics = os.path.join(path, "lidar.json")
 
         self.metadata = LidarMetadata(
-            timestamps=self.channels['ts'].read(start=0, samples=-1),
+            timestamps=timestamp_interpolation(
+                self.channels['ts'].read(start=0, samples=-1)),
             intrinsics=intrinsics)
 
     @overload
@@ -99,7 +100,7 @@ class OS0Lidar(Sensor[types.OS0Data[np.ndarray], LidarMetadata]):
         if timestamp_interpolation is None:
             timestamp_interpolation = timestamps.smooth
 
-        super().__init__(path, timestamp_interpolation)
+        super().__init__(path)
 
         if not os.path.exists(os.path.join(path, 'lidar.json')):
             warnings.warn(
@@ -109,7 +110,8 @@ class OS0Lidar(Sensor[types.OS0Data[np.ndarray], LidarMetadata]):
             intrinsics = os.path.join(path, "lidar.json")
 
         self.metadata = LidarMetadata(
-            timestamps=self.channels['ts'].read(start=0, samples=-1),
+            timestamps=timestamp_interpolation(
+                self.channels['ts'].read(start=0, samples=-1)),
             intrinsics=intrinsics)
 
     @overload
