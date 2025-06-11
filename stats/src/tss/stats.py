@@ -41,8 +41,8 @@ def autocorrelation(
 
     Returns:
         Autocorrelation for time delays up to `N/2`; if the data is ever
-        identical across an autocorrelation window (this should never happen),
-        `None` is returned instead.
+            identical across an autocorrelation window (this should never
+            happen), `None` is returned instead.
     """
     half = x.shape[0] // 2
 
@@ -196,6 +196,16 @@ class NDStats:
             with ThreadPool(workers) as p:
                 stats = p.map(cls.from_values, values)
             return cls.stack(*stats)
+
+    @property
+    def shape(self) -> tuple[int, ...]:
+        """ND shape."""
+        return self.n.shape
+
+    @property
+    def ndim(self) -> int:
+        """Number of dimensions."""
+        return self.n.ndim
 
     @property
     def _n(self) -> Integer[np.ndarray, "..."] | np.integer:

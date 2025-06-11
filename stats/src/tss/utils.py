@@ -23,7 +23,7 @@ def tree_flatten(
 
     Returns:
         A dictionary, where keys correspond to `/`-joined strings of the key
-        paths to each leaf.
+            paths to each leaf.
     """
     if isinstance(tree, dict):
         out = {}

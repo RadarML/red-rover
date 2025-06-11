@@ -26,11 +26,16 @@ nav:
     - Channels:
       - Channel Types: roverd/channels.md
       - Utils: roverd/utils.md
+  - roverp:
+    - About: roverp/index.md
   - i/q-1m:
     - About: iq1m/index.md
-  - tsms:
+  - tss:
     - About: tss/index.md
-    - API: tss/api.md
+    - API:
+      - High Level API: tss/api.md
+      - Stats: tss/stats.md
+      - Utils: tss/utils.md
 
 extra_css:
   - stylesheets/extra.css

@@ -1,20 +1,45 @@
-"""Time series metric statistics."""
+"""Time series metric statistics.
+
+The high level API is broken up into four steps:
+
+1. [`index`][.]: Index evaluation files using a regex pattern.
+
+    !!! info
+
+        If you are only interested in a subset of evaluation traces, you can
+        filter them at this stage.
+
+2. [`experiments_from_index`][.]: Load data for each indexed result file, or
+    a subset of experiments.
+
+3. [`stats_from_experiments`][.]: Compute statistics for each experiment. See
+    [`NDStats`][.stats.] and [`effective_sample_size`][.stats.] for more
+    details about how and what statistics are computed.
+
+4. [`dataframe_from_stats`][.]: Aggregate the statistics into a readable
+    dataframe, ready to be plotted or exported.
+
+!!! tip
+
+    We also provide [`dataframe_from_index`][.], which combines the last three
+    steps into a single function for convenience.
+"""
 
 from jaxtyping import install_import_hook
 
 with install_import_hook("tsms", "beartype.beartype"):
-    from .ablations import dataframe_from_ablations, stats_from_ablations
-    from .stats import NDStats, autocorrelation, effective_sample_size
-    from .utils import (
-        cut_trace,
-        intersect_difference,
-        tree_flatten,
-        tree_unflatten,
+    from . import stats, utils
+    from .api import (
+        dataframe_from_index,
+        dataframe_from_stats,
+        experiments_from_index,
+        index,
+        stats_from_experiments,
     )
 
 
 __all__ = [
-    "stats_from_ablations", "dataframe_from_ablations",
-    "NDStats", "autocorrelation", "effective_sample_size",
-    "tree_flatten", "tree_unflatten", "cut_trace", "intersect_difference"
+    "dataframe_from_index", "dataframe_from_stats",
+    "experiments_from_index", "stats_from_experiments",
+    "index", "stats", "utils"
 ]
