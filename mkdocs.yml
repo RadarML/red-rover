@@ -5,9 +5,10 @@ nav:
   - about: index.md
   - roverc:
     - About: roverc/index.md
-    - Guides:
-      - Step by Step Guide: roverc/instructions.md
-      - Setup Guide: roverc/setup.md
+    - User Guide:
+      - Usage Instructions: roverc/instructions.md
+      - Assembly: roverc/assembly.md
+      - Setup & Configuration: roverc/setup.md
       - Data Collection Tips: roverc/tips.md
       - Manual Operation: roverc/usage.md
     - Internals:

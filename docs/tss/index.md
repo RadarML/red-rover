@@ -9,6 +9,16 @@ You can install `tss` from github:
 pip install "tss@git+ssh://git@github.com/WiseLabCMU/red-rover.git#subdirectory=stats"
 ```
 
+## Why Time Series Statistics?
+
+!!! warning "Time-Correlated Samples"
+
+    Unlike scraped internet data, collected physical sensor data generally take the form of long time series, which have significant temporal correlations and cannot be viewed as independent samples[^2].
+
+!!! warning "Finite Sample Size"
+
+    Due to this temporal correlation, we find that in practice, datasets almost never have a large enough test split to be considered an "infinite sample size," even when their test set consists of thousands or tens of thousands of frames. This necessitates *statistical testing* to quantify the uncertainty in our evaluation.
+
 ## Usage
 
 !!! abstract "In practice"
@@ -26,6 +36,10 @@ Time series evaluations are expected to be stored in `.npz` files, which contain
 - All metrics which might pass through this library must be 1D arrays with a time/sample index axis.
 - Timestamps can have additional axes (e.g., for models which operate on a sequence of data); in this case, the last timestamp[^1] is used.
 - The metrics and timestamps within each evaluation are expected to be synchronized.
+
+!!! warning
+
+    We assume that data in different evaluations of the same experiment (e.g., traces with different names - `bike/ptbreeze.out.npz` and `bike/ptbreeze.back.npz`) are temporally correlated. Evaluations on data traces which are recorded back-to-back must be combined into the same file!
 
 [^1]: If more than one extra axis is provided, the last axis when the array is flattened in C-order is used.
 
@@ -74,7 +88,7 @@ The file path to each evaluation, relative to some base path, should contain inf
 
 ### Using the High Level API
 
-**Index evaluations**: using `index`, provide a base path where the evaluations are stored, and a regex pattern for finding evaluation files and extracting their `experiment` and `trace` names.
+**Index evaluations**: using [`index`][tss.index], provide a base path where the evaluations are stored, and a regex pattern for finding evaluation files and extracting their `experiment` and `trace` names.
 
 ```python
 import tss
@@ -92,7 +106,7 @@ index = tss.index_results(path, pattern)
     a directory with 20k total files on a SMB share). You may want to
     cache the index or save them to disk somewhere!
 
-**Compute Statistics**: we provide a all-inclusive `dataframe_from_index` function which returns a dataframe containing summary statistics for the specified index, given a key of interest and baseline method.
+**Compute Statistics**: we provide a all-inclusive [`dataframe_from_index`][tss.dataframe_from_index] function which returns a dataframe containing summary statistics for the specified index, given a key of interest and baseline method.
 
 ```python
 experiments = ["small/p10", "small/p20", "small/p50", "small/base"]
@@ -109,16 +123,6 @@ small/p10   0.161236  0.088207    0.002991  162931  869.479694  0.035865  0.0390
 small/p20   0.152850  0.097548    0.003209  162931  924.222609  0.027480  0.045835    0.000945  162931  2353.289155  21.918760    0.753636   True
 small/p50   0.134158  0.076811    0.002594  162931  877.094752  0.008787  0.027099    0.000406  162931  4453.599831   7.009018    0.323892   True
 ```
-
-## Why Time Series Statistics?
-
-!!! failure "Time-Correlated Samples"
-
-    Unlike scraped internet data, collected physical sensor data generally take the form of long time series, which have significant temporal correlations and cannot be viewed as independent samples[^2].
-
-!!! failure "Finite Sample Size"
-
-    Due to this temporal correlation, we find that in practice, datasets almost never have a large enough test split to be considered an "infinite sample size," even when their test set consists of thousands or tens of thousands of frames. This necessitates *statistical testing* to quantify the uncertainty in our evaluation.
 
 ## Procedure
 

@@ -17,7 +17,21 @@ from .utils import cut_trace, intersect_difference
 LeafType = TypeVar("LeafType", bound=np.ndarray)
 
 if TYPE_CHECKING:
+    # NOTE: mkdocstrings uses TYPE_CHECKING mode, so we put the docstring here.
     NestedValues = Sequence["NestedValues"] | LeafType
+    """An arbitrarily nested sequence, parameterized by a leaf type.
+
+    For example, these are valid examples of
+    `NestedValues[Float[np.ndarray, "_N"]]`:
+    ```python
+    nested_leaf = Float[np.ndarray, "N1"]
+    nested_list = [Float[np.ndarray, "N1"], Float[np.ndarray, "N2"]]
+    nested_list_list = [
+        [Float[np.ndarray, "N1"], Float[np.ndarray, "N2"]],
+        [Float[np.ndarray, "N3"], Float[np.ndarray, "N4"]],
+    ]
+    ```
+    """
 else:
     NestedValues = Sequence[Any] | LeafType
 
@@ -27,12 +41,13 @@ def index(
 ) -> dict[str | None, dict[str | None, str]]:
     r"""Recursively find all evaluations matching the given pattern.
 
-    The pattern can have two groups:
+    !!! tip
 
-    - `experiment`: the name of the experiment.
-    - `trace`: the name of the trace.
+        LLM chat bots are very good at writing simple regex patterns!
 
-    If either group is omitted, it is set as `None`.
+    The pattern can have two groups: `experiment`, and `trace`, which
+    respectively indicate the name of the experiment and trace. If either group
+    is omitted, it is set as `None`.
 
     !!! example
 

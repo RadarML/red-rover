@@ -1,5 +1,9 @@
 # Data Collection: Step by Step
 
+!!! info
+
+    This guide assumes you have already assembled, installed, and configured `red-rover`. See the [assembly](./assembly.md) and [software setup & sensor configuration](./setup.md) guides if you have not done so already (or this has not been done for you).
+
 ## Physical checks
 
 1. Ensure that the protective cover is removed from the radar.
@@ -73,9 +77,16 @@
 
         This should be written on the data collection computer, and should match the name of the data collection rig.
 
-3. Select the target drive on the drop down in the web app.
+## Collect data
 
-    - By default, a `data` option is always included; this saves data to the local disk. External drives will show up as `/data-a`, `/data-b`, etc.
+!!! tip
+
+    Do a dry run of the data collection process before unplugging to go collect data!
+
+
+1. Select the target drive / output location.
+
+    - By default, a `data` option is always included; this saves data to the local disk in the current working directory. External drives will show up as `/data-a`, `/data-b`, etc.
     - External drives should mount automatically.
     - Options are only loaded on page load; if you plug in an external drive after loading the web app, refresh the page.
 
@@ -83,13 +94,12 @@
     
         If an external drive still does not show up, verify that the drive has mounted automatically in `/media/rover/...` using the display/keyboard/terminal.
 
-## Collect data
+2. **(optional)** Provide a trace name.
 
-!!! tip
+    - Use the text input to set a name that the recorded trace will be saved as.
+    - If left blank, will be named after the current timestamp in `YYYY-MM-DD.HH-MM-SS` format.
 
-    Do a dry run of the data collection process before unplugging to go collect data!
-
-1. In the web app, press the `start` button.
+3. In the web app, press the `start` button.
     
     !!! info "Expected Behavior"
 
@@ -116,7 +126,7 @@
         - Any other errors are likely system and/or hardware problems. If a full reboot (turn off computer, unplug the battery, and return to step 0.) does not fix the problem, please report this.
         - If the data collection frequency drops below 90% of the expected frequency, an error is logged. If this happens outside of initialization (e.g. not in the first few messages), please report this.
 
-2. Press stop.
+4. Press stop.
 
     !!! info "Expected Behavior"
 
@@ -138,3 +148,15 @@
     - If using a shared controller phone, please return the phone to its charger as well.
 
 4. Replace the protective cover on the radar.
+
+## Troubleshooting
+
+If some data types (especially Lidar) are not being collected as expected:
+
+- Check all cables for loose connections or damaged connectors.
+- Reboot the data collection computer.
+- Reboot the rig (by turning off the computer, and unpowering all sensors, e.g. by unplugging the root power strip).
+
+For radar-related issues:
+
+- See the [`xwr` troubleshooting documentation](https://wiselabcmu.github.io/xwr/#troubleshooting).

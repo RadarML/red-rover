@@ -30,6 +30,7 @@ from jaxtyping import install_import_hook
 with install_import_hook("tsms", "beartype.beartype"):
     from . import stats, utils
     from .api import (
+        NestedValues,
         dataframe_from_index,
         dataframe_from_stats,
         experiments_from_index,
@@ -39,6 +40,7 @@ with install_import_hook("tsms", "beartype.beartype"):
 
 
 __all__ = [
+    "NestedValues",
     "dataframe_from_index", "dataframe_from_stats",
     "experiments_from_index", "stats_from_experiments",
     "index", "stats", "utils"
