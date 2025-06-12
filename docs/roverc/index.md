@@ -1,6 +1,12 @@
 # Roverc: data collection system
 
-TODO
+<div class="grid" markdown>
+
+![Front](images/rover-front.jpg)
+
+![Back](images/rover-back.jpg)
+
+</div>
 
 ## Software Design
 
