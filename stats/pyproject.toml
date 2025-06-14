@@ -34,3 +34,6 @@ dependencies = [
 Homepage = "https://github.com/WiseLabCMU/red-rover"
 Documentation = "https://wiselabcmu.github.io/red-rover/"
 Issues = "https://github.com/WiseLabCMU/red-rover/issues"
+
+[project.scripts]
+tss = "tss:_cli.cli_main"

@@ -91,7 +91,7 @@ def index(
 def experiments_from_index(
     index: dict[str | None, dict[str | None, str]],
     key: str, timestamps: str | None = None,
-    experiments: Sequence[str | None] | None = None,
+    experiments: Sequence[str | None] | str | None = None,
     cut: float | None = None, workers: int = -1
 ) -> tuple[
     Mapping[str, NestedValues[Num[np.ndarray, "_N"]]],
@@ -126,8 +126,8 @@ def experiments_from_index(
             and paths to the result files; see [`index`][^.].
         key: name of the metric to load from the result files.
         timestamps: name of the timestamps to load from the result files.
-        experiments: list of experiment names to load from the index; loads all
-            experiments if not specified.
+        experiments: list of experiment names to load from the index (or a
+            regex filter); loads all experiments if not specified.
         cut: cut each time series when there is a gap in the timestamps larger
             than this value if provided; see [`cut_trace`][tss.utils.].
         workers: number of worker threads to use when loading. If `<0`, load
@@ -139,8 +139,18 @@ def experiments_from_index(
         A list of the common sequence/trace names which correspond to the
             loaded metrics.
     """
+    if len(index) == 0:
+        raise ValueError("Could not fetch experiments: the index is empty.")
+
     if experiments is None:
         experiments = list(index.keys())
+    elif isinstance(experiments, str):
+        re_filter = re.compile(experiments)
+        experiments = [x for x in index.keys() if re_filter.match(str(x))]
+        if len(experiments) == 0:
+            raise ValueError(
+                f"No experiments found matching the filter: {experiments}")
+
     common = list(set.intersection(
         *[set(index[k].keys()) for k in experiments]))
     if workers < 0:
