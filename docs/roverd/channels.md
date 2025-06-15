@@ -3,3 +3,5 @@
         inherited_members:
         - stream
         - consume
+        - read
+        - write

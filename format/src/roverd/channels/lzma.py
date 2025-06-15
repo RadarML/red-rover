@@ -1,18 +1,11 @@
 """LZMA-compressed channels."""
 
+import io
 import lzma
 from multiprocessing.pool import ThreadPool
 from queue import Queue
 from threading import Thread
-from typing import (
-    Any,
-    Callable,
-    Iterable,
-    Iterator,
-    Optional,
-    Sequence,
-    cast,
-)
+from typing import Any, Callable, Iterable, Iterator, Optional, Sequence, cast
 
 import numpy as np
 from jaxtyping import Shaped
@@ -37,27 +30,30 @@ class LzmaChannel(RawChannel):
         size: total file size, in bytes.
     """
 
-    _FOPEN = staticmethod(lzma.open)  # type: ignore
+    @staticmethod
+    def _open_r(path: str) -> io.BufferedIOBase:
+        return lzma.open(path, 'rb')
+
+    @staticmethod
+    def _open_w(path, append: bool = False) -> io.BufferedIOBase:
+        return lzma.open(path, 'ab' if append else 'wb')
 
     def memmap(self) -> np.memmap:
         """Open memory mapped array."""
         raise Exception("Cannot mem-map a compressed channel.")
 
-    def read(
-        self, start: int | np.integer = 0, samples: int | np.integer = 1
-    ) -> Shaped[np.ndarray, "..."]:
-        """Read data."""
-        if start != 0:
-            raise ValueError("Cannot seek (start != 0) in a LzmaChannel.")
-        return super().read(start=0, samples=samples)
+    def write(self, data: Data, append: bool = False) -> None:
+        """Write data.
 
-    def write(
-        self, data: Data, mode: str = 'wb'
-    ) -> None:
-        """Write data."""
-        if mode != 'wb':
+        Args:
+            data: data to write.
+
+        Raises:
+            ValueError: data type/shape does not match channel specifications.
+        """
+        if append:
             raise ValueError("Can only write/overwrite an lzma channel.")
-        super().write(data, mode='wb')
+        super().write(data, append=False)
 
 
 class LzmaFrameChannel(Channel):
@@ -74,6 +70,17 @@ class LzmaFrameChannel(Channel):
     ```python
     [0, 2, 7, 10]
     ```
+
+    Args:
+        path: file path.
+        dtype: data type, or string name of dtype (e.g. `u1`, `f4`).
+        shape: data shape.
+
+    Attributes:
+        path: file path.
+        type: numpy data type.
+        shape: sample data shape.
+        size: total file size, in bytes.
     """
 
     def read(
@@ -113,14 +120,18 @@ class LzmaFrameChannel(Channel):
             f.seek(int(indices[0]), 0)
             for left, right in zip(indices[:-1], indices[1:]):
                 decompressed = lzma.decompress(f.read(right - left))
-                data.append(self.buffer_to_array(decompressed))
+                data.append(self.buffer_to_array(decompressed, final=False))
 
         return np.concatenate(data, axis=0)
 
     def write(
-        self, data: Data, mode: str = 'wb', preset: int = 0
+        self, data: Data, append: bool = False, preset: int = 0
     ) -> None:
         """Write data.
+
+        Args:
+            data: data to write.
+            preset: LZMA compression preset (0-9, 0 is fastest, 9 is best).
 
         Raises:
             ValueError: data type/shape does not match channel specifications.
@@ -129,7 +140,7 @@ class LzmaFrameChannel(Channel):
             raise ValueError("LzmaFrame does not support writing raw data.")
 
         self._verify_type(data)
-        if mode != 'wb':
+        if append:
             raise ValueError("Only overwriting is currently supported.")
         self.consume(data, preset=preset)
 

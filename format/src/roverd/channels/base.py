@@ -39,9 +39,29 @@ class Channel(ABC):
         return self.__class__(path=path, dtype=self.type, shape=self.shape)
 
     def buffer_to_array(
-        self, data: bytes, batch: bool = True
+        self, data: bytes | bytearray, batch: bool = True, final: bool = True
     ) -> Shaped[np.ndarray, "n ..."]:
-        """Convert raw buffer to the appropriate type and shape."""
+        """Convert raw buffer to the appropriate type and shape.
+
+        !!! warning
+
+            If `data` is a `bytes`, this method will create a new mutable
+            copy from it unless `final=False`.
+
+        Args:
+            data: input buffer; use `bytearray` if downstream code requires
+                a writable array.
+            batch: whether this is supposed to be a batch of samples.
+            final: whether the result will be directly passed to the user, or
+                if a copy will be made later.
+
+        Returns:
+            Array with the appropriate type and shape, with a leading axis
+                corresponding to the number of samples, if `batch=True`.
+        """
+        if isinstance(data, bytes):
+            data = bytearray(data)
+
         arr = np.frombuffer(data, self.type).reshape(-1, *self.shape)
         if batch:
             return arr
@@ -119,9 +139,13 @@ class Channel(ABC):
             return data
 
     def write(
-        self, data: Data, mode: str = 'wb'
+        self, data: Data, append: bool = False
     ) -> None:
         """Write data.
+
+        Args:
+            data: data to write.
+            append: if `True`, append to the file instead of overwriting it.
 
         Raises:
             ValueError: data type/shape does not match channel specifications.

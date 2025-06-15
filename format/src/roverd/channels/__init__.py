@@ -21,6 +21,10 @@ following fields:
 
 Currently supported channel types:
 
+!!! info
+
+    The core API is implemented and documented by the base type [`Channel`][.].
+
 | Name    | Class                   | Description                            |
 | ------- | ----------------------- | -------------------------------------- |
 | `raw`   | [`RawChannel`][.]       | Little-endian raw byte array           |
