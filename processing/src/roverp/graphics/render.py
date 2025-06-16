@@ -1,8 +1,8 @@
 """2D rendering."""
 
+from typing import Any, Callable
+
 import jax
-import numpy as np
-from beartype.typing import Any, Callable
 from jax import numpy as jnp
 from jaxtyping import Array, Shaped, UInt8
 
@@ -12,6 +12,11 @@ from .font import JaxFont
 class Render:
     """2D renderer to combine data channels in a fixed format.
 
+    !!! warning
+
+        If the strings being rendered every change length, this will trigger
+        recompilation!
+
     Args:
         size: total frame size as `(height, width)`.
         channels: which data channels to render. Specify as
@@ -20,9 +25,9 @@ class Render:
         transforms: dict of jax jit-compatible transforms to apply to each data
             channel (organized by channel name); must output RGB images.
         text: text to render; each key is a `(x, y)` coordinate, and each
-            value is a format string. **NOTE**: if the strings ever change
-            length, this will trigger recompilation!
-        font, textcolor: text rendering configuration.
+            value is a format string.
+        font: rendering font.
+        textcolor: text rendering configuration.
     """
 
     def __init__(
@@ -65,14 +70,14 @@ class Render:
 
             _textcolor = jnp.array(textcolor, dtype=jnp.uint8)
             for k2, v2 in encoded_text.items():
-                frame = font.render(v2, frame, _textcolor, x=k2[0], y=k2[1])
+                frame = font(v2, frame, _textcolor, x=k2[0], y=k2[1])
 
             return frame
 
         self._render_func = jax.jit(_render_func)
         self._vrender_func = jax.jit(jax.vmap(_render_func))
 
-    def render(
+    def __call__(
         self, data: dict[str, Shaped[Array, "..."]],
         meta: dict[str, Any] | list[dict[str, Any]]
     ) -> UInt8[Array, "*batch h w 3"]:

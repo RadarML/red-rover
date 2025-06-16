@@ -11,24 +11,12 @@ Outputs:
 import json
 import math
 import os
+from typing import cast
 
 import numpy as np
-from beartype.typing import cast
 from matplotlib import pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 from tqdm import tqdm
-
-from roverp import RawTrajectory
-
-
-def _parse(p):
-    p.add_argument("-p", "--path", help="Dataset path.")
-    p.add_argument(
-        "-o", "--out",
-        help="Output path; defaults to `_reports/...` in the dataset.")
-    p.add_argument(
-        "-w", "--width", default=30.0, type=float,
-        help="Time series plot row width, in seconds.")
 
 
 def _plot_speed(axs, tproc, traw, vproc, vraw, dmax):
@@ -48,31 +36,49 @@ def _plot_speed(axs, tproc, traw, vproc, vraw, dmax):
     axs[3].set_ylabel("$||v||_2$ (m/s)")
 
 
-def _main(args):
+def cli_report(path: str, /, out: str | None = None, width: float = 30.0) -> None:
+    """Generate speed report.
 
-    if args.out is None:
-        args.out = os.path.join(args.path, "_report", "speed.pdf")
-    os.makedirs(os.path.dirname(args.out), exist_ok=True)
+    !!! info
 
-    traj = RawTrajectory.from_csv(
-        os.path.join(args.path, "_slam", "trajectory.csv"))
+        The cartographer slam pipeline (`make trajectory` or `make lidar`) must
+        be run beforehand.
+
+    Args:
+        path: path to the dataset.
+        out: output path; defaults to `_report/speed.pdf` in the dataset.
+        width: time series plot row width, in seconds.
+    """
+    from roverp.readers import RawTrajectory
+
+    if out is None:
+        out = os.path.join(path, "_report", "speed.pdf")
+    os.makedirs(os.path.dirname(out), exist_ok=True)
+
+    trajfile = os.path.join(path, "_slam", "trajectory.csv")
+    if not os.path.exists(trajfile):
+        raise FileNotFoundError(
+            f"Trajectory file not found: {trajfile}. "
+            f"Run `make trajectory` or `make lidar` first.")
+
+    traj = RawTrajectory.from_csv(trajfile)
     base_time = traj.t[0]
     duration = traj.t[-1] - base_time
 
     vraw = np.diff(traj.xyz, axis=1) / np.diff(traj.t)
-    traw = (traj.t[1:] + traj.t[:-1]) / 2 - base_time
+    traw = (traj.t[1:] + traj.t[:-1]) / 2 - base_time  # type: ignore
 
-    radarpose = np.load(os.path.join(args.path, "_radar", "pose.npz"))
+    radarpose = np.load(os.path.join(path, "_radar", "pose.npz"))
     vproc = radarpose["vel"].T
     tproc = radarpose["t"] - base_time
 
-    with open(os.path.join(args.path, "radar", "radar.json")) as f:
+    with open(os.path.join(path, "radar", "radar.json")) as f:
         cfg = json.load(f)
         nd = cfg["shape"][0]
         dmax = cfg["doppler_resolution"] * (nd // 2)
 
-    with PdfPages(args.out) as pdf:
-        for i in tqdm(range(math.ceil(duration / args.width / 2))):
+    with PdfPages(out) as pdf:
+        for i in tqdm(range(math.ceil(duration / width / 2))):
             fig, page = plt.subplots(8, 1, figsize=(8.5, 11))
             page = cast(np.ndarray, page)
 
@@ -80,7 +86,7 @@ def _main(args):
                 _plot_speed(axs, tproc, traw, vproc, vraw, dmax)
                 for ax in axs:
                     ax.set_xlim(
-                        (i * 2 + j) * args.width, (i * 2 + j + 1) * args.width)
+                        (i * 2 + j) * width, (i * 2 + j + 1) * width)
                     ax.grid()
 
             page[-1].set_xlabel("Time (s)")

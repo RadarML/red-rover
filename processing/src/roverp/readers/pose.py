@@ -1,15 +1,17 @@
-"""Cartographer output interface."""
+"""Cartographer pose output interface."""
+
+from dataclasses import dataclass
 
 import numpy as np
 import pandas as pd
-from beartype.typing import NamedTuple
 from jaxtyping import Bool, Float, Float64, Integer
 from scipy.interpolate import splev, splprep
 from scipy.signal import medfilt
 from scipy.spatial.transform import Rotation, Slerp
 
 
-class Poses(NamedTuple):
+@dataclass(frozen=True)
+class Poses:
     """Discrete sampled poses.
 
     Attributes:
@@ -26,8 +28,19 @@ class Poses(NamedTuple):
     acc: Float64[np.ndarray, "N 3"]
     rot: Float64[np.ndarray, "N 3 3"]
 
+    def as_dict(self) -> dict[str, Float64[np.ndarray, "N"]]:
+        """Convert to a dictionary."""
+        return {
+            "t": self.t,
+            "pos": self.pos,
+            "vel": self.vel,
+            "acc": self.acc,
+            "rot": self.rot,
+        }
 
-class RawTrajectory(NamedTuple):
+
+@dataclass(frozen=True)
+class RawTrajectory:
     """Raw trajectory from cartographer.
 
     Attributes:
@@ -42,7 +55,11 @@ class RawTrajectory(NamedTuple):
 
     @classmethod
     def from_csv(cls, path: str) -> "RawTrajectory":
-        """Load `trajectory.csv` output file."""
+        """Load `trajectory.csv` output file.
+
+        Args:
+            path: path to the `trajectory.csv` file.
+        """
         df = pd.read_csv(path)
         return RawTrajectory(
             xyz=np.stack([
@@ -61,7 +78,7 @@ class RawTrajectory(NamedTuple):
         Float[np.ndarray, "3"],
         Integer[np.ndarray, "3"]
     ]:
-        """Get grid bounds.
+        """Get bounds for a grid containing the extents of the trajectory.
 
         Args:
             margin_xy, margin_z: grid margin around trajectory bounds in the
@@ -71,7 +88,9 @@ class RawTrajectory(NamedTuple):
                 specified margin until the resolution is divisible by `align`.
 
         Returns:
-            (lower bound, upper bound, grid size)
+            grid lower bound
+            grid upper bound
+            grid size
         """
         margin = np.array([margin_xy, margin_xy, margin_z])
         lower = np.min(self.xyz, axis=1) - margin
@@ -136,16 +155,16 @@ class Trajectory:
             t: input timestamps; can be in an arbitrary order.
 
         Returns:
-            (poses, mask). Only valid timestamps are included in `poses`;
-            these valid timestamps are specified in `mask`.
+            Output poses; only indluces poses with valid timestamps.
+            A mask indicating valid timestamps.
         """
         t_rel = t - self.base_time
         mask = (t_rel > 0) & (t_rel < self.t_slam[-1])
         t_valid = t_rel[mask]
 
-        pos = np.array(splev(t_valid, self.tck)).T
-        vel = np.array(splev(t_valid, self.tck, der=1)).T
-        acc = np.array(splev(t_valid, self.tck, der=2)).T
+        pos = np.array(splev(t_valid, self.tck)).T  # type: ignore
+        vel = np.array(splev(t_valid, self.tck, der=1)).T  # type: ignore
+        acc = np.array(splev(t_valid, self.tck, der=2)).T  # type: ignore
         rot = self.slerp(t_valid).as_matrix()
 
         return Poses(

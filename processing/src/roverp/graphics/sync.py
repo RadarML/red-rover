@@ -1,7 +1,8 @@
 """Video sychronization utilities."""
 
+from typing import Any, Iterator
+
 import numpy as np
-from beartype.typing import Any, Iterator, Optional
 from jaxtyping import Float
 
 
@@ -9,7 +10,7 @@ def synchronize(
     streams: dict[str, Iterator[Any]],
     timestamps: dict[str, Float[np.ndarray, "?T"]],
     period: float = 1 / 30.0,
-    round: Optional[float] = None,
+    round: float | None = None,
     duplicate: dict[str, str] = {},
     batch: int = 0,
     stop_at: float = 0.0
@@ -31,11 +32,11 @@ def synchronize(
         stop_at: terminate early after this many seconds. If `0.0` (default),
             plays back the full provided streams.
 
-    Returns:
-        Yields a tuple with the current timestamp relative to the start time,
-        the index of each synchronized frame, and references to the active
-        values at that timestamp. The active values are given by reference
-        only, and should not be modified.
+    Yields:
+        A tuple with the current timestamp relative to the start time, the
+            index of each synchronized frame, and references to the active
+            values at that timestamp. The active values are given by reference
+            only, and should not be modified.
     """
     def handle_duplicates(t, ii, active):
         for k, v in duplicate.items():

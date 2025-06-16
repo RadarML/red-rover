@@ -1,7 +1,8 @@
 """JAX-native color conversions for GPU acceleration."""
 
+from typing import cast
+
 import matplotlib
-from beartype.typing import Optional, cast
 from jax import numpy as jnp
 from jaxtyping import Array, Float, Num, UInt8
 
@@ -13,14 +14,16 @@ def hsv_to_rgb(
 ) -> Float[Array, "... 3"]:
     """Convert hsv values to rgb.
 
-    Copied from [G1]_, modified for vectorization, and converted to jax.
+    Copied [from matplotlib](
+    https://matplotlib.org/3.1.1/_modules/matplotlib/colors.html#hsv_to_rgb),
+    modified for vectorization, and converted to jax.
 
     Args:
         hsv: HSV colors.
 
     Returns:
         RGB colors `float (0, 1)`, using the array format corresponding to the
-        provided backend.
+            provided backend.
     """
     in_shape = hsv.shape
     h = hsv[..., 0]
@@ -53,7 +56,7 @@ def lut(
 
     Returns:
         An array with the same shape as `data`, with an extra dimension
-        appended.
+            appended.
     """
     fidx = jnp.clip(data, 0.0, 1.0) * (colors.shape[0] - 1)
     return jnp.take(colors, fidx.astype(int), axis=0)
@@ -62,7 +65,7 @@ def lut(
 def mpl_colormap(cmap: str = "viridis") -> UInt8[Array, "n 3"]:
     """Get color LUT from matplotlib colormap.
 
-    Use with :py:func:`graphics.lut`.
+    Use with [`lut`][^.].
     """
     # For some reason, mypy does not recognize `colors` as an attribute of mpl.
     colors = cast(
@@ -73,10 +76,10 @@ def mpl_colormap(cmap: str = "viridis") -> UInt8[Array, "n 3"]:
 
 def render_image(
     data: Num[Array, "h w"],
-    colors: Optional[Num[Array, "n d"]] = None,
-    resize: Optional[tuple[int, int]] = None,
-    scale: Optional[float | int] = None,
-    pmin: Optional[float] = None, pmax: Optional[float] = None
+    colors: Num[Array, "n d"] | None = None,
+    resize: tuple[int, int] | None = None,
+    scale: float | int | None = None,
+    pmin: float | None = None, pmax: float | None = None
 ) -> UInt8[Array, "h2 w2 d"]:
     """Apply colormap with specified scaling, clipping, and sizing.
 
@@ -86,8 +89,10 @@ def render_image(
         resize: resize inputs to specified size.
         scale: if specified, use this exact scale to normalize the data to
             `[0, 1]`, with clipping applied.
-        pmin, pmax: if specified, use this percentile as the minimum and
-            maximum for normalization instead of the actual min and max.
+        pmin: if specified, use this percentile as the minimum for
+            normalization instead of the actual min.
+        pmax: if specified, use this percentile as the maximum for
+            normalization instead of the actual max.
 
     Returns:
         Rendered RGB image.

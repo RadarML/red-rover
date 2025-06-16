@@ -1,6 +1,5 @@
 """GPU-accelerated nearest neighbor resizing."""
 
-
 from jax import numpy as jnp
 from jaxtyping import Array, Num
 

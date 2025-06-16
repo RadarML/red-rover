@@ -5,18 +5,7 @@
 #
 
 DATASET?=example
-
-
-# ------------------------------ Python Config ------------------------------ #
-
-PYTHON?=python3.12
 ROVER_DIR=$(shell pwd)
-VENV=./env/bin
-
-env:
-	$(PYTHON) -m venv env
-	$(VENV)/pip install ../format[ouster,video]
-	$(VENV)/pip install -r requirements.txt
 
 # ------------------------------ Docker Config ------------------------------ #
 
@@ -67,8 +56,6 @@ endif
 .PHONY: lidar trajectory validate info
 trajectory: $(TRAJ)
 lidar: $(TRAJ) $(POINTS)
-
-trajectory: $(TRAJ)
 
 validate:
 	$(call docker_run, cartographer_rosbag_validate -bag_filename $(D_BAG))

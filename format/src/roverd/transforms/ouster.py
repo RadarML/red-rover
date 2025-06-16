@@ -128,7 +128,7 @@ class PointCloud(spec.Transform[types.OSDepth, types.PointCloud]):
                 valid = (np.linalg.norm(pc, axis=-1) >= self.min_range)
             else:
                 valid = np.any(pc != 0, axis=-1)
-            valid = valid | np.all(~np.isnan(pc), axis=-1)
+            valid = valid & np.all(~np.isnan(pc), axis=-1)
 
             xyz.append(pc.reshape(-1, 3)[valid.reshape(-1)])
 

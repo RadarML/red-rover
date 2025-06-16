@@ -18,9 +18,9 @@ nav:
       - Flask App: roverc/flask.md
   - roverd:
     - About: roverd/index.md
-    - Usage:
-      - CLI: roverd/cli.md
-      - API: roverd/api.md
+    - CLI: roverd/cli.md
+    - High Level API:
+      - Data Loading: roverd/api.md
       - Data Types: roverd/types.md
       - Transforms: roverd/transforms.md
     - Sensors:
@@ -31,7 +31,11 @@ nav:
       - Utils: roverd/utils.md
   - roverp:
     - About: roverp/index.md
-    - Graphics: roverp/graphics.md
+    - Processing:
+      - Cartographer: roverp/docker.md
+    - Library:
+      - Data Readers: roverp/readers.md
+      - Graphics: roverp/graphics.md
   - i/q-1m:
     - About: iq1m/index.md
   - tss:

@@ -1,7 +1,13 @@
 """GPU-accelerated 2D graphics using JAX.
 
-.. [G1] Matplotlib HSV to RGB implementation.
-    https://matplotlib.org/3.1.1/_modules/matplotlib/colors.html#hsv_to_rgb
+!!! warning
+
+    This module is not automatically imported; you will need to explicitly
+    import it:
+    ```python
+    from roverp import graphics
+    ```
+    You will also need to have the `graphics` extra installed.
 """
 
 from .colors import hsv_to_rgb, lut, mpl_colormap, render_image

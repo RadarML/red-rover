@@ -16,6 +16,7 @@ dependencies = []
 
 [tool.uv.sources]
 roverd = { path = "./format" }
+roverp = { path = "./processing" }
 tss = { path = "./stats" }
 xwr = { git = "ssh://git@github.com/WiseLabCMU/xwr.git" }
 
@@ -36,6 +37,10 @@ roverc = [
 
 roverd = [
     "roverd[video,ouster,xwr,ros]"
+]
+
+roverp = [
+    "roverp"
 ]
 
 stats = [

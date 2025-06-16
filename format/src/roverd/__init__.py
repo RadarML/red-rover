@@ -40,11 +40,11 @@ to load a single trace, single sensor, or a single "channel" within a sensor.
     >>> dataset = Dataset.from_config(
             Dataset.find_traces("/data/grt"),
             sync=generic.Nearest("lidar", tol=0.1),
-            sensors={"radar": sensors.XWRRadar, "lidar": sensors.OS0Lidar})
+            sensors={"radar": sensors.XWRRadar, "lidar": sensors.OSLidar})
     >>> dataset
     Dataset(166 traces, n=1139028)
     >>> dataset[42]
-    {'radar': XWRRadarIQ(...), 'lidar': OS0LidarData(...)}
+    {'radar': XWRRadarIQ(...), 'lidar': OSLidarData(...)}
     ```
 
 === "Single Trace, Typed"
@@ -55,11 +55,11 @@ to load a single trace, single sensor, or a single "channel" within a sensor.
     >>> trace = Trace.from_config(
             "/data/grt/bike/point.back",
             sync=generic.Nearest("lidar"),
-            sensors={"radar": sensors.XWRRadar, "lidar": sensors.OS0Lidar})
+            sensors={"radar": sensors.XWRRadar, "lidar": sensors.OSLidar})
     >>> trace['radar']
     XWRRadar(/data/grt/bike/point.back/radar: [ts, iq, valid])
     >>> trace[42]
-    {'radar': XWRRadarIQ(...), 'lidar': OS0LidarData(...)}
+    {'radar': XWRRadarIQ(...), 'lidar': OSLidarData(...)}
     ```
 
 === "Single Trace, Untyped"

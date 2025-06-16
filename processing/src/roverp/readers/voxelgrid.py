@@ -1,10 +1,11 @@
 """Voxel grid utilities."""
 
+from typing import NamedTuple
+
 import matplotlib
 import numpy as np
-from beartype.typing import NamedTuple, Optional
 from einops import einsum, rearrange
-from jaxtyping import Array, Bool, Float, UInt8
+from jaxtyping import Bool, Float, UInt8
 from scipy.signal import convolve as default_conv
 
 
@@ -50,8 +51,8 @@ class VoxelGrid(NamedTuple):
         return cls(data=data, lower=npz["lower"], resolution=resolution)
 
     def crop(
-        self, left: Optional[tuple[int, int, int]] = None,
-        right: Optional[tuple[int, int, int]] = None
+        self, left: tuple[int, int, int] | None = None,
+        right: tuple[int, int, int] | None = None
     ) -> "VoxelGrid":
         """Crop voxel grid by integer lower and upper indices.
 
@@ -104,7 +105,7 @@ class VoxelGrid(NamedTuple):
             lower=self.lower, resolution=self.resolution)
 
     def as_pointcloud(
-        self, mask: Bool[Array, "Nx Ny Nz"], cmap: str = 'inferno'
+        self, mask: Bool[np.ndarray, "Nx Ny Nz"], cmap: str = 'inferno'
     ) -> tuple[Float[np.ndarray, "3"], UInt8[np.ndarray, "3"]]:
         """Convert voxel grid to point cloud.
 
@@ -113,7 +114,8 @@ class VoxelGrid(NamedTuple):
             cmap: matplotlib colormap to use.
 
         Returns:
-            (xyz, rgb), where xyz are positions and rgb colors.
+            xyz: point positions.
+            rgb: point colors.
         """
         colors = matplotlib.colormaps[cmap]
 
@@ -126,9 +128,18 @@ class VoxelGrid(NamedTuple):
         return xyz, rgb_u8
 
     def as_pcd(
-        self, path: str, mask: Bool[Array, "Nx Ny Nz"], cmap: str = 'inferno'
+        self, path: str, mask: Bool[np.ndarray, "Nx Ny Nz"],
+        cmap: str = 'inferno'
     ) -> None:
         """Save as a .pcd file.
+
+        !!! warning
+
+            This method requires `pypcd4` to be installed, e.g. via the `pcd`
+            extra:
+            ```sh
+            pip install roverp[pcd]
+            ```
 
         Args:
             path: output path (ending with .pcd).
@@ -142,9 +153,18 @@ class VoxelGrid(NamedTuple):
         pc.save(path)
 
     def as_ply(
-        self, path: str, mask: Bool[Array, "Nx Ny Nz"], cmap: str = 'inferno'
+        self, path: str, mask: Bool[np.ndarray, "Nx Ny Nz"],
+        cmap: str = 'inferno'
     ) -> None:
         """Save as a .ply file.
+
+        !!! warning
+
+            This method requires `plyfile` to be installed, e.g. via the `ply`
+            extra:
+            ```sh
+            pip install roverp[ply]
+            ```
 
         Args:
             path: output path (ending with .ply).

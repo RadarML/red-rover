@@ -1,6 +1,7 @@
 """Convert to ROS 1 bag."""
 
 import os
+from functools import partial
 from typing import cast
 
 from roverd import Trace, sensors
@@ -20,6 +21,11 @@ def cli_rosbag(
 
         This CLI command requires the `roverd[ros]` extra to be installed.
 
+    !!! danger
+
+        Rosbags are incredibly inefficient; expect for the output bag file to
+        be ~10x larger than the input depth maps!
+
     Args:
         path: data path.
         out: output rosbag file path; if `None`, uses `_scratch/lidar.bag` in
@@ -37,7 +43,10 @@ def cli_rosbag(
         out = os.path.join(path, "_scratch", "lidar.bag")
 
     trace = Trace.from_config(
-        path, sensors={"lidar": sensors.OSLidarDepth, "imu": sensors.IMU})
+        path, sensors={
+            "lidar": partial(sensors.OSLidarDepth, correction="auto"),
+            "imu": partial(sensors.IMU, correction="auto")
+        })
     lidar = cast(sensors.OSLidarDepth, trace["lidar"])
     imu = cast(sensors.IMU, trace["imu"])
 

@@ -90,7 +90,7 @@ def rover_to_rosbag(
     with Writer(out) as writer:
 
         msgtype = types.sensor_msgs__msg__Imu.__msgtype__
-        connection = writer.add_connection("/imu", msgtype, latching=True)
+        connection = writer.add_connection("/imu", msgtype, latching=1)
         data = zip(
             Rotation.from_euler('XYZ', imu["rot"].read()).as_quat(False),
             imu["acc"].read(), imu["avel"].read(),
@@ -103,7 +103,7 @@ def rover_to_rosbag(
 
         to_pointcloud = ouster.PointCloud(min_range=min_range)
         msgtype = types.sensor_msgs__msg__PointCloud2.__msgtype__
-        connection = writer.add_connection("/points2", msgtype, latching=True)
+        connection = writer.add_connection("/points2", msgtype, latching=1)
         data = utils.Prefetch(
             zip(lidar.stream(), *ts_sec_ns(lidar.metadata.timestamps)))
         for raw, sec, nsec, ts in tqdm(data, total=len(lidar), desc="lidar"):

@@ -1,7 +1,8 @@
 """Pointcloud rendering utilities."""
 
+from typing import Sequence
+
 import numpy as np
-from beartype.typing import Sequence
 from jax import numpy as jnp
 from jaxtyping import Array, Integer, Num
 
@@ -81,8 +82,8 @@ class Scatter:
 
         Returns:
             Rendered scatter plot. Note that there is some indeterminism in
-            case multiple points with the same intensity fall in the same
-            initial pixel.
+                case multiple points with the same intensity fall in the same
+                initial pixel.
         """
         img = jnp.zeros(self.resolution, dtype=c.dtype)
 

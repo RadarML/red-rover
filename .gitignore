@@ -1,11 +1,13 @@
 # Red Rover
 # -----------------------------------------------------------------------------
 
-# Scratch notebooks
+# Scratch files
 *tmp*.ipynb
 *scratch*.ipynb
+tmp*
 
 # Data files
+data*
 collect/data*
 collect/_data*
 processing/data*

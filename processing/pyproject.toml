@@ -3,12 +3,12 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "roverd"
+name = "roverp"
 version = "0.1.0"
 authors = [
   { name="Tianshu Huang", email="tianshu2@andrew.cmu.edu" },
 ]
-description = "Rover Data Format API."
+description = "Rover Data Processing Utilities."
 readme = "README.md"
 requires-python = ">=3.12"
 classifiers = [
@@ -19,26 +19,39 @@ license = "MIT"
 license-files = ["LICEN[CS]E*"]
 
 dependencies = [
-    "numpy >= 1.19",
-    "jaxtyping >= 0.3.2",
-    "pyyaml",
-    "types-PyYaml",
+    "numpy>=1.19",
+    "jaxtyping>=0.3.2",
     "beartype",
-    "optree >= 0.16.0",
-    "abstract_dataloader == 0.3.*",
+    "einops",
+    "jax[cuda12]",
+    "scipy",
+    "tqdm",
+    "pyyaml",
+    "pandas",
+    "tqdm-stubs",
+    "pandas-stubs",
+    "types-PyYaml",
+    "types-Pillow",
     "tyro>=0.9.0",
+    "roverd >= 0.1.0"
 ]
+
+[project.optional-dependencies]
+graphics = [
+    "matplotlib",
+    "pillow",
+    "imageio[ffmpeg]"
+]
+pcd = [ "pypcd4" ]
+ply = [ "plyfile" ]
+
+[tool.uv.sources]
+roverd = { path = "../format" }
 
 [project.urls]
 Homepage = "https://github.com/WiseLabCMU/red-rover"
 Documentation = "https://wiselabcmu.github.io/red-rover/"
 Issues = "https://github.com/WiseLabCMU/red-rover/issues"
 
-[project.optional-dependencies]
-video = ["opencv-python-headless"]
-ouster = ["ouster-sdk >= 0.12.0"]
-xwr = ["xwr >= 0.1.0"]
-ros = ["rosbags==0.9.19", "scipy", "tqdm"]
-
 [project.scripts]
-roverd = "roverd:_cli.cli_main"
+roverp = "roverp:_cli.cli_main"
