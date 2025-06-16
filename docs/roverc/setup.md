@@ -24,6 +24,13 @@ The data collection computer uses a linux installation; we use ubuntu 22.04, tho
     sudo apt install -y python3.12 python3.12-venv build-essential net-tools
     ```
 
+    Install UV:
+    ```sh
+    curl -LsSf https://astral.sh/uv/install.sh | sh
+    # or
+    wget -qO- https://astral.sh/uv/install.sh | sh
+    ```
+
 2. Install `red-rover`:
     ```sh
     git clone git@github.com:WiseLabCMU/red-rover.git

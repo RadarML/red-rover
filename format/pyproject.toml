@@ -2,6 +2,9 @@
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
+[tool.hatch.build.targets.wheel]
+packages = ["src/roverd"]
+
 [project]
 name = "roverd"
 version = "0.1.0"
@@ -42,3 +45,7 @@ ros = ["rosbags==0.9.19", "scipy", "tqdm"]
 
 [project.scripts]
 roverd = "roverd:_cli.cli_main"
+
+[tool.uv.sources]
+xwr = { git = "ssh://git@github.com/WiseLabCMU/xwr.git" }
+

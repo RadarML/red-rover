@@ -37,7 +37,7 @@ class RoverSensor:
     def loop(self):
         """Run / log loop."""
         with subprocess.Popen(
-            ['./env/bin/python', 'collect.py', "run", "-s", self.name],
+            ['./.venv/bin/python', 'cli.py', "run", "--sensor", self.name],
             stdout=subprocess.PIPE, stderr=subprocess.STDOUT
         ) as proc:
             for line in io.TextIOWrapper(proc.stdout, encoding="utf-8"):  # type: ignore

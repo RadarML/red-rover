@@ -2,16 +2,16 @@ layout {
     pane split_direction="vertical" {
         pane split_direction="horizontal" {
             pane command="./env/bin/python" {
-                args "collect.py" "run" "-s" "camera"
+                args "cli.py" "run" "--sensor" "camera"
             }
             pane command="./env/bin/python" {
-                args "collect.py" "run" "-s" "lidar"
+                args "cli.py" "run" "--sensor" "lidar"
             }
             pane command="./env/bin/python" {
-                args "collect.py" "run" "-s" "imu"
+                args "cli.py" "run" "--sensor" "imu"
             }
             pane command="./env/bin/python" {
-                args "collect.py" "run" "-s" "radar"
+                args "cli.py" "run" "--sensor" "radar"
             }
         }
         pane split_direction="horizontal" {

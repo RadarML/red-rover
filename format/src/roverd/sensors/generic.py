@@ -108,7 +108,7 @@ class DynamicSensor(Sensor[TGenericSample, generic.Metadata]):
             [Float64[np.ndarray, "N"]], Float64[np.ndarray, "N"]] = None
     ) -> None:
         if create and not exist_ok:
-            if os.path.exists(self.path):
+            if os.path.exists(path):
                 raise ValueError(
                     "`create=True`, but this sensor already exists!")
 
@@ -118,6 +118,7 @@ class DynamicSensor(Sensor[TGenericSample, generic.Metadata]):
 
         super().__init__(path=path, correction=correction)
         self.subset = subset
+        self.path = path
 
     @cached_property
     def metadata(self) -> generic.Metadata:  # type: ignore

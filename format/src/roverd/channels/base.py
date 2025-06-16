@@ -127,7 +127,7 @@ class Channel(ABC):
 
     def _serialize(
         self, data: Data | Sequence[Data]
-    ) -> bytes | bytearray:
+    ) -> bytes | bytearray | memoryview:
         """Serialize data into a binary format for writing."""
         if isinstance(data, (list, tuple)):
             return b''.join(self._serialize(x) for x in data)

@@ -8,10 +8,9 @@ ifndef ROVER_CFG
 $(error No config file specified: ROVER_CFG is not set)
 endif
 
-PYTHON?=python3.11
-VENV=./env/bin
+VENV=./.venv/bin
 ROVERC=$(VENV)/python cli.py
-GETCONF=$(ROVERC) get-config -c $(ROVER_CFG) -p
+GETCONF=$(ROVERC) get-config --config $(ROVER_CFG) --path
 
 RADAR_SYS_IP=$(shell $(GETCONF) radar/args/capture/sys_ip)
 RADAR_IF=$(shell $(GETCONF) radar/interface)
@@ -21,7 +20,7 @@ RECV_BUF_SIZE=$(shell $(GETCONF) radar/args/capture/socket_buffer)
 
 .PHONY: run server start stop
 server:
-	./env/bin/flask run --host=0.0.0.0
+	$(VENV)/flask run --host=0.0.0.0
 run:
 	echo "Launched with config: $(ROVER_CFG)"
 	zellij --layout rover.kdl
@@ -29,11 +28,6 @@ start:
 	$(ROVERC) start
 stop:
 	$(ROVERC) stop
-
-env:
-	$(PYTHON) -m venv env
-	$(VENV)/pip install ../format
-	$(VENV)/pip install -r requirements.txt
 
 lsconfig:
 	$(VENV)/python config/summary.py

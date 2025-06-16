@@ -63,10 +63,10 @@
 
 2. Launch data collection processes (in the background, in separate terminals, in `screen`, etc.):
     ```sh
-    screen -dm bash -c "./env/bin/python cli.py run -c [config.yaml] -s radar"
-    screen -dm bash -c "./env/bin/python cli.py run -c [config.yaml] -s camera"
-    screen -dm bash -c "./env/bin/python cli.py run -c [config.yaml] -s lidar"
-    screen -dm bash -c "./env/bin/python cli.py run -c [config.yaml] -s imu"
+    screen -dm bash -c "./env/bin/python cli.py run --config [config.yaml] --sensor radar"
+    screen -dm bash -c "./env/bin/python cli.py run --config [config.yaml] --sensor camera"
+    screen -dm bash -c "./env/bin/python cli.py run --config [config.yaml] --sensor lidar"
+    screen -dm bash -c "./env/bin/python cli.py run --config [config.yaml] --sensor imu"
     ```
 
 3. Run data collection

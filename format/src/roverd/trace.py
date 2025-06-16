@@ -9,7 +9,7 @@ from typing import Callable, Mapping, TypeVar, cast, overload
 import numpy as np
 from abstract_dataloader import abstract, generic, spec
 
-from roverd.sensors import Sensor, from_config
+from .sensors import Sensor, from_config
 
 TSample = TypeVar("TSample")
 

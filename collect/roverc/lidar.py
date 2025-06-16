@@ -88,11 +88,14 @@ class Lidar(Sensor):
         config.operating_mode = client.OperatingMode.OPERATING_NORMAL  # type: ignore
         config.lidar_mode = client.LidarMode.from_string(mode)  # type: ignore
 
-        self.fps = float(config.lidar_mode.frequency)  # type: ignore
-        self.shape = (beams, config.lidar_mode.cols)  # type: ignore
+        # Ouster removed the ability to calculate the resolution from the
+        # mode string. Not sure why, makes absolutely no sense.
+        self.fps = float(mode.split('x')[1])
+        self.shape = (beams, int(mode.split('x')[0]))
 
         client.set_config(  # type: ignore
             self.addr, config, persist=True, udp_dest_auto=True)
+
         self.log.info("Initialized lidar {}: {}-beam x {} x {} fps".format(
             self.addr, *self.shape, self.fps))
 
@@ -122,7 +125,7 @@ class Lidar(Sensor):
         stream = client.Scans.stream(  # type: ignore
             hostname=self.addr, lidar_port=7502, complete=True, timeout=1.0)
         with open(os.path.join(path, self.name, "lidar.json"), 'w') as f:
-            f.write(stream.metadata.updated_metadata_string())  # type: ignore
+            f.write(stream.metadata.to_json_string())  # type: ignore
 
         for scan in stream:
             out.start()

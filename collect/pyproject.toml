@@ -1,0 +1,35 @@
+[project]
+name = "roverc"
+version = "0.1.0"
+authors = [
+  { name="Tianshu Huang", email="tianshu2@andrew.cmu.edu" },
+]
+
+requires-python = "==3.12.*"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: POSIX :: Linux"
+]
+
+dependencies = [
+    # General
+    "numpy",
+    "pyyaml",
+    # Control / Logging Web App
+    "flask",
+    # Type checking
+    "beartype",
+    "jaxtyping",
+    "types-PyYAML",
+    "types-pyserial",
+    # Sensor-specific
+    "pyserial",
+    "opencv-python-headless",
+    "ouster-sdk==0.14.0",
+    "xwr>=0.1.0",
+    "roverd[video,ouster,xwr]"
+]
+
+[tool.uv.sources]
+xwr = { git = "ssh://git@github.com/WiseLabCMU/xwr.git" }
+roverd = { path = "../format" }
