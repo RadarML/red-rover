@@ -1,13 +1,22 @@
-"""Data Types."""
+"""Data Type Library.
+
+!!! info
+
+    Following the recommendations of the [abstract dataloader](
+    https://wiselabcmu.github.io/abstract-dataloader/types/), each type is a
+    generic dataclass of arrays.
+"""
 
 from dataclasses import field
 from typing import Generic, TypeVar
 
 from jaxtyping import (
+    Complex64,
     Float,
     Float32,
     Float64,
     Int16,
+    Integer,
     UInt8,
     UInt16,
 )
@@ -45,8 +54,54 @@ class XWRRadarIQ(Generic[TArray]):
 
 
 @dataclass
-class OS0Depth(Generic[TArray]):
-    """Lidar raw depth data from an Ouster OS0 sensor.
+class XWR4DSpectrum(Generic[TArray]):
+    """4D radar spectrum data.
+
+    Attributes:
+        spectrum: 4D complex spectrum in doppler-elevation-azimuth-range order.
+        timestamps: timestamp for each frame; nominally in seconds.
+        range_resolution: range resolution for the modulation used; nominally
+            in meters.
+        doppler_resolution: doppler resolution; nominally in m/s.
+    """
+
+    spectrum: Complex64[TArray, "#batch doppler elevation azimuth range"]
+    timestamps: Float64[TArray, "#batch"]
+    range_resolution: Float[TArray, "#batch"]
+    doppler_resolution: Float[TArray, "#batch"]
+
+
+@dataclass
+class Depth(Generic[TArray]):
+    """Generic raw depth data.
+
+    Attributes:
+        rng: raw range measurements in beam-time space; nominally in mm.
+        timestamps: timestamp for each frame; nominally in seconds.
+    """
+
+    rng: UInt16[TArray, "#batch beam time"]
+    timestamps: Float64[TArray, "#batch"]
+
+
+@dataclass
+class PointCloud(Generic[TArray]):
+    """Generic point cloud data.
+
+    Attributes:
+        xyz: point cloud coordinates in meters.
+        length: number of points in each point cloud.
+        timestamps: timestamp for each frame; nominally in seconds.
+    """
+
+    xyz: Float32[TArray, "#batch 3"]
+    length: Integer[TArray, "#batch"]
+    timestamps: Float64[TArray, "#batch"]
+
+
+@dataclass
+class OSDepth(Generic[TArray]):
+    """Lidar raw depth data from an Ouster OSX sensor.
 
     !!! warning
 
@@ -67,8 +122,8 @@ class OS0Depth(Generic[TArray]):
 
 
 @dataclass
-class OS0Data(Generic[TArray]):
-    """Depth and IR intensity data from an Ouster OS0.
+class OSData(Generic[TArray]):
+    """Depth and IR intensity data from an Ouster OSX sensor.
 
     !!! warning
 

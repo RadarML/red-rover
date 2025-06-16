@@ -18,10 +18,12 @@ nav:
       - Flask App: roverc/flask.md
   - roverd:
     - About: roverd/index.md
-    - CLI: roverd/cli.md
-    - API: roverd/api.md
-    - Sensors:
+    - Usage:
+      - CLI: roverd/cli.md
+      - API: roverd/api.md
       - Data Types: roverd/types.md
+      - Transforms: roverd/transforms.md
+    - Sensors:
       - Rover Sensors: roverd/sensors.md
       - Timestamps: roverd/timestamps.md
     - Channels:
@@ -29,6 +31,7 @@ nav:
       - Utils: roverd/utils.md
   - roverp:
     - About: roverp/index.md
+    - Graphics: roverp/graphics.md
   - i/q-1m:
     - About: iq1m/index.md
   - tss:
@@ -67,6 +70,7 @@ plugins:
         - format/src
         - collect/
         - stats/src
+        - processing/src
         options:
           docstring_style: google
           relative_crossrefs: true

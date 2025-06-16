@@ -45,7 +45,8 @@ class RawChannel(Channel):
             We read through `bytearray -> memoryview -> np.frombuffer` to
             provide a read-write buffer without requiring an additional copy.
             This is required for full functionality in downstream applications,
-            e.g. [`torch.from_numpy`][torch.from_numpy].
+            e.g. [`torch.from_numpy`](
+            https://docs.pytorch.org/docs/stable/generated/torch.from_numpy.html).
 
             Note that this is valid since the bytearray is not returned, so
             ownership is passed to the returned numpy array.
@@ -62,7 +63,7 @@ class RawChannel(Channel):
             if start > 0:
                 f.seek(self.size * start, 0)
 
-            size = -1 if samples == -1 else samples * self.size
+            size = self.filesize if samples == -1 else samples * self.size
             buf = bytearray(size)
             f.readinto(memoryview(buf))
 

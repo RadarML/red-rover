@@ -1,13 +1,15 @@
 """High level API for trace & dataset loading."""
 
 import os
+import traceback
+import warnings
 from functools import cached_property
 from typing import Callable, Mapping, TypeVar, cast, overload
 
 import numpy as np
 from abstract_dataloader import abstract, generic, spec
 
-from roverd.sensors import DynamicSensor, Sensor
+from roverd.sensors import Sensor, from_config
 
 TSample = TypeVar("TSample")
 
@@ -44,7 +46,7 @@ class Trace(abstract.Trace[TSample]):
     def from_config(
         cls, path: str, sync: spec.Synchronization = generic.Empty(),
         sensors: Mapping[
-            str, Sensor | Callable[[str], Sensor] | None] | None = None,
+            str, Callable[[str], Sensor] | str | None] | None = None,
         include_virtual: bool = False, name: str | None = None
     ) -> "Trace":
         """Create a trace from a directory containing a single recording.
@@ -52,6 +54,8 @@ class Trace(abstract.Trace[TSample]):
         Sensor types can be specified by:
 
         - `None`: use the [`DynamicSensor`][roverd.sensors.DynamicSensor] type.
+        - `"auto"`: return a known sensor type if applicable; see
+            [`roverd.sensors`][roverd.sensors].
         - `Callable[[str], Sensor]`: a sensor constructor, which has all
             non-path arguments closed on.
         - `Sensor`: an already initialized sensor instance.
@@ -75,14 +79,11 @@ class Trace(abstract.Trace[TSample]):
             _sensors = Trace.find_sensors(path, virtual=include_virtual)
             sensors = {k: None for k in _sensors}
 
-        initialized = {}
-        for k, v in sensors.items():
-            if isinstance(v, Sensor):
-                initialized[k] = v
-            elif v is None:
-                initialized[k] = DynamicSensor(os.path.join(path, k))
-            else:
-                initialized[k] = v(os.path.join(path, k))
+        initialized = {
+            k: from_config(
+                os.path.join(path, k), type=(k if v == "auto" else v))
+            for k, v in sensors.items()
+        }
 
         # Ignore this type error here until abstract-dataloader switches to
         # `Mapping`.
@@ -191,7 +192,7 @@ class Dataset(abstract.Dataset[TSample]):
     def from_config(
         cls, paths: list[str], sync: spec.Synchronization = generic.Empty(),
         sensors: Mapping[
-            str, Sensor | Callable[[str], Sensor] | None] | None = None,
+            str, Callable[[str], Sensor] | str | None] | None = None,
         include_virtual: bool = False
     ) -> "Dataset":
         """Create a dataset from a list of directories containing recordings.
@@ -204,10 +205,16 @@ class Dataset(abstract.Dataset[TSample]):
             sensors: sensor types to use.
             include_virtual: if `True`, include virtual sensors as well.
         """
-        traces = [
-            Trace.from_config(
-                p, sync=sync, sensors=sensors, include_virtual=include_virtual)
-            for p in paths]
+        traces = []
+        for p in paths:
+            try:
+                traces.append(Trace.from_config(
+                    p, sync=sync, sensors=sensors,
+                    include_virtual=include_virtual))
+            except Exception as e:
+                warnings.warn(f"Error while loading trace: {p}")
+                warnings.warn(''.join(traceback.format_exception(e)))
+
         return cls(traces=cast(list[Trace[TSample]], traces))  # type: ignore
 
     def __getitem__(self, index: int | np.integer) -> TSample:

@@ -19,20 +19,23 @@ class Camera(Sensor[types.CameraData[np.ndarray], generic.Metadata]):
         path: path to sensor data directory. Must contain a `lidar.json` file
             with ouster lidar intrinsics.
         key: video channel name.
-        timestamp_interpolation: timestamp smoothing function to apply.
+        correction: optional timestamp correction to apply (i.e.,
+            smoothing); can be a callable, string (name of a callable in
+            [`roverd.timestamps`][roverd.timestamps]), or `None`. If `"auto"`,
+            uses `smooth(interval=30.)`.
     """
 
     def __init__(
         self, path: str, key: str = "video.avi",
-        timestamp_interpolation: Callable[
-            [Float64[np.ndarray, "N"]], Float64[np.ndarray, "N"]] | None = None
+        correction: str | None | Callable[
+            [Float64[np.ndarray, "N"]], Float64[np.ndarray, "N"]] = None
     ) -> None:
-        if timestamp_interpolation is None:
-            timestamp_interpolation = partial(timestamps.smooth, interval=30.)
+        if correction == "auto":
+            correction = partial(timestamps.smooth, interval=30.)
 
-        super().__init__(path)
+        super().__init__(path, correction=correction)
         self.metadata = generic.Metadata(
-            timestamps=timestamp_interpolation(
+            timestamps=self.correction(
                 self.channels["ts"].read(start=0, samples=-1)))
         self.key = key
 
@@ -68,20 +71,23 @@ class Semseg(Sensor[types.CameraSemseg[np.ndarray], generic.Metadata]):
         path: path to sensor data directory. Must contain a `lidar.json` file
             with ouster lidar intrinsics.
         key: semseg channel name.
-        timestamp_interpolation: timestamp smoothing function to apply.
+        correction: optional timestamp correction to apply (i.e.,
+            smoothing); can be a callable, string (name of a callable in
+            [`roverd.timestamps`][roverd.timestamps]), or `None`. If `"auto"`,
+            uses `smooth(interval=30.)`.
     """
 
     def __init__(
         self, path: str, key: str = "segment",
-        timestamp_interpolation: Callable[
-            [Float64[np.ndarray, "N"]], Float64[np.ndarray, "N"]] | None = None
+        correction: str | None | Callable[
+            [Float64[np.ndarray, "N"]], Float64[np.ndarray, "N"]] = None
     ) -> None:
-        if timestamp_interpolation is None:
-            timestamp_interpolation = partial(timestamps.smooth, interval=30.)
+        if correction is None:
+            correction = partial(timestamps.smooth, interval=30.)
 
-        super().__init__(path)
+        super().__init__(path, correction=correction)
         self.metadata = generic.Metadata(
-            timestamps=timestamp_interpolation(
+            timestamps=self.correction(
                 self.channels["ts"].read(start=0, samples=-1)))
         self.key = key
 

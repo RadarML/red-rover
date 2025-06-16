@@ -1,4 +1,4 @@
-"""Timestamp interpolation.
+"""Timestamp denoising / dejittering.
 
 Timestamps which are recorded when a sample is read by the collection computer
 may suffer from jitter due to scheduling noise and other timing effects.
@@ -14,6 +14,11 @@ This module provides two timestamp models:
 
 import numpy as np
 from jaxtyping import Float64
+
+
+def identity(x: Float64[np.ndarray, "n"]) -> Float64[np.ndarray, "n"]:
+    """Do not apply any correction."""
+    return x
 
 
 def smooth(

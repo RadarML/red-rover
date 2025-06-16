@@ -9,8 +9,13 @@ You can install the `roverd` library from github:
 ```sh
 pip install "roverd[video]@git+ssh://git@github.com/WiseLabCMU/red-rover.git#subdirectory=format"
 ```
-
 In addition to the `roverd` package, this also installs the [`roverd info` and `roverd validate` CLI tools](./cli.md).
+
+!!! info "Extras"
+
+    - `roverd[video]` (`opencv-python-headless`): read camera data.
+    - `roverd[ouster]` (`ouster-sdk`): ouster lidar-related transforms (i.e., destagger, point clouds)
+    - `roverd[xwr]` (`xwr`): radar-related transforms (spectrum computation)
 
 ## Design Goals
 

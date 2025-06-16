@@ -37,17 +37,20 @@ class XWRRadar(Sensor[types.XWRRadarIQ[np.ndarray], RadarMetadata]):
     Args:
         path: path to sensor data directory. Must contain a `radar.json`
             file with `range_resolution` and `doppler_resolution` keys.
-        timestamp_interpolation: timestamp smoothing function to apply.
+        correction: optional timestamp correction to apply (i.e.,
+            smoothing); can be a callable, string (name of a callable in
+            [`roverd.timestamps`][roverd.timestamps]), or `None`. If `"auto"`,
+            uses `smooth(interval=30.)`.
     """
 
     def __init__(
-        self, path: str, timestamp_interpolation: Callable[
-            [Float64[np.ndarray, "N"]], Float64[np.ndarray, "N"]] | None = None
+        self, path: str, correction: str | None | Callable[
+            [Float64[np.ndarray, "N"]], Float64[np.ndarray, "N"]] = None
     ) -> None:
-        if timestamp_interpolation is None:
-            timestamp_interpolation = partial(timestamps.smooth, interval=30.)
+        if correction is None:
+            correction = partial(timestamps.smooth, interval=30.)
 
-        super().__init__(path)
+        super().__init__(path, correction=correction)
 
         try:
             with open(os.path.join(path, "radar.json")) as f:
@@ -67,11 +70,12 @@ class XWRRadar(Sensor[types.XWRRadarIQ[np.ndarray], RadarMetadata]):
         self.metadata = RadarMetadata(
             doppler_resolution=np.array([dd], dtype=np.float32),
             range_resolution=np.array([dr], dtype=np.float32),
-            timestamps=timestamp_interpolation(
+            timestamps=self.correction(
                 self.channels['ts'].read(start=0, samples=-1)))
 
     @overload
-    def __getitem__(self, index: int | np.integer) -> types.XWRRadarIQ: ...
+    def __getitem__(
+        self, index: int | np.integer) -> types.XWRRadarIQ[np.ndarray]: ...
 
     @overload
     def __getitem__(self, index: str) -> channels.Channel: ...

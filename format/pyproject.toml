@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "roverd"
-version = "0.0.0"
+version = "0.1.0"
 authors = [
   { name="Tianshu Huang", email="tianshu2@andrew.cmu.edu" },
 ]
@@ -36,6 +36,9 @@ Issues = "https://github.com/WiseLabCMU/red-rover/issues"
 
 [project.optional-dependencies]
 video = ["opencv-python-headless"]
+ouster = ["ouster-sdk >= 0.14.0"]
+xwr = ["xwr >= 0.1.0"]
+ros = ["rosbags", "scipy", "tqdm"]
 
 [project.scripts]
 roverd = "roverd:_cli.cli_main"

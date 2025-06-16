@@ -10,7 +10,7 @@ import numpy as np
 from abstract_dataloader import abstract, generic
 from jaxtyping import Float64
 
-from roverd import channels
+from roverd import channels, timestamps
 
 TSample = TypeVar("TSample")
 TGenericSample = TypeVar("TGenericSample", bound=dict[str, np.ndarray])
@@ -23,9 +23,21 @@ class Sensor(abstract.Sensor[TSample, TMetadata]):
     Args:
         path: path to sensor data directory. Must contain a `meta.json` file;
             see the dataset format specifications.
+        correction: optional timestamp correction to apply (i.e.,
+            smoothing); can be a callable, string (name of a callable in
+            [`roverd.timestamps`][roverd.timestamps]), or `None`.
+
+    Attributes:
+        path: path to sensor data directory.
+        channels: dictionary of channels, keyed by channel name.
+        correction: timestamp correction function to apply.
     """
 
-    def __init__(self, path: str) -> None:
+    def __init__(
+        self, path: str,
+        correction: str | None | Callable[
+            [Float64[np.ndarray, "N"]], Float64[np.ndarray, "N"]] = None
+    ) -> None:
 
         self.path = path
 
@@ -40,6 +52,19 @@ class Sensor(abstract.Sensor[TSample, TMetadata]):
             name: channels.from_config(
                 path=os.path.join(self.path, name), **cfg)
             for name, cfg in self.config.items()}
+
+        if correction is None:
+            correction = timestamps.identity
+        if isinstance(correction, str):
+            correction = getattr(timestamps, correction, None)
+            if correction is None:
+                raise ValueError(
+                    f"Unknown timestamp correction function: {correction}")
+            correction = cast(
+                Callable[[Float64[np.ndarray, "N"]], Float64[np.ndarray, "N"]],
+                correction)
+
+        self.correction = correction
 
     @cached_property
     def filesize(self):
@@ -71,15 +96,16 @@ class DynamicSensor(Sensor[TGenericSample, generic.Metadata]):
         exist_ok: if `True`, do not raise an error if `create=True` and the
             sensor already exists.
         subset: if specified, only read the listed channels.
-        timestamp_interpolation: optional timestamp interpolation to apply;
-            see [`roverd.timestamps`][roverd.timestamps].
+        correction: optional timestamp correction to apply (i.e.,
+            smoothing); can be a callable, string (name of a callable in
+            [`roverd.timestamps`][roverd.timestamps]), or `None`.
     """
 
     def __init__(
         self, path: str, create: bool = False, exist_ok: bool = False,
         subset: Sequence[str] | None = None,
-        timestamp_interpolation: Callable[
-            [Float64[np.ndarray, "N"]], Float64[np.ndarray, "N"]] | None = None
+        correction: str | None | Callable[
+            [Float64[np.ndarray, "N"]], Float64[np.ndarray, "N"]] = None
     ) -> None:
         if create and not exist_ok:
             if os.path.exists(self.path):
@@ -90,8 +116,7 @@ class DynamicSensor(Sensor[TGenericSample, generic.Metadata]):
             with open(os.path.join(path, "meta.json"), 'w') as f:
                 json.dump({}, f)
 
-        super().__init__(path=path)
-        self.timestamp_interpolation = timestamp_interpolation
+        super().__init__(path=path, correction=correction)
         self.subset = subset
 
     @cached_property
@@ -102,9 +127,8 @@ class DynamicSensor(Sensor[TGenericSample, generic.Metadata]):
             return generic.Metadata(timestamps=np.array([], dtype=np.float64))
 
         ts = self.channels['ts'].read(start=0, samples=-1)
-        if self.timestamp_interpolation is not None:
-            ts = self.timestamp_interpolation(ts)
-        return generic.Metadata(timestamps=ts)
+        corrected = self.correction(ts)
+        return generic.Metadata(timestamps=corrected)
 
     def _flush_config(self) -> None:
         """Flush configuration to disk.

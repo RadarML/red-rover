@@ -12,6 +12,7 @@ classifiers = [
 ]
 license = "MIT"
 license-files = ["LICEN[CS]E*"]
+dependencies = []
 
 [tool.uv.sources]
 roverd = { path = "./format" }
@@ -34,7 +35,7 @@ roverc = [
 ]
 
 roverd = [
-    "roverd[video]"
+    "roverd[video,ouster,xwr,ros]"
 ]
 
 stats = [
