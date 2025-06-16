@@ -57,8 +57,9 @@ class VoxelGrid(NamedTuple):
         """Crop voxel grid by integer lower and upper indices.
 
         Args:
-            left, right: lower and upper indices; `right` is interpreted as an
-                ordinary index limit, so can be negative.
+            left: lower indices.
+            right: upper; `right` is interpreted as an ordinary index limit, so
+                can be negative.
         """
         lower = self.lower
         data = self.data
@@ -79,7 +80,8 @@ class VoxelGrid(NamedTuple):
         """Get CFAR conv comparison values.
 
         Args:
-            guard_band, window_size: CFAR window shape.
+            guard_band: CFAR guard band size.
+            window_size: CFAR window shape.
             convolve_func: convolution backend to use.
         """
         mask = np.ones([2 * window_size + 1] * 3)
@@ -97,7 +99,8 @@ class VoxelGrid(NamedTuple):
         """Normalize to (0, 1).
 
         Args:
-            left, right: left and right percentiles to clip to.
+            left: lower percentile to clip to.
+            right: upper percentile to clip to.
         """
         ll, rr = np.percentile(self.data, [left, right])
         return VoxelGrid(
@@ -143,7 +146,8 @@ class VoxelGrid(NamedTuple):
 
         Args:
             path: output path (ending with .pcd).
-            mask, cmap: pointcloud mask and colors.
+            mask: pointcloud mask.
+            cmap: pointcloud colors.
         """
         from pypcd4 import PointCloud  # type: ignore
 
@@ -168,7 +172,8 @@ class VoxelGrid(NamedTuple):
 
         Args:
             path: output path (ending with .ply).
-            mask, cmap: pointcloud mask and colors.
+            mask: pointcloud mask.
+            cmap: pointcloud colors.
         """
         from plyfile import PlyData, PlyElement  # type: ignore
 

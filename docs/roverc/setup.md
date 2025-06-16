@@ -18,13 +18,8 @@ The data collection computer uses a linux installation; we use ubuntu 22.04, tho
         ```
     - Make sure that all ethernet interfaces are enabled (3 in total), and that the lidar interface is set to "link-local only".
 
-1. Install dependencies:
-    ```sh
-    sudo add-apt-repository ppa:deadsnakes/ppa
-    sudo apt install -y python3.12 python3.12-venv build-essential net-tools
-    ```
+1. Install [uv](https://github.com/astral-sh/uv):
 
-    Install UV:
     ```sh
     curl -LsSf https://astral.sh/uv/install.sh | sh
     # or
@@ -35,7 +30,7 @@ The data collection computer uses a linux installation; we use ubuntu 22.04, tho
     ```sh
     git clone git@github.com:WiseLabCMU/red-rover.git
     cd red-rover/collect
-    make env
+    uv sync
     ```
 
 ## Sensors
@@ -48,11 +43,17 @@ The data collection computer uses a linux installation; we use ubuntu 22.04, tho
 - Gain: 18db (for typical indoors lighting; change based on lighting conditions).
 - SDI output: 1080p60
 
-Note that the HDMI menu overlay is not shown on the SDI output.
+    !!! note
+
+        The HDMI menu overlay is not shown on the SDI output.
 
 **IMU**: Install [MT Manager](https://www.movella.com/support/software-documentation), and connect the Xsens MTi-3 IMU via the development board. Select the following:
 
 - Orientation: Euler Angles; Floating Point 32-bit; 100Hz
 - Inertial data: Rate of Turn, Acceleration; Floating Point 32-bit; 100Hz
 
-**Lidar**: Should work out-of-the-box. Make sure that an IP is assigned to the lidar in the management page.
+**Lidar**: Should work out-of-the-box.
+
+!!! warning
+
+    Make sure that an IP is assigned to the lidar in the [web management page](https://static.ouster.dev/sensor-docs/image_route1/image_route2/connecting/connecting-to-sensors.html#sensor-web-interface).

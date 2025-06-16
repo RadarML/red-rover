@@ -68,7 +68,7 @@ class RawTrajectory:
             quat=np.stack([
                 df["field.transform.rotation.{}".format(axis)]
                 for axis in "xyzw"]),
-            t=np.array(df['field.header.stamp']) / 1e9)
+            t=np.array(df['field.header.stamp']) / 1e9)  # type: ignore
 
     def bounds(
         self, margin_xy: float = 5.0, margin_z: float = 5.0,
@@ -81,8 +81,9 @@ class RawTrajectory:
         """Get bounds for a grid containing the extents of the trajectory.
 
         Args:
-            margin_xy, margin_z: grid margin around trajectory bounds in the
-                horizontal plane and vertical axis, respectively.
+            margin_xy: grid margin around trajectory bounds in the
+                horizontal plane.
+            margin_z: grid margin in the vertical axis.
             resolution: resolution, in grid cells/m.
             align: grid resolution alignment; the grid will be expanded from the
                 specified margin until the resolution is divisible by `align`.
