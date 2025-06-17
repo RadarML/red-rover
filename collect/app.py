@@ -124,7 +124,8 @@ def index():
 
     App route: `GET:/`
 
-    Response: Rendered HTML.
+    Response:
+        Rendered HTML.
     """
     media = "/media/rover"
     disks = os.listdir(media)
@@ -171,24 +172,25 @@ def log_all():
 
     App route: `GET:/log`
 
-    Response: JSON object with log entries for each sensor and the timestamp of
-    the last entry. The log entries are in the format
-    ```
-    {
-        "entries": {
-            "<sensor_name>": [
-                {
-                    "lvl": <log_level>,
-                    "msg": "<log_message>",
-                    "mod": "<module_name>"
-                },
+    Response:
+        JSON object with log entries for each sensor and the timestamp of
+        the last entry. The log entries are in the format
+        ```
+        {
+            "entries": {
+                "<sensor_name>": [
+                    {
+                        "lvl": <log_level>,
+                        "msg": "<log_message>",
+                        "mod": "<module_name>"
+                    },
+                    ...
+                ],
                 ...
-            ],
-            ...
-        },
-        "ts": "<timestamp>"
-    }
-    ```
+            },
+            "ts": "<timestamp>"
+        }
+        ```
     """
     return jsonify(rover.log(start=-1.))
 
@@ -199,8 +201,9 @@ def log(start=None):
 
     App route: `GET:/log/<start>`
 
-    Response: JSON object with log entries for each sensor and the timestamp of
-    the last entry.
+    Response:
+        JSON object with log entries for each sensor and the timestamp of
+        the last entry.
     """
     try:
         ts_start = datetime.strptime(start, "%Y-%m-%dT%H:%M:%S,%f")  # type: ignore
