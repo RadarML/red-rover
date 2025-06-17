@@ -107,14 +107,15 @@ class DynamicSensor(Sensor[TGenericSample, generic.Metadata]):
         correction: str | None | Callable[
             [Float64[np.ndarray, "N"]], Float64[np.ndarray, "N"]] = None
     ) -> None:
-        if create and not exist_ok:
+        if create:
             if os.path.exists(path):
-                raise ValueError(
-                    "`create=True`, but this sensor already exists!")
-
-            os.makedirs(path)
-            with open(os.path.join(path, "meta.json"), 'w') as f:
-                json.dump({}, f)
+                if not exist_ok:
+                    raise ValueError(
+                        "`create=True`, but this sensor already exists!")
+            else:
+                os.makedirs(path)
+                with open(os.path.join(path, "meta.json"), 'w') as f:
+                    json.dump({}, f)
 
         super().__init__(path=path, correction=correction)
         self.subset = subset

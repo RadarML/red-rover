@@ -1,19 +1,4 @@
-"""Get interpolated poses for a specific sensor.
-
-Inputs:
-    - `_slam/trajectory.csv`
-
-Outputs:
-    - `{sensor}/pose.npz` depending on the specified `--sensor`.
-
-Keys:
-    - `mask`: binary mask, applied to the raw sensor data along the time
-      axis, which denotes valid samples for the available poses.
-    - `smoothing`, `start_threshold`, `filter_size`: parameters used for
-      pose interpolation.
-    - `t`, `pos`, `vel`, `acc`, `rot`: pose parameters; see
-      :class:`rover.Poses`.
-"""
+"""Get interpolated poses for a specific sensor."""
 
 import os
 
@@ -25,6 +10,19 @@ def cli_sensorpose(
     smoothing: float = 500.0, threshold: float = 1.0
 ) -> None:
     """Get interpolated poses for a specific sensor.
+
+    !!! io "Expected Inputs and Outputs"
+
+        **Inputs**: `_slam/trajectory.csv`
+
+        **Outputs**: `{sensor}/pose.npz` depending on the specified `--sensor`, with keys:
+
+        - `mask`: binary mask, applied to the raw sensor data along the time
+        axis, which denotes valid samples for the available poses.
+        - `smoothing`, `start_threshold`, `filter_size`: parameters used for
+        pose interpolation.
+        - `t`, `pos`, `vel`, `acc`, `rot`: pose parameters; see
+            [`Poses`][roverp.readers.]
 
     Args:
         path: Path to the dataset.

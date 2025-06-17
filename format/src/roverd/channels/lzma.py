@@ -237,7 +237,7 @@ class LzmaFrameChannel(Channel):
             stream_not_batched = cast(Iterable[Data] | Iterator[Data], stream)
             stream = batch_iterator(stream_not_batched, size=batch)
 
-        def _compress_batch(data: Sequence[Data]):
+        def _compress_batch(data: Data | Sequence[Data]):
             self._verify_type(data)
             if not isinstance(data[0], np.ndarray):
                 raise ValueError(

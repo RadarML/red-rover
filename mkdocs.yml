@@ -32,6 +32,7 @@ nav:
   - roverp:
     - About: roverp/index.md
     - Processing:
+      - CLI: roverp/cli.md
       - Cartographer: roverp/docker.md
     - Library:
       - Data Readers: roverp/readers.md

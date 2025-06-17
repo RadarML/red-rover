@@ -1,12 +1,4 @@
-"""Get speed report.
-
-Inputs:
-    - `_radar/pose.npz`
-    - `_slam/trajectory.csv`
-
-Outputs:
-    - `_report/speed.pdf`
-"""
+"""Get speed report."""
 
 import json
 import math
@@ -19,30 +11,21 @@ from matplotlib.backends.backend_pdf import PdfPages
 from tqdm import tqdm
 
 
-def _plot_speed(axs, tproc, traw, vproc, vraw, dmax):
-    """Plot speed report."""
-    for ax, vp, vr in zip(axs, vproc, vraw):
-        ax.plot(tproc, vp, linewidth=1.0, label="Processed")
-        ax.plot(traw, vr, linewidth=1.0, label="Raw")
-    axs[-1].plot(
-        tproc, np.linalg.norm(vproc, axis=0), linewidth=1.0, label="Processed")
-    axs[-1].plot(
-        traw, np.linalg.norm(vraw, axis=0), linewidth=1.0, label="Raw")
-    axs[-1].axhline(dmax, linestyle='--', color='black')
-
-    axs[0].set_ylabel("$v_x$ (m/s)")
-    axs[1].set_ylabel("$v_y$ (m/s)")
-    axs[2].set_ylabel("$v_z$ (m/s)")
-    axs[3].set_ylabel("$||v||_2$ (m/s)")
-
-
-def cli_report(path: str, /, out: str | None = None, width: float = 30.0) -> None:
+def cli_report(
+    path: str, /, out: str | None = None, width: float = 30.0
+) -> None:
     """Generate speed report.
 
-    !!! info
+    !!! warning
 
         The cartographer slam pipeline (`make trajectory` or `make lidar`) must
         be run beforehand.
+
+    !!! io "Expected Inputs and Outputs"
+
+        **Inputs**: `_radar/pose.npz`, `_slam/trajectory.csv`
+
+        **Outputs**: `_report/speed.pdf`
 
     Args:
         path: path to the dataset.
@@ -50,6 +33,21 @@ def cli_report(path: str, /, out: str | None = None, width: float = 30.0) -> Non
         width: time series plot row width, in seconds.
     """
     from roverp.readers import RawTrajectory
+
+    def _plot_speed(axs, tproc, traw, vproc, vraw, dmax):
+        for ax, vp, vr in zip(axs, vproc, vraw):
+            ax.plot(tproc, vp, linewidth=1.0, label="Processed")
+            ax.plot(traw, vr, linewidth=1.0, label="Raw")
+        axs[-1].plot(
+            tproc, np.linalg.norm(vproc, axis=0), linewidth=1.0, label="Processed")
+        axs[-1].plot(
+            traw, np.linalg.norm(vraw, axis=0), linewidth=1.0, label="Raw")
+        axs[-1].axhline(dmax, linestyle='--', color='black')
+
+        axs[0].set_ylabel("$v_x$ (m/s)")
+        axs[1].set_ylabel("$v_y$ (m/s)")
+        axs[2].set_ylabel("$v_z$ (m/s)")
+        axs[3].set_ylabel("$||v||_2$ (m/s)")
 
     if out is None:
         out = os.path.join(path, "_report", "speed.pdf")

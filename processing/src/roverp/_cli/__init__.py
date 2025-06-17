@@ -5,6 +5,7 @@ from typing import Annotated, Any, Union
 import tyro
 
 from .report import cli_report
+from .segment import cli_segment
 from .sensorpose import cli_sensorpose
 
 
@@ -22,6 +23,7 @@ def cli_main() -> None:
     commands = {
         "report": cli_report,
         "sensorpose": cli_sensorpose,
+        "segment": cli_segment,
     }
 
     return tyro.cli(Union[  # type: ignore
