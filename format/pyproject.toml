@@ -48,4 +48,3 @@ roverd = "roverd:_cli.cli_main"
 
 [tool.uv.sources]
 xwr = { git = "ssh://git@github.com/WiseLabCMU/xwr.git" }
-

@@ -15,7 +15,7 @@ def cli_sensorpose(
 
         **Inputs**: `_slam/trajectory.csv`
 
-        **Outputs**: `{sensor}/pose.npz` depending on the specified `--sensor`, with keys:
+        **Outputs**: `_{sensor}/pose.npz` depending on the specified `--sensor`, with keys:
 
         - `mask`: binary mask, applied to the raw sensor data along the time
         axis, which denotes valid samples for the available poses.

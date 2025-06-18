@@ -3,7 +3,6 @@
 # First `uv run --all-extras mkdocs build`
 # Then run this script.
 
-rm -rf build;
 mkdir build;
 cd build;
 git init -b gh-pages;
@@ -15,3 +14,4 @@ touch .nojekyll;
 git add --all;
 git commit -m "Update gh-pages";
 git push -f origin gh-pages;
+rm -rf build;

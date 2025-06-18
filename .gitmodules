@@ -1,6 +1,0 @@
-[submodule "lidar/catkin_ws/src/serial"]
-	path = lidar/catkin_ws/src/serial
-	url = git@github.com:wjwwood/serial.git
-[submodule "lidar/catkin_ws/src/ouster-ros"]
-	path = lidar/catkin_ws/src/ouster-ros
-	url = https://github.com/ouster-lidar/ouster-ros.git
