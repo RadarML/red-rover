@@ -22,21 +22,21 @@ camera:
 radar:
   type: radar
   interface: enx207bd2be1456
-  comment: "RadarHD, bike-mounted"
+  comment: "GRT, indoor"
   args:
     radar:
+      device: AWR1843
       port: /dev/ttyACM0
       frequency: 77.0
-      idle_time: 6.0
+      idle_time: 200.0
       adc_start_time: 5.7
-      ramp_end_time: 34.00
+      ramp_end_time: 59.00
       tx_start_time: 1.0
       freq_slope: 67.012
       adc_samples: 256
-      sample_rate: 10000
+      sample_rate: 5000
       frame_length: 64
       frame_period: 50.0
-      num_tx: 3
     capture:
       sys_ip: 192.168.33.30
       fpga_ip: 192.168.33.180

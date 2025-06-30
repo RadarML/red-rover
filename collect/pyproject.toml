@@ -26,7 +26,7 @@ dependencies = [
     "pyserial",
     "opencv-python-headless",
     "ouster-sdk==0.14.0",
-    "xwr>=0.1.0",
+    "xwr>=0.3.0",
     "roverd[video,ouster,xwr]"
 ]
 

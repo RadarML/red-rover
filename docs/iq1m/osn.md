@@ -6,9 +6,9 @@
 
 !!! tip "OSN is on Internet2"
 
-    OSN is connected to [internet2](https://internet2.edu/); institutions connected to internet2 can benefit from high download speeds easily in excess of 1Gbps.
+    OSN is connected to [internet2](https://internet2.edu/); institutions connected to internet2 can benefit from high download speeds.
 
-    TODO: run a benchmark
+    In our benchmarks from CMU campus, we were able to achieve ~600mbps download and ~1500mbps upload speeds.
 
 ## Set up `rclone`
 
@@ -78,23 +78,23 @@ To test this configuration:
 
 To download the full dataset, use:
 ```sh
-rclone sync osn-rw:/cmu-wiselab-iq1m/data ./iq1m -v
+rclone sync osn-ro:/cmu-wiselab-iq1m/data ./iq1m -v
 ```
 
 - When using `rclone sync`, you can stop (interrupt with ctrl+C) and resume downloading at any time.
 
 You can also download each setting or trace separately:
 ```sh
-rclone sync osn-rw:/cmu-wiselab-iq1m/data/indoor ./iq1m/indoor -v
-rclone sync osn-rw:/cmu-wiselab-iq1m/data/indoor/baker ./iq1m/indoor/baker -v
-rclone sync osn-rw:/cmu-wiselab-iq1m/data/indoor/baker/baker.1.fwd ./iq1m/indoor/baker/baker.1.fwd -v
+rclone sync osn-ro:/cmu-wiselab-iq1m/data/indoor ./iq1m/indoor -v
+rclone sync osn-ro:/cmu-wiselab-iq1m/data/indoor/baker ./iq1m/indoor/baker -v
+rclone sync osn-ro:/cmu-wiselab-iq1m/data/indoor/baker/baker.1.fwd ./iq1m/indoor/baker/baker.1.fwd -v
 ```
 
 !!! tip
 
     You can exclude certain files (e.g., lidar reflectance / NIR) using
     ```sh
-    rclone sync osn-rw:/cmu-wiselab-iq1m/data ./iq1m -v --exclude */lidar/rfl */lidar/nir
+    rclone sync osn-ro:/cmu-wiselab-iq1m/data ./iq1m -v --exclude */lidar/rfl */lidar/nir
     ```
 
     See the `rclone sync` [documentation](https://rclone.org/commands/rclone_sync) for more details and other optoins.

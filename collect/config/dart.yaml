@@ -25,6 +25,7 @@ radar:
   comment: "DART, indoor"
   args:
     radar:
+      device: AWR1843
       port: /dev/ttyACM0
       frequency: 77.0
       idle_time: 331.0
@@ -36,7 +37,6 @@ radar:
       sample_rate: 2500
       frame_length: 128
       frame_period: 100.0
-      num_tx: 2
     capture:
       sys_ip: 192.168.33.30
       fpga_ip: 192.168.33.180
