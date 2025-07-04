@@ -54,17 +54,17 @@ class Sensor(abstract.Sensor[TSample, TMetadata]):
             for name, cfg in self.config.items()}
 
         if correction is None:
-            correction = timestamps.identity
-        if isinstance(correction, str):
+            self.correction = timestamps.identity
+        elif isinstance(correction, str):
             correction = getattr(timestamps, correction, None)
             if correction is None:
                 raise ValueError(
                     f"Unknown timestamp correction function: {correction}")
-            correction = cast(
+            self.correction = cast(
                 Callable[[Float64[np.ndarray, "N"]], Float64[np.ndarray, "N"]],
                 correction)
-
-        self.correction = correction
+        else:
+            self.correction = correction
 
     @cached_property
     def filesize(self):

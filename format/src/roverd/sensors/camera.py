@@ -82,7 +82,7 @@ class Semseg(Sensor[types.CameraSemseg[np.ndarray], generic.Metadata]):
         correction: str | None | Callable[
             [Float64[np.ndarray, "N"]], Float64[np.ndarray, "N"]] = None
     ) -> None:
-        if correction is None:
+        if correction == "auto":
             correction = partial(timestamps.smooth, interval=30.)
 
         super().__init__(path, correction=correction)
