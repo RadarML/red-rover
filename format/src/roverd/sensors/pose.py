@@ -1,5 +1,6 @@
 """IMU."""
 
+import os
 from functools import partial
 from typing import Callable, overload
 
@@ -68,4 +69,52 @@ class IMU(Sensor[types.IMUData[np.ndarray], types.IMUData[np.ndarray]]):
                 acc=self.metadata.acc[index][None],
                 rot=self.metadata.rot[index][None],
                 avel=self.metadata.avel[index][None],
+                timestamps=self.metadata.timestamps[index][None])
+
+
+class Pose(Sensor[types.Pose[np.ndarray], types.Pose[np.ndarray]]):
+    """Pose sensor.
+
+    Args:
+        path: "virtual" path to the sensor. The actual pose data is read from
+            a `.npz` file `_{reference}/pose.npz`.
+    """
+
+    def __init__(self, path: str, reference: str = "radar") -> None:
+        path = os.path.join(
+            os.path.dirname(path), f"_{reference}", "pose.npz")
+        self.metadata = types.Pose(
+            pos=np.load(path)["pos"].astype(np.float32),
+            rot=np.load(path)["rot"].astype(np.float32),
+            vel=np.load(path)["vel"].astype(np.float32),
+            acc=np.load(path)["acc"].astype(np.float32),
+            timestamps=np.load(path)["t"])
+
+    @overload
+    def __getitem__(
+        self, index: int | np.integer) -> types.Pose[np.ndarray]: ...
+
+    @overload
+    def __getitem__(self, index: str) -> channels.Channel: ...
+
+    def __getitem__(
+        self, index: int | np.integer | str
+    ) -> types.Pose[np.ndarray] | channels.Channel:
+        """Fetch IMU data by index.
+
+        Args:
+            index: frame index, or channel name.
+
+        Returns:
+            Radar data, or channel object if `index` is a string.
+        """
+        if isinstance(index, str):
+            raise ValueError(
+                "Pose sensor does not support indexing by channel name.")
+        else: # int | np.integer
+            return types.Pose(
+                pos=self.metadata.pos[index][None],
+                rot=self.metadata.rot[index][None],
+                vel=self.metadata.vel[index][None],
+                acc=self.metadata.acc[index][None],
                 timestamps=self.metadata.timestamps[index][None])

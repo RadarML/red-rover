@@ -7,9 +7,9 @@
     generic dataclass of arrays.
 """
 
-from dataclasses import field
-from typing import Generic, TypeVar
+from typing import Generic
 
+from abstract_dataloader.ext.types import TArray, dataclass
 from jaxtyping import (
     Complex64,
     Float,
@@ -20,14 +20,6 @@ from jaxtyping import (
     UInt8,
     UInt16,
 )
-from optree.dataclasses import dataclass as _optree_dataclass
-from typing_extensions import dataclass_transform
-
-TArray = TypeVar("TArray")
-
-@dataclass_transform(field_specifiers=(field,))
-def dataclass(cls):  # noqa: D103
-    return _optree_dataclass(cls, namespace='')
 
 
 @dataclass
@@ -188,3 +180,22 @@ class IMUData(Generic[TArray]):
     rot: Float32[TArray, "#batch 3"]
     avel: Float32[TArray, "#batch 3"]
     timestamps: Float64[TArray, "#batch"]
+
+
+@dataclass
+class Pose(Generic[TArray]):
+    """Pose data.
+
+    Attributes:
+        pos: position, in meters (front-left-up coordinate convention).
+        vel: velocity, in meters/second.
+        acc: acceleration, in meters/second^2.
+        rot: rotation (as matrix).
+        timestamps: timestamp for each measurement; nominally in seconds.
+    """
+
+    pos: Float32[TArray, "N 3"]
+    vel: Float32[TArray, "N 3"]
+    acc: Float32[TArray, "N 3"]
+    rot: Float32[TArray, "N 3 3"]
+    timestamps: Float64[TArray, "N"]
