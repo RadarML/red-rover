@@ -95,8 +95,8 @@ class XWRRadar(Sensor[types.XWRRadarIQ[np.ndarray], RadarMetadata]):
             return self.channels[index]
         else: # int | np.integer
             return types.XWRRadarIQ(
-                iq=self.channels['iq'][index],
-                timestamps=self.metadata.timestamps[index][None],
+                iq=self.channels['iq'][index][None],
+                timestamps=self.metadata.timestamps[index][None, None],
                 range_resolution=self.metadata.range_resolution,
                 doppler_resolution=self.metadata.doppler_resolution,
-                valid=self.channels['valid'][index])
+                valid=self.channels['valid'][index][None])

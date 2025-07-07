@@ -60,7 +60,7 @@ class Camera(Sensor[types.CameraData[np.ndarray], generic.Metadata]):
             return self.channels[index]
         else: # int | np.integer
             return types.CameraData(
-                image=self.channels[self.key][index],
+                image=self.channels[self.key][index][None],
                 timestamps=self.metadata.timestamps[index][None])
 
 
@@ -112,5 +112,5 @@ class Semseg(Sensor[types.CameraSemseg[np.ndarray], generic.Metadata]):
             return self.channels[index]
         else: # int | np.integer
             return types.CameraSemseg(
-                semseg=self.channels[self.key][index],
-                timestamps=self.metadata.timestamps[index][None])
+                semseg=self.channels[self.key][index][None],
+                timestamps=self.metadata.timestamps[index][None, None])

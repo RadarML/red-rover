@@ -72,11 +72,17 @@ class ConfigCache:
 
 
 class Destagger(spec.Transform[types.OSDepth, types.Depth]):
-    """Destagger Ouster Lidar depth data."""
+    """Destagger Ouster Lidar depth data.
 
-    def __init__(self) -> None:
-        self.cache = ConfigCache()
+    Args:
+        config: if provided, use this configuration cache (to share with other
+            transforms).
+    """
 
+    def __init__(self, config: ConfigCache | None = None) -> None:
+        if config is None:
+            config = ConfigCache()
+        self._config = config
 
     def __call__(self, data: types.OSDepth) -> types.Depth:
         """Destagger Ouster Lidar depth data.
@@ -88,7 +94,7 @@ class Destagger(spec.Transform[types.OSDepth, types.Depth]):
             Depth data with destaggered measurements.
         """
         destaggered = client.destagger(  # type: ignore
-            self.cache[data.intrinsics], data.rng)
+            self._config[data.intrinsics], data.rng)
         return types.Depth(rng=destaggered, timestamps=data.timestamps)
 
 

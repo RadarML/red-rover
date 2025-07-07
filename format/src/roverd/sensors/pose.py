@@ -5,6 +5,7 @@ from functools import partial
 from typing import Callable, overload
 
 import numpy as np
+from abstract_dataloader.generic import Metadata
 from jaxtyping import Float64
 
 from roverd import channels, timestamps, types
@@ -12,7 +13,7 @@ from roverd import channels, timestamps, types
 from .generic import Sensor
 
 
-class IMU(Sensor[types.IMUData[np.ndarray], types.IMUData[np.ndarray]]):
+class IMU(Sensor[types.IMUData[np.ndarray], Metadata]):
     """IMU sensor.
 
     Args:
@@ -41,8 +42,10 @@ class IMU(Sensor[types.IMUData[np.ndarray], types.IMUData[np.ndarray]]):
         avel = self.channels["avel"].read(start=0, samples=-1)
         n = min(len(ts), len(acc), len(rot), len(avel))
 
-        self.metadata = types.IMUData(
-            acc=acc[:n], rot=rot[:n], avel=avel[:n], timestamps=ts[:n])
+        self.metadata = Metadata(ts[:n])
+        self.imudata = types.IMUData(
+            acc=acc[:n, None, ...], rot=rot[:n, None, ...],
+            avel=avel[:n, None, ...], timestamps=ts[:n, None])
 
     @overload
     def __getitem__(
@@ -66,13 +69,13 @@ class IMU(Sensor[types.IMUData[np.ndarray], types.IMUData[np.ndarray]]):
             return self.channels[index]
         else: # int | np.integer
             return types.IMUData(
-                acc=self.metadata.acc[index][None],
-                rot=self.metadata.rot[index][None],
-                avel=self.metadata.avel[index][None],
-                timestamps=self.metadata.timestamps[index][None])
+                acc=self.imudata.acc[index][None],
+                rot=self.imudata.rot[index][None],
+                avel=self.imudata.avel[index][None],
+                timestamps=self.imudata.timestamps[index][None])
 
 
-class Pose(Sensor[types.Pose[np.ndarray], types.Pose[np.ndarray]]):
+class Pose(Sensor[types.Pose[np.ndarray], Metadata]):
     """Pose sensor.
 
     Args:
@@ -83,12 +86,13 @@ class Pose(Sensor[types.Pose[np.ndarray], types.Pose[np.ndarray]]):
     def __init__(self, path: str, reference: str = "radar") -> None:
         path = os.path.join(
             os.path.dirname(path), f"_{reference}", "pose.npz")
-        self.metadata = types.Pose(
-            pos=np.load(path)["pos"].astype(np.float32),
-            rot=np.load(path)["rot"].astype(np.float32),
-            vel=np.load(path)["vel"].astype(np.float32),
-            acc=np.load(path)["acc"].astype(np.float32),
-            timestamps=np.load(path)["t"])
+        self.pose = types.Pose(
+            pos=np.load(path)["pos"].astype(np.float32)[:, None, ...],
+            rot=np.load(path)["rot"].astype(np.float32)[:, None, ...],
+            vel=np.load(path)["vel"].astype(np.float32)[:, None, ...],
+            acc=np.load(path)["acc"].astype(np.float32)[:, None, ...],
+            timestamps=np.load(path)["t"][:, None])
+        self.metadata = Metadata(timestamps=self.pose.timestamps[:, 0])
 
     @overload
     def __getitem__(
@@ -113,8 +117,8 @@ class Pose(Sensor[types.Pose[np.ndarray], types.Pose[np.ndarray]]):
                 "Pose sensor does not support indexing by channel name.")
         else: # int | np.integer
             return types.Pose(
-                pos=self.metadata.pos[index][None],
-                rot=self.metadata.rot[index][None],
-                vel=self.metadata.vel[index][None],
-                acc=self.metadata.acc[index][None],
-                timestamps=self.metadata.timestamps[index][None])
+                pos=self.pose.pos[index][None],
+                rot=self.pose.rot[index][None],
+                vel=self.pose.vel[index][None],
+                acc=self.pose.acc[index][None],
+                timestamps=self.pose.timestamps[index][None])

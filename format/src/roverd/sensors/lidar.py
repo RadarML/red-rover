@@ -82,8 +82,8 @@ class OSLidarDepth(Sensor[types.OSDepth[np.ndarray], LidarMetadata]):
             return self.channels[index]
         else: # int | np.integer
             return types.OSDepth(
-                rng=self.channels['rng'][index],
-                timestamps=self.metadata.timestamps[index][None],
+                rng=self.channels['rng'][index][None],
+                timestamps=self.metadata.timestamps[index][None, None],
                 intrinsics=self.metadata.intrinsics)
 
     def stream(  # type: ignore
@@ -105,8 +105,8 @@ class OSLidarDepth(Sensor[types.OSDepth[np.ndarray], LidarMetadata]):
             self.metadata.timestamps, self.channels['rng'].stream()
         ):
             yield types.OSDepth(
-                rng=rng[None],
-                timestamps=t[None],
+                rng=rng[None, None],
+                timestamps=t[None, None],
                 intrinsics=self.metadata.intrinsics)
 
 
@@ -163,8 +163,8 @@ class OSLidar(Sensor[types.OSData[np.ndarray], LidarMetadata]):
             return self.channels[index]
         else: # int | np.integer
             return types.OSData(
-                rng=self.channels['rng'][index],
-                rfl=self.channels['rfl'][index],
-                nir=self.channels['nir'][index],
-                timestamps=self.metadata.timestamps[index][None],
+                rng=self.channels['rng'][index][None],
+                rfl=self.channels['rfl'][index][None],
+                nir=self.channels['nir'][index][None],
+                timestamps=self.metadata.timestamps[index][None, None],
                 intrinsics=self.metadata.intrinsics)
