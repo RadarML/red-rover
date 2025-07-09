@@ -18,10 +18,9 @@ dependencies = []
 roverd = { path = "./format" }
 roverp = { path = "./processing" }
 tss = { path = "./stats" }
-xwr = { git = "ssh://git@github.com/WiseLabCMU/xwr.git" }
 
 [project.optional-dependencies]
-roverd = [ "roverd[video,ouster,xwr,ros]" ]
+roverd = [ "roverd[video,ouster,ros]" ]
 
 roverp = [ "roverp[graphics,pcd,ply,semseg]" ]
 

@@ -6,7 +6,7 @@
 mkdir build;
 cd build;
 git init -b gh-pages;
-git remote add origin git@github.com:WiseLabCMU/red-rover.git;
+git remote add origin git@github.com:RadarML/red-rover.git;
 cd ..;
 cp -r site/* build/;
 cd build;
