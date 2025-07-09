@@ -97,6 +97,7 @@ from jaxtyping import install_import_hook
 
 with install_import_hook("roverd", "beartype.beartype"):
     from . import channels, sensors, timestamps, types
-    from .trace import Dataset, Trace
+    from .trace import Dataset, Trace, split
 
-__all__ = ["channels", "timestamps", "sensors", "types", "Dataset", "Trace"]
+__all__ = [
+    "channels", "timestamps", "sensors", "types", "Dataset", "Trace", "split"]

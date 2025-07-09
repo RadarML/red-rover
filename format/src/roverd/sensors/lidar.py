@@ -39,15 +39,19 @@ class OSLidarDepth(Sensor[types.OSDepth[np.ndarray], LidarMetadata]):
             smoothing); can be a callable, string (name of a callable in
             [`roverd.timestamps`][roverd.timestamps]), or `None`. If `"auto"`,
             uses `discretize(interval=10., eps=0.05)`.
+        past: number of past samples to include.
+        future: number of future samples to include.
     """
 
-    def __init__(self, path: str, correction: str | None | Callable[
-            [Float64[np.ndarray, "N"]], Float64[np.ndarray, "N"]] = None
+    def __init__(
+        self, path: str, correction: str | None | Callable[
+            [Float64[np.ndarray, "N"]], Float64[np.ndarray, "N"]] = None,
+        past: int = 0, future: int = 0
     ) -> None:
         if correction == "auto":
             correction = partial(timestamps.discretize, interval=10., eps=0.05)
 
-        super().__init__(path, correction=correction)
+        super().__init__(path, correction=correction, past=past, future=future)
 
         if not os.path.exists(os.path.join(path, 'lidar.json')):
             warnings.warn(
@@ -82,8 +86,10 @@ class OSLidarDepth(Sensor[types.OSDepth[np.ndarray], LidarMetadata]):
             return self.channels[index]
         else: # int | np.integer
             return types.OSDepth(
-                rng=self.channels['rng'][index],
-                timestamps=self.metadata.timestamps[index][None],
+                rng=self.channels['rng'].read(
+                    index - self.past, samples=self.window)[None],
+                timestamps=self.metadata.timestamps[
+                    index - self.past:index + self.future + 1][None],
                 intrinsics=self.metadata.intrinsics)
 
     def stream(  # type: ignore
@@ -105,8 +111,8 @@ class OSLidarDepth(Sensor[types.OSDepth[np.ndarray], LidarMetadata]):
             self.metadata.timestamps, self.channels['rng'].stream()
         ):
             yield types.OSDepth(
-                rng=rng[None],
-                timestamps=t[None],
+                rng=rng[None, None],
+                timestamps=t[None, None],
                 intrinsics=self.metadata.intrinsics)
 
 
@@ -120,15 +126,19 @@ class OSLidar(Sensor[types.OSData[np.ndarray], LidarMetadata]):
             smoothing); can be a callable, string (name of a callable in
             [`roverd.timestamps`][roverd.timestamps]), or `None`. If `"auto"`,
             uses `discretize(interval=10., eps=0.05)`.
+        past: number of past samples to include.
+        future: number of future samples to include.
     """
 
-    def __init__(self, path: str, correction: str | None | Callable[
-            [Float64[np.ndarray, "N"]], Float64[np.ndarray, "N"]] = None
+    def __init__(
+        self, path: str, correction: str | None | Callable[
+            [Float64[np.ndarray, "N"]], Float64[np.ndarray, "N"]] = None,
+        past: int = 0, future: int = 0
     ) -> None:
         if correction == "auto":
             correction = partial(timestamps.discretize, interval=10., eps=0.05)
 
-        super().__init__(path, correction=correction)
+        super().__init__(path, correction=correction, past=past, future=future)
 
         if not os.path.exists(os.path.join(path, 'lidar.json')):
             warnings.warn(
@@ -163,8 +173,12 @@ class OSLidar(Sensor[types.OSData[np.ndarray], LidarMetadata]):
             return self.channels[index]
         else: # int | np.integer
             return types.OSData(
-                rng=self.channels['rng'][index],
-                rfl=self.channels['rfl'][index],
-                nir=self.channels['nir'][index],
-                timestamps=self.metadata.timestamps[index][None],
+                rng=self.channels['rng'].read(
+                    index - self.past, samples=self.window)[None],
+                rfl=self.channels['rfl'].read(
+                    index - self.past, samples=self.window)[None],
+                nir=self.channels['nir'].read(
+                    index - self.past, samples=self.window)[None],
+                timestamps=self.metadata.timestamps[
+                    index - self.past:index + self.future + 1][None],
                 intrinsics=self.metadata.intrinsics)

@@ -41,16 +41,19 @@ class XWRRadar(Sensor[types.XWRRadarIQ[np.ndarray], RadarMetadata]):
             smoothing); can be a callable, string (name of a callable in
             [`roverd.timestamps`][roverd.timestamps]), or `None`. If `"auto"`,
             uses `smooth(interval=30.)`.
+        past: number of past samples to include.
+        future: number of future samples to include.
     """
 
     def __init__(
         self, path: str, correction: str | None | Callable[
-            [Float64[np.ndarray, "N"]], Float64[np.ndarray, "N"]] = None
+            [Float64[np.ndarray, "N"]], Float64[np.ndarray, "N"]] = None,
+        past: int = 0, future: int = 0
     ) -> None:
         if correction == "auto":
             correction = partial(timestamps.smooth, interval=30.)
 
-        super().__init__(path, correction=correction)
+        super().__init__(path, correction=correction, past=past, future=future)
 
         try:
             with open(os.path.join(path, "radar.json")) as f:
@@ -95,8 +98,11 @@ class XWRRadar(Sensor[types.XWRRadarIQ[np.ndarray], RadarMetadata]):
             return self.channels[index]
         else: # int | np.integer
             return types.XWRRadarIQ(
-                iq=self.channels['iq'][index],
-                timestamps=self.metadata.timestamps[index][None],
+                iq=self.channels['iq'].read(
+                    index - self.past, samples=self.window)[None],
+                timestamps=self.metadata.timestamps[
+                    index - self.past:index + self.future + 1][None],
                 range_resolution=self.metadata.range_resolution,
                 doppler_resolution=self.metadata.doppler_resolution,
-                valid=self.channels['valid'][index])
+                valid=self.channels['valid'].read(
+                    index - self.past, samples=self.window)[None])

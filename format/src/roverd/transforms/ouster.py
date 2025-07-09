@@ -16,6 +16,7 @@ import os
 
 import numpy as np
 from abstract_dataloader import spec
+from einops import rearrange
 from ouster.sdk import client
 
 from roverd import types
@@ -72,11 +73,17 @@ class ConfigCache:
 
 
 class Destagger(spec.Transform[types.OSDepth, types.Depth]):
-    """Destagger Ouster Lidar depth data."""
+    """Destagger Ouster Lidar depth data.
 
-    def __init__(self) -> None:
-        self.cache = ConfigCache()
+    Args:
+        config: if provided, use this configuration cache (to share with other
+            transforms).
+    """
 
+    def __init__(self, config: ConfigCache | None = None) -> None:
+        if config is None:
+            config = ConfigCache()
+        self._config = config
 
     def __call__(self, data: types.OSDepth) -> types.Depth:
         """Destagger Ouster Lidar depth data.
@@ -87,8 +94,14 @@ class Destagger(spec.Transform[types.OSDepth, types.Depth]):
         Returns:
             Depth data with destaggered measurements.
         """
-        destaggered = client.destagger(  # type: ignore
-            self.cache[data.intrinsics], data.rng)
+        batch, t, el, az = data.rng.shape
+
+        batch_last = rearrange(data.rng, "b t el az -> el az (b t)")
+        destaggered_hwb = client.destagger(  # type: ignore
+            self._config[data.intrinsics], batch_last)
+        destaggered = rearrange(
+            destaggered_hwb, "el az (b t) -> b t el az", b=batch, t=t)
+
         return types.Depth(rng=destaggered, timestamps=data.timestamps)
 
 

@@ -5,11 +5,20 @@
     Following the recommendations of the [abstract dataloader](
     https://wiselabcmu.github.io/abstract-dataloader/types/), each type is a
     generic dataclass of arrays.
+
+Each type in this library is a dataclass of arrays:
+
+- Each entry has a leading `batch` axis, which is usually `1` when loading
+    single samples. Some entries are annotated with `#batch` to indicate that
+    broadcasting is allowed on this axis, e.g., all samples in the same batch
+    having the same `range_resolution`.
+- Each entry has a second `t` axis, which indicates the time dimension for
+    sequences of frames. If only single frames are loaded, this is just `1`.
 """
 
-from dataclasses import field
-from typing import Generic, TypeVar
+from typing import Generic
 
+from abstract_dataloader.ext.types import TArray, dataclass
 from jaxtyping import (
     Complex64,
     Float,
@@ -20,14 +29,6 @@ from jaxtyping import (
     UInt8,
     UInt16,
 )
-from optree.dataclasses import dataclass as _optree_dataclass
-from typing_extensions import dataclass_transform
-
-TArray = TypeVar("TArray")
-
-@dataclass_transform(field_specifiers=(field,))
-def dataclass(cls):  # noqa: D103
-    return _optree_dataclass(cls, namespace='')
 
 
 @dataclass
@@ -46,11 +47,11 @@ class XWRRadarIQ(Generic[TArray]):
             zero-filled data due to dropped packets.
     """
 
-    iq: Int16[TArray, "#batch slow tx rx fast"]
-    timestamps: Float64[TArray, "#batch"]
+    iq: Int16[TArray, "batch t slow tx rx fast"]
+    timestamps: Float64[TArray, "batch t"]
     range_resolution: Float[TArray, "#batch"]
     doppler_resolution: Float[TArray, "#batch"]
-    valid: UInt8[TArray, "#batch"]
+    valid: UInt8[TArray, "batch t"]
 
 
 @dataclass
@@ -65,8 +66,8 @@ class XWR4DSpectrum(Generic[TArray]):
         doppler_resolution: doppler resolution; nominally in m/s.
     """
 
-    spectrum: Complex64[TArray, "#batch doppler elevation azimuth range"]
-    timestamps: Float64[TArray, "#batch"]
+    spectrum: Complex64[TArray, "batch t doppler elevation azimuth range"]
+    timestamps: Float64[TArray, "batch t"]
     range_resolution: Float[TArray, "#batch"]
     doppler_resolution: Float[TArray, "#batch"]
 
@@ -80,8 +81,8 @@ class Depth(Generic[TArray]):
         timestamps: timestamp for each frame; nominally in seconds.
     """
 
-    rng: UInt16[TArray, "#batch beam time"]
-    timestamps: Float64[TArray, "#batch"]
+    rng: UInt16[TArray, "batch t beam time"]
+    timestamps: Float64[TArray, "batch t"]
 
 
 @dataclass
@@ -94,9 +95,9 @@ class PointCloud(Generic[TArray]):
         timestamps: timestamp for each frame; nominally in seconds.
     """
 
-    xyz: Float32[TArray, "#batch 3"]
-    length: Integer[TArray, "#batch"]
-    timestamps: Float64[TArray, "#batch"]
+    xyz: Float32[TArray, "batch t 3"]
+    length: Integer[TArray, "#batch #t"]
+    timestamps: Float64[TArray, "batch t"]
 
 
 @dataclass
@@ -116,8 +117,8 @@ class OSDepth(Generic[TArray]):
         intrinsics: path to intrinsics file used by the Ouster SDK.
     """
 
-    rng: UInt16[TArray, "#batch beam time"]
-    timestamps: Float64[TArray, "#batch"]
+    rng: UInt16[TArray, "batch t beam time"]
+    timestamps: Float64[TArray, "batch t"]
     intrinsics: str
 
 
@@ -140,10 +141,10 @@ class OSData(Generic[TArray]):
         intrinsics: path to intrinsics file used by the Ouster SDK.
     """
 
-    rng: UInt16[TArray, "#batch beam time"]
-    rfl: UInt8[TArray, "#batch beam time"]
-    nir: UInt16[TArray, "#batch beam time"]
-    timestamps: Float64[TArray, "#batch"]
+    rng: UInt16[TArray, "batch t beam time"]
+    rfl: UInt8[TArray, "batch t beam time"]
+    nir: UInt16[TArray, "batch t beam time"]
+    timestamps: Float64[TArray, "batch t"]
     intrinsics: str
 
 
@@ -156,8 +157,8 @@ class CameraData(Generic[TArray]):
         timestamps: timestamp for each frame; nominally in seconds.
     """
 
-    image: UInt8[TArray, "#batch height width 3"]
-    timestamps: Float64[TArray, "#batch"]
+    image: UInt8[TArray, "batch t height width 3"]
+    timestamps: Float64[TArray, "batch t"]
 
 
 @dataclass
@@ -169,8 +170,8 @@ class CameraSemseg(Generic[TArray]):
         timestamps: timestamp for each frame; nominally in seconds.
     """
 
-    semseg: UInt8[TArray, "#batch height width"]
-    timestamps: Float64[TArray, "#batch"]
+    semseg: UInt8[TArray, "batch t height width"]
+    timestamps: Float64[TArray, "batch t"]
 
 
 @dataclass
@@ -184,7 +185,26 @@ class IMUData(Generic[TArray]):
         timestamps: timestamp for each measurement; nominally in seconds.
     """
 
-    acc: Float32[TArray, "#batch 3"]
-    rot: Float32[TArray, "#batch 3"]
-    avel: Float32[TArray, "#batch 3"]
-    timestamps: Float64[TArray, "#batch"]
+    acc: Float32[TArray, "batch t 3"]
+    rot: Float32[TArray, "batch t 3"]
+    avel: Float32[TArray, "batch t 3"]
+    timestamps: Float64[TArray, "batch t"]
+
+
+@dataclass
+class Pose(Generic[TArray]):
+    """Pose data.
+
+    Attributes:
+        pos: position, in meters (front-left-up coordinate convention).
+        vel: velocity, in meters/second.
+        acc: acceleration, in meters/second^2.
+        rot: rotation (as matrix).
+        timestamps: timestamp for each measurement; nominally in seconds.
+    """
+
+    pos: Float32[TArray, "batch t 3"]
+    vel: Float32[TArray, "batch t 3"]
+    acc: Float32[TArray, "batch t 3"]
+    rot: Float32[TArray, "batch t 3 3"]
+    timestamps: Float64[TArray, "batch t"]

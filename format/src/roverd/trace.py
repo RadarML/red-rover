@@ -1,8 +1,6 @@
 """High level API for trace & dataset loading."""
 
 import os
-import traceback
-import warnings
 from functools import cached_property
 from typing import Callable, Mapping, Sequence, TypeVar, cast, overload
 
@@ -153,10 +151,10 @@ class Dataset(abstract.Dataset[TSample]):
             with a leading singleton axis.
 
     Args:
-        traces: traces which make up this dataset.
+        traces: traces which make up this dataset; must be `roverd` traces!
     """
 
-    def __init__(self, traces: Sequence[spec.Trace[TSample]]) -> None:
+    def __init__(self, traces: Sequence[Trace[TSample]]) -> None:
         self.traces = traces
 
     @staticmethod
@@ -208,13 +206,9 @@ class Dataset(abstract.Dataset[TSample]):
         """
         traces = []
         for p in paths:
-            try:
-                traces.append(Trace.from_config(
-                    p, sync=sync, sensors=sensors,
-                    include_virtual=include_virtual))
-            except Exception as e:
-                warnings.warn(f"Error while loading trace: {p}")
-                warnings.warn(''.join(traceback.format_exception(e)))
+            traces.append(Trace.from_config(
+                p, sync=sync, sensors=sensors,
+                include_virtual=include_virtual))
 
         return cls(traces=cast(list[Trace[TSample]], traces))  # type: ignore
 
@@ -236,3 +230,57 @@ class Dataset(abstract.Dataset[TSample]):
     def __len__(self) -> int:
         """Total number of samples in this dataset."""
         return super().__len__()
+
+
+@overload
+def split(
+    dataset: Trace[TSample],  start: float = 0.0, end: float = 0.0
+) -> Trace[TSample]: ...
+
+@overload
+def split(
+    dataset: Dataset[TSample],  start: float = 0.0, end: float = 0.0
+) -> Dataset[TSample]: ...
+
+def split(
+    dataset: Dataset[TSample] | Trace[TSample],
+    start: float = 0.0, end: float = 0.0
+) -> Dataset[TSample] | Trace[TSample]:
+    """Get sub-trace or sub-dataset.
+
+    Args:
+        dataset: trace or dataset to split.
+        start: start of the split, as a proportion of the trace length (`0-1`).
+        end: end of the split, as a proportion of the trace length (`0-1`).
+
+    Returns:
+        Trace or dataset with a contiguous subset of samples according to the
+        start and end indices.
+    """
+    if not (0 <= start < end <= 1):
+        raise ValueError(
+            f"Invalid split range: {start} - {end} (must be in [0, 1])")
+
+    if isinstance(dataset, Trace):
+        # Make dummy indices if `None`.
+        if dataset.indices is None:
+            indices = {
+                k: np.arange(len(v), dtype=np.int32)
+                for k, v in dataset.sensors.items()}
+        else:
+            indices = dataset.indices
+
+        for v in indices.values():
+            istart = int(len(v) * start)
+            iend = int(len(v) * end)
+            break
+        else:
+            raise ValueError("There must be at least one sensor.")
+
+        return Trace(
+            sensors=dataset.sensors,
+            sync={k: np.copy(v[istart:iend]) for k, v in indices.items()})
+
+    else:  # Dataset
+        return Dataset(traces=[
+            split(t, start=start, end=end) for t in dataset.traces])

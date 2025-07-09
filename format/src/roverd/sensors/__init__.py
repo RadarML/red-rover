@@ -14,8 +14,8 @@ from typing import Callable
 
 from .camera import Camera, Semseg
 from .generic import DynamicSensor, Sensor
-from .imu import IMU
 from .lidar import OSLidar, OSLidarDepth
+from .pose import IMU, Pose
 from .radar import XWRRadar
 
 SENSOR_TYPES: dict[str, type[Sensor]] = {
@@ -24,6 +24,7 @@ SENSOR_TYPES: dict[str, type[Sensor]] = {
     "camera": Camera,
     "_camera": Semseg,
     "imu": IMU,
+    "pose": Pose
 }
 
 

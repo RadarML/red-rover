@@ -20,12 +20,20 @@ TMetadata = TypeVar("TMetadata", bound=abstract.Metadata)
 class Sensor(abstract.Sensor[TSample, TMetadata]):
     """Base sensor class, providing various utility methods.
 
+    !!! warning
+
+        If `past > 0` or `future > 0`, the caller is responsible for
+        ensuring that invalid indices `< past` or `>= len(sensor) - future`
+        are not read.
+
     Args:
         path: path to sensor data directory. Must contain a `meta.json` file;
             see the dataset format specifications.
         correction: optional timestamp correction to apply (i.e.,
             smoothing); can be a callable, string (name of a callable in
             [`roverd.timestamps`][roverd.timestamps]), or `None`.
+        past: number of past samples to include.
+        future: number of future samples to include.
 
     Attributes:
         path: path to sensor data directory.
@@ -36,10 +44,14 @@ class Sensor(abstract.Sensor[TSample, TMetadata]):
     def __init__(
         self, path: str,
         correction: str | None | Callable[
-            [Float64[np.ndarray, "N"]], Float64[np.ndarray, "N"]] = None
+            [Float64[np.ndarray, "N"]], Float64[np.ndarray, "N"]] = None,
+        past: int = 0, future: int = 0
     ) -> None:
 
         self.path = path
+        self.past = past
+        self.future = future
+        self.window = past + future + 1
 
         try:
             with open(os.path.join(path, "meta.json")) as f:
@@ -80,7 +92,7 @@ class Sensor(abstract.Sensor[TSample, TMetadata]):
         """Total number of measurements."""
         return os.stat(os.path.join(self.path, "ts")).st_size // 8
 
-    def __repr__(self):
+    def __repr__(self) -> str:  # noqa: D105
         return "{}({}: [{}])".format(
             self.__class__.__name__, self.path, ", ".join(self.channels))
 
@@ -99,13 +111,16 @@ class DynamicSensor(Sensor[TGenericSample, generic.Metadata]):
         correction: optional timestamp correction to apply (i.e.,
             smoothing); can be a callable, string (name of a callable in
             [`roverd.timestamps`][roverd.timestamps]), or `None`.
+        past: number of past samples to include.
+        future: number of future samples to include.
     """
 
     def __init__(
         self, path: str, create: bool = False, exist_ok: bool = False,
         subset: Sequence[str] | None = None,
         correction: str | None | Callable[
-            [Float64[np.ndarray, "N"]], Float64[np.ndarray, "N"]] = None
+            [Float64[np.ndarray, "N"]], Float64[np.ndarray, "N"]] = None,
+        past: int = 0, future: int = 0
     ) -> None:
         if create:
             if os.path.exists(path):
@@ -117,9 +132,9 @@ class DynamicSensor(Sensor[TGenericSample, generic.Metadata]):
                 with open(os.path.join(path, "meta.json"), 'w') as f:
                     json.dump({}, f)
 
-        super().__init__(path=path, correction=correction)
+        super().__init__(
+            path=path, correction=correction, past=past, future=future)
         self.subset = subset
-        self.path = path
 
     @cached_property
     def metadata(self) -> generic.Metadata:  # type: ignore
@@ -181,7 +196,12 @@ class DynamicSensor(Sensor[TGenericSample, generic.Metadata]):
             return self.channels[index]
         else:  # int | np.integer
             if self.subset is not None:
-                data = {k: self.channels[k][index] for k in self.subset}
+                data = {
+                    k: self.channels[k].read(
+                        index - self.past, samples=self.window)
+                    for k in self.subset}
             else:
-                data = {k: v[index] for k, v in self.channels.items()}
+                data = {
+                    k: v.read(index - self.past, samples=self.window)
+                    for k, v in self.channels.items()}
             return cast(TGenericSample, data)

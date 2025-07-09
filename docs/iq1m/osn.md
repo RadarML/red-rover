@@ -97,7 +97,7 @@ rclone sync osn-ro:/cmu-wiselab-iq1m/data/indoor/baker/baker.1.fwd ./iq1m/indoor
     rclone sync osn-ro:/cmu-wiselab-iq1m/data ./iq1m -v --exclude */lidar/rfl */lidar/nir
     ```
 
-    See the `rclone sync` [documentation](https://rclone.org/commands/rclone_sync) for more details and other optoins.
+    See the `rclone sync` [documentation](https://rclone.org/commands/rclone_sync) for more details and other options.
 
 
 !!! warning
