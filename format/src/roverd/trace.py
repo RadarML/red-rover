@@ -4,7 +4,7 @@ import os
 import traceback
 import warnings
 from functools import cached_property
-from typing import Callable, Mapping, TypeVar, cast, overload
+from typing import Callable, Mapping, Sequence, TypeVar, cast, overload
 
 import numpy as np
 from abstract_dataloader import abstract, generic, spec
@@ -156,7 +156,7 @@ class Dataset(abstract.Dataset[TSample]):
         traces: traces which make up this dataset.
     """
 
-    def __init__(self, traces: list[spec.Trace[TSample]]) -> None:
+    def __init__(self, traces: Sequence[spec.Trace[TSample]]) -> None:
         self.traces = traces
 
     @staticmethod
@@ -190,7 +190,8 @@ class Dataset(abstract.Dataset[TSample]):
 
     @classmethod
     def from_config(
-        cls, paths: list[str], sync: spec.Synchronization = generic.Empty(),
+        cls, paths: Sequence[str],
+        sync: spec.Synchronization = generic.Empty(),
         sensors: Mapping[
             str, Callable[[str], Sensor] | str | None] | None = None,
         include_virtual: bool = False

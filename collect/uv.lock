@@ -968,8 +968,8 @@ wheels = [
 
 [[package]]
 name = "xwr"
-version = "0.1.0"
-source = { git = "ssh://git@github.com/WiseLabCMU/xwr.git#7456961cb8e679d8bf13b863f95ae47a987970b3" }
+version = "0.3.0"
+source = { git = "ssh://git@github.com/WiseLabCMU/xwr.git#e92f16de3b63350fb14f1d17b4ece392d146d5cc" }
 dependencies = [
     { name = "beartype" },
     { name = "jaxtyping" },

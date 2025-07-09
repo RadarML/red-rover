@@ -39,6 +39,7 @@ nav:
       - Graphics: roverp/graphics.md
   - i/q-1m:
     - About: iq1m/index.md
+    - Download via OSN: iq1m/osn.md
   - tss:
     - About: tss/index.md
     - API:
@@ -61,8 +62,26 @@ theme:
     - navigation.expand
     - navigation.tabs
   palette:
+  - media: "(prefers-color-scheme)"
+    toggle:
+      icon: material/brightness-auto
+      name: Switch to light mode
+  - media: "(prefers-color-scheme: light)"
+    scheme: default
     primary: red
     accent: purple
+    toggle:
+      icon: material/weather-sunny
+      name: Switch to dark mode
+  - media: "(prefers-color-scheme: dark)"
+    scheme: slate
+    primary: red
+    accent: purple
+    toggle:
+      icon: material/weather-night
+      name: Switch to system preference
+
+
 
 plugins:
 - search
