@@ -49,7 +49,7 @@ CHANNEL_TYPES: dict[str, type[Channel]] = {
 }
 
 
-def from_config(
+def from_config(  # noqa: D417
     path: str, format: str, type: str, shape: Sequence[int],
     description: str | None = None, desc: str | None = None
 ) -> Channel:

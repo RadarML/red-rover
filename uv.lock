@@ -2414,6 +2414,7 @@ source = { directory = "format" }
 dependencies = [
     { name = "abstract-dataloader" },
     { name = "beartype" },
+    { name = "einops" },
     { name = "jaxtyping" },
     { name = "numpy" },
     { name = "optree" },
@@ -2442,6 +2443,7 @@ xwr = [
 requires-dist = [
     { name = "abstract-dataloader", specifier = "==0.3.*" },
     { name = "beartype" },
+    { name = "einops", specifier = ">=0.7.0" },
     { name = "jaxtyping", specifier = ">=0.3.2" },
     { name = "numpy", specifier = ">=1.19" },
     { name = "opencv-python-headless", marker = "extra == 'video'" },

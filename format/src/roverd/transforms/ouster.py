@@ -16,6 +16,7 @@ import os
 
 import numpy as np
 from abstract_dataloader import spec
+from einops import rearrange
 from ouster.sdk import client
 
 from roverd import types
@@ -93,8 +94,14 @@ class Destagger(spec.Transform[types.OSDepth, types.Depth]):
         Returns:
             Depth data with destaggered measurements.
         """
-        destaggered = client.destagger(  # type: ignore
-            self._config[data.intrinsics], data.rng)
+        batch, t, el, az = data.rng.shape
+
+        batch_last = rearrange(data.rng, "b t el az -> el az (b t)")
+        destaggered_hwb = client.destagger(  # type: ignore
+            self._config[data.intrinsics], batch_last)
+        destaggered = rearrange(
+            destaggered_hwb, "el az (b t) -> b t el az", b=batch, t=t)
+
         return types.Depth(rng=destaggered, timestamps=data.timestamps)
 
 

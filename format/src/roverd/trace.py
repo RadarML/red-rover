@@ -208,13 +208,9 @@ class Dataset(abstract.Dataset[TSample]):
         """
         traces = []
         for p in paths:
-            try:
-                traces.append(Trace.from_config(
-                    p, sync=sync, sensors=sensors,
-                    include_virtual=include_virtual))
-            except Exception as e:
-                warnings.warn(f"Error while loading trace: {p}")
-                warnings.warn(''.join(traceback.format_exception(e)))
+            traces.append(Trace.from_config(
+                p, sync=sync, sensors=sensors,
+                include_virtual=include_virtual))
 
         return cls(traces=cast(list[Trace[TSample]], traces))  # type: ignore
 

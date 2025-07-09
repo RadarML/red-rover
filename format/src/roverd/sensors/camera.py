@@ -23,17 +23,20 @@ class Camera(Sensor[types.CameraData[np.ndarray], generic.Metadata]):
             smoothing); can be a callable, string (name of a callable in
             [`roverd.timestamps`][roverd.timestamps]), or `None`. If `"auto"`,
             uses `smooth(interval=30.)`.
+        past: number of past samples to include.
+        future: number of future samples to include.
     """
 
     def __init__(
         self, path: str, key: str = "video.avi",
         correction: str | None | Callable[
-            [Float64[np.ndarray, "N"]], Float64[np.ndarray, "N"]] = None
+            [Float64[np.ndarray, "N"]], Float64[np.ndarray, "N"]] = None,
+        past: int = 0, future: int = 0
     ) -> None:
         if correction == "auto":
             correction = partial(timestamps.smooth, interval=30.)
 
-        super().__init__(path, correction=correction)
+        super().__init__(path, correction=correction, past=past, future=future)
         self.metadata = generic.Metadata(
             timestamps=self.correction(
                 self.channels["ts"].read(start=0, samples=-1)))
@@ -60,8 +63,10 @@ class Camera(Sensor[types.CameraData[np.ndarray], generic.Metadata]):
             return self.channels[index]
         else: # int | np.integer
             return types.CameraData(
-                image=self.channels[self.key][index][None],
-                timestamps=self.metadata.timestamps[index][None])
+                image=self.channels[self.key].read(
+                    index - self.past, samples=self.window)[None],
+                timestamps=self.metadata.timestamps[
+                    index - self.past:index + self.future + 1][None])
 
 
 class Semseg(Sensor[types.CameraSemseg[np.ndarray], generic.Metadata]):
@@ -75,17 +80,20 @@ class Semseg(Sensor[types.CameraSemseg[np.ndarray], generic.Metadata]):
             smoothing); can be a callable, string (name of a callable in
             [`roverd.timestamps`][roverd.timestamps]), or `None`. If `"auto"`,
             uses `smooth(interval=30.)`.
+        past: number of past samples to include.
+        future: number of future samples to include.
     """
 
     def __init__(
         self, path: str, key: str = "segment",
         correction: str | None | Callable[
-            [Float64[np.ndarray, "N"]], Float64[np.ndarray, "N"]] = None
+            [Float64[np.ndarray, "N"]], Float64[np.ndarray, "N"]] = None,
+        past: int = 0, future: int = 0
     ) -> None:
         if correction == "auto":
             correction = partial(timestamps.smooth, interval=30.)
 
-        super().__init__(path, correction=correction)
+        super().__init__(path, correction=correction, past=past, future=future)
         self.metadata = generic.Metadata(
             timestamps=self.correction(
                 self.channels["ts"].read(start=0, samples=-1)))
@@ -112,5 +120,7 @@ class Semseg(Sensor[types.CameraSemseg[np.ndarray], generic.Metadata]):
             return self.channels[index]
         else: # int | np.integer
             return types.CameraSemseg(
-                semseg=self.channels[self.key][index][None],
-                timestamps=self.metadata.timestamps[index][None, None])
+                semseg=self.channels[self.key].read(
+                    index - self.past, samples=self.window)[None],
+                timestamps=self.metadata.timestamps[
+                    index - self.past: index + self.future + 1][None])
