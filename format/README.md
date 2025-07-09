@@ -5,7 +5,7 @@
 
 You can install the `roverd` library from github:
 ```sh
-pip install "roverd[video]@git+ssh://git@github.com/WiseLabCMU/red-rover.git#subdirectory=format"
+pip install "roverd[video]@git+ssh://git@github.com/RadarML/red-rover.git#subdirectory=format"
 ```
 
 Details about the data format and data loading API can be found at the [documentation site](http://localhost:8000/roverd/).

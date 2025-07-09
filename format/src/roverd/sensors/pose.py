@@ -119,7 +119,7 @@ class Pose(Sensor[types.Pose[np.ndarray], Metadata]):
     def __getitem__(
         self, index: int | np.integer | str
     ) -> types.Pose[np.ndarray] | channels.Channel:
-        """Fetch IMU data by index.
+        """Fetch pose data by index.
 
         Args:
             index: frame index, or channel name.

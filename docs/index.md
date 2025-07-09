@@ -49,7 +49,7 @@ TODO: some explanation about why we did this and the high level goals
 
     abstract interface for composable dataloaders and preprocessing pipelines
 
-- :material-antenna: [`xwr`](https://wiselabcmu.github.io/xwr/)
+- :material-antenna: [`xwr`](https://radarml.github.io/xwr/)
 
     ---
 

@@ -7,7 +7,7 @@
 
 You can install the `roverd` library from github:
 ```sh
-pip install "roverd[video]@git+ssh://git@github.com/WiseLabCMU/red-rover.git#subdirectory=format"
+pip install "roverd[video]@git+ssh://git@github.com/RadarML/red-rover.git#subdirectory=format"
 ```
 In addition to the `roverd` package, this also installs the [`roverd info` and `roverd validate` CLI tools](./cli.md).
 

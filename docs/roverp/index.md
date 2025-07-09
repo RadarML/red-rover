@@ -5,20 +5,20 @@ Install:
 === "pip + local"
 
     ```sh
-    git clone git@github.com:WiseLabCMU/red-rover.git
+    git clone git@github.com:RadarML/red-rover.git
     pip install -e ./red-rover/processing[graphics,pcd,ply,semseg]
     ```
 
 === "pip + github"
 
     ```sh
-    pip install "roverp@git+ssh://git@github.com/WiseLabCMU/red-rover.git#subdirectory=processing"
+    pip install "roverp@git+ssh://git@github.com/RadarML/red-rover.git#subdirectory=processing"
     ```
 
 === "pip + github + extras"
 
     ```sh
-    pip install "roverp[graphics,pcd,ply,semseg]@git+ssh://git@github.com/WiseLabCMU/red-rover.git#subdirectory=processing"
+    pip install "roverp[graphics,pcd,ply,semseg]@git+ssh://git@github.com/RadarML/red-rover.git#subdirectory=processing"
     ```
 
 Extras:

@@ -28,14 +28,14 @@ The data collection computer uses a linux installation; we use ubuntu 22.04, tho
 
 2. Install `red-rover`:
     ```sh
-    git clone git@github.com:WiseLabCMU/red-rover.git
+    git clone git@github.com:RadarML/red-rover.git
     cd red-rover/collect
     uv sync
     ```
 
 ## Sensors
 
-**Radar**: Follow the setup instructions described in the [XWR documentation](https://wiselabcmu.github.io/xwr/setup/#awr1843boost).
+**Radar**: Follow the setup instructions described in the [XWR documentation](https://radarml.github.io/xwr/setup/#awr1843boost).
 
 **Camera**: Plug a HDMI cable into a monitor in order to change the settings. Select the following using the buttons on the front:
 
