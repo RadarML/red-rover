@@ -48,7 +48,7 @@ class XWRRadarIQ(Generic[TArray]):
     """
 
     iq: Int16[TArray, "batch t slow tx rx fast"]
-    timestamps: Float64[TArray, "#batch #t"]
+    timestamps: Float64[TArray, "batch t"]
     range_resolution: Float[TArray, "#batch"]
     doppler_resolution: Float[TArray, "#batch"]
     valid: UInt8[TArray, "batch t"]
@@ -67,7 +67,7 @@ class XWR4DSpectrum(Generic[TArray]):
     """
 
     spectrum: Complex64[TArray, "batch t doppler elevation azimuth range"]
-    timestamps: Float64[TArray, "#batch t"]
+    timestamps: Float64[TArray, "batch t"]
     range_resolution: Float[TArray, "#batch"]
     doppler_resolution: Float[TArray, "#batch"]
 

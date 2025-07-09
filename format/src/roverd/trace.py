@@ -1,8 +1,6 @@
 """High level API for trace & dataset loading."""
 
 import os
-import traceback
-import warnings
 from functools import cached_property
 from typing import Callable, Mapping, Sequence, TypeVar, cast, overload
 
