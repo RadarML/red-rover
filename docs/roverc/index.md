@@ -24,7 +24,7 @@
 
 **Core Platform**: `red-rover` is built around a laterally aligned lidar, radar, and camera on a handheld platform.
 
-- [TI AWR1843Boost](https://www.ti.com/tool/AWR1843BOOST) + [DCA1000EVM](https://www.ti.com/tool/DCA1000EVM): radar and capture card commonly used for academic radar research; see the [xwr documentation](https://wiselabcmu.github.io/xwr/setup/#awr1843boost).
+- [TI AWR1843Boost](https://www.ti.com/tool/AWR1843BOOST) + [DCA1000EVM](https://www.ti.com/tool/DCA1000EVM): radar and capture card commonly used for academic radar research; see the [xwr documentation](https://radarml.github.io/xwr/setup/#awr1843boost).
 
 - [Ouster OS0-32/64/128](https://ouster.com/products/hardware/os0-lidar-sensor) wide field of view (360x90 degree) lidar: provides a good field of view, even in tight and cluttered indoor spaces.
 
@@ -63,7 +63,7 @@ The `roverc` recording software is based on a client-server architecture:
 
     !!! info
 
-        This is accomplished by our [standalone python implementation](https://wiselabcmu.github.io/xwr/) of the TI radar and capture card interfaces, which replaces the windows-only mmWave studio software which is typically used for radar data collection.
+        This is accomplished by our [standalone python implementation](https://radarml.github.io/xwr/) of the TI radar and capture card interfaces, which replaces the windows-only mmWave studio software which is typically used for radar data collection.
 
 - These processes communicate via unix domain sockets to a control server by sending output logs to the server, and receiving commands.
 - The control server also exposes a web server (via a flask app) which hosts a GUI which can be used to start/stop data collection, set metadata, and view output logs.

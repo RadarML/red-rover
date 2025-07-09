@@ -6,7 +6,7 @@
 
 You can install `tss` from github:
 ```sh
-pip install "tss@git+ssh://git@github.com/WiseLabCMU/red-rover.git#subdirectory=stats"
+pip install "tss@git+ssh://git@github.com/RadarML/red-rover.git#subdirectory=stats"
 ```
 
 ## Why Time Series Statistics?

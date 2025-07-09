@@ -159,7 +159,7 @@ If some data types (especially Lidar) are not being collected as expected:
 
 For radar-related issues:
 
-- See the [`xwr` troubleshooting documentation](https://wiselabcmu.github.io/xwr/#troubleshooting).
+- See the [`xwr` troubleshooting documentation](https://radarml.github.io/xwr/#troubleshooting).
 
 If the camera is not coming through at full rate:
 
