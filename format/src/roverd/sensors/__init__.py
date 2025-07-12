@@ -8,6 +8,7 @@
 | camera  | [`Camera`][.] | Generic RGB camera | IID |
 | _camera | [`Semseg`][.] | Generic image semantic segmentation | IID |
 | imu     | [`IMU`][.] | 3-axis accelerometer + gyroscope | IID |
+| (other) | [`DynamicSensor`][.] | Generic sensor with dynamic channels | none |
 """
 
 from typing import Callable

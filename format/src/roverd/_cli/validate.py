@@ -69,7 +69,7 @@ def cli_validate(
     """Validate dataset files.
 
     ```sh
-    $ roverd validate /data/grt
+    $ uv run roverd validate /data/grt
     Validate: 166 traces with 0 containing errors.
     $ echo $?
     0  # would be 1 if there were any errors

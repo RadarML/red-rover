@@ -1,6 +1,6 @@
 site_name: Red Rover
-repo_url: https://github.com/WiseLabCMU/red-rover
-repo_name: WiseLabCMU/red-rover
+repo_url: https://github.com/RadarML/red-rover
+repo_name: RadarML/red-rover
 nav:
   - about: index.md
   - roverc:

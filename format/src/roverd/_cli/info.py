@@ -21,7 +21,7 @@ def cli_info(path: str, /,) -> None:
     Only metadata for non-virtual (originally collected) sensors is shown.
 
     ```sh
-    roverd info /data/grt/bike/point.out
+    uv run roverd info /data/grt/bike/point.out
     ```
 
     ??? quote "Sample output"

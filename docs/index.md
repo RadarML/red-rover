@@ -55,6 +55,12 @@ TODO: some explanation about why we did this and the high level goals
 
     python interface for collecting raw time signal data from TI mmWave radars
 
+- :octicons-ai-model-16: [`nrdk`](https://radarml.github.io/nrdk/)
+
+    ---
+
+    neural radar development kit for deep learning on multimodal radar data
+
 - :dart: [`dart`](https://wiselabcmu.github.io/dart/)
 
     ---
