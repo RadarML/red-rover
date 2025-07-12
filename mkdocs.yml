@@ -116,7 +116,7 @@ plugins:
         - https://wiselabcmu.github.io/abstract-dataloader/objects.inv
         - https://docs.pytorch.org/docs/stable/objects.inv
         - https://docs.jax.dev/en/latest/objects.inv
-        - https://wiselabcmu.github.io/xwr/objects.inv
+        - https://radarml.github.io/xwr/objects.inv
 
 markdown_extensions:
   - pymdownx.highlight:

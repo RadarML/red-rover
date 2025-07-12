@@ -38,10 +38,6 @@ class LzmaChannel(RawChannel):
     def _open_w(path, append: bool = False) -> io.BufferedIOBase:
         return lzma.open(path, 'ab' if append else 'wb')
 
-    def memmap(self) -> np.memmap:
-        """Open memory mapped array."""
-        raise Exception("Cannot mem-map a compressed channel.")
-
     def write(self, data: Data, append: bool = False) -> None:
         """Write data.
 
