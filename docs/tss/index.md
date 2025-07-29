@@ -25,15 +25,16 @@ pip install "tss@git+ssh://git@github.com/RadarML/red-rover.git#subdirectory=sta
 
     This methodology has so far been used by:
 
-    - [DART: Implicit Doppler Tomography for Radar Novel View Synthesis](https://wiselabcmu.github.io/dart/)
+    - [DART: Implicit Doppler Tomography for Radar Novel View Synthesis](https://wiselabcmu.github.io/dart/), CVPR '24
+    - Towards Foundational Models for Single-Chip Radar, ICCV '25
 
-!!! abstract "Assumptions"
+!!! warning "Assumptions"
 
     While our goal is really to estimate the underlying effective sample size (ESS) of the underlying time series, we are not aware of any currently methods which can do so for extremely high-dimensional-spaces with low-dimensional structure[^3]. As such, we apply a univariate analysis on model performance metrics by roughly assuming that metrics change if and only if the data changes. Equivalently, and more verbosely, we assume that:
 
     1. Changing metrics imply changing data,
     2. Constant metrics imply constant data, and
-    3. The degree to which the first assumption is violated (i.e., different metrics result from random noise outside of the underlying data "signal") is roughly cancelled out by the degree to which the second is violated (i.e., the data changes, but the method performs the same).
+    3. The degree to which the first assumption is violated (i.e., different metrics result from random noise outside of the underlying data "signal") is roughly cancelled out by the degree to which the second is violated (i.e., the data changes, but the metrics are the same).
 
 
 1. **Run a Paired Test**: Paired tests on the difference between two models when applied to the same data control for "constant" sample variability which is unrelated to the performance of the underlying model. This allows for statistical tests on the *relative* performance of ablations with respect to their baselines.

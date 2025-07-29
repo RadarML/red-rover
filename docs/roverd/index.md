@@ -100,6 +100,10 @@ Parquet is not suitable for random acess, e.g., in deep learning, since data are
 
 Each channel is stored as a file, and may be stored in a raw binary format, compressed, or any other format (e.g., `raw`, `lzma`, `mjpeg`).
 
+!!! info
+
+    See the [channels](./channels.md) documentation for specifications about each supported format.
+
 - Channel names may have file extensions (e.g. `.avi`) if the file format can be interpreted by off-the-shelf programs.
 - The "shape" of each channel is described by the constant axes of the data, i.e. the overall array for a channel with `N` observations has shape `(N, *shape)`.
 - All data should be stored in little endian.

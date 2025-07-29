@@ -30,12 +30,6 @@ TODO: some explanation about why we did this and the high level goals
 
     one million i/q frames across indoor, outdoor, and bike-mounted settings
 
-- :material-chart-line: [`tss`](./tss/index.md)
-
-    ---
-
-    statistical testing for time series performance metrics
-
 </div>
 
 
@@ -54,6 +48,12 @@ TODO: some explanation about why we did this and the high level goals
     ---
 
     python interface for collecting raw time signal data from TI mmWave radars
+
+- :octicons-ai-model-16: [`nrdk`](https://radarml.github.io/nrdk/)
+
+    ---
+
+    neural radar development kit for deep learning on multimodal radar data
 
 - :dart: [`dart`](https://wiselabcmu.github.io/dart/)
 

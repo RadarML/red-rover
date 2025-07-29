@@ -1,10 +1,10 @@
 site_name: Red Rover
-repo_url: https://github.com/WiseLabCMU/red-rover
-repo_name: WiseLabCMU/red-rover
+repo_url: https://github.com/RadarML/red-rover
+repo_name: RadarML/red-rover
 nav:
-  - about: index.md
+  - home: index.md
   - roverc:
-    - About: roverc/index.md
+    - Overview: roverc/index.md
     - User Guide:
       - Usage Instructions: roverc/instructions.md
       - Assembly: roverc/assembly.md
@@ -17,7 +17,7 @@ nav:
       - IMU API: roverc/imu.md
       - Flask App: roverc/flask.md
   - roverd:
-    - About: roverd/index.md
+    - Overview: roverd/index.md
     - CLI: roverd/cli.md
     - High Level API:
       - Data Loading: roverd/api.md
@@ -30,7 +30,7 @@ nav:
       - Channel Types: roverd/channels.md
       - Utils: roverd/utils.md
   - roverp:
-    - About: roverp/index.md
+    - Overview: roverp/index.md
     - Processing:
       - CLI: roverp/cli.md
       - Cartographer: roverp/docker.md
@@ -38,14 +38,8 @@ nav:
       - Data Readers: roverp/readers.md
       - Graphics: roverp/graphics.md
   - i/q-1m:
-    - About: iq1m/index.md
+    - Overview: iq1m/index.md
     - Download via OSN: iq1m/osn.md
-  - tss:
-    - About: tss/index.md
-    - API:
-      - High Level API: tss/api.md
-      - Stats: tss/stats.md
-      - Utils: tss/utils.md
 
 extra_css:
   - stylesheets/extra.css
@@ -116,7 +110,7 @@ plugins:
         - https://wiselabcmu.github.io/abstract-dataloader/objects.inv
         - https://docs.pytorch.org/docs/stable/objects.inv
         - https://docs.jax.dev/en/latest/objects.inv
-        - https://wiselabcmu.github.io/xwr/objects.inv
+        - https://radarml.github.io/xwr/objects.inv
 
 markdown_extensions:
   - pymdownx.highlight:

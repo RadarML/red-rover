@@ -255,7 +255,7 @@ def split(
 
     Returns:
         Trace or dataset with a contiguous subset of samples according to the
-        start and end indices.
+            start and end indices.
     """
     if not (0 <= start < end <= 1):
         raise ValueError(

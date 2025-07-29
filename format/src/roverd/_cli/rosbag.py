@@ -14,7 +14,7 @@ def cli_rosbag(
     """Write lidar and IMU data to a ROS 1 bag.
 
     ```sh
-    roverd rosbag data/wiselab --min_range 0.5
+    uv run --extra ros roverd rosbag data/wiselab --min_range 0.5
     ```
 
     !!! warning
