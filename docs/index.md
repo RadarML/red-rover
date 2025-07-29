@@ -30,12 +30,6 @@ TODO: some explanation about why we did this and the high level goals
 
     one million i/q frames across indoor, outdoor, and bike-mounted settings
 
-- :material-chart-line: [`tss`](./tss/index.md)
-
-    ---
-
-    statistical testing for time series performance metrics
-
 </div>
 
 

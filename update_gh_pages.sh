@@ -14,4 +14,5 @@ touch .nojekyll;
 git add --all;
 git commit -m "Update gh-pages";
 git push -f origin gh-pages;
+cd ..;
 rm -rf build;
