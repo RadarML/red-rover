@@ -12,7 +12,6 @@ classifiers = [
 ]
 license = "MIT"
 license-files = ["LICEN[CS]E*"]
-dependencies = []
 
 [tool.uv.sources]
 roverd = { path = "./format", editable = true}
