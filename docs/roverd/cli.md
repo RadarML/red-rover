@@ -9,7 +9,7 @@
 
 ## `roverd extract`
 
-:::roverd._cli.cli_info
+:::roverd._cli.cli_extract
     options:
         heading_level: 2
         show_symbol_type_heading: false

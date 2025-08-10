@@ -1,8 +1,9 @@
 """IMU."""
 
 import os
+from collections.abc import Callable
 from functools import partial
-from typing import Callable, overload
+from typing import overload
 
 import numpy as np
 from abstract_dataloader.generic import Metadata

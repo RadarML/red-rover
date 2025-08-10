@@ -12,7 +12,16 @@ def cli_extract(
     src: str, dst: str, /, start: float | None = None, end: float | None = None,
     length: float | None = None, relative: bool = False
 ) -> None:
-    """Extract a subset of a trace.
+    r"""Extract a subset of a trace.
+
+    ```sh
+    $ uv run roverd extract /data/grt/bike/point.out extracted-trace \
+        --start 0.5 --length 0.001 --relative
+    $ uv run roverd info extracted-trace
+    start    1727901429.808
+    length   1.775
+    ...
+    ```
 
     !!! info
 

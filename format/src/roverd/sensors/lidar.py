@@ -2,9 +2,10 @@
 
 import os
 import warnings
+from collections.abc import Callable, Iterator
 from dataclasses import dataclass
 from functools import partial
-from typing import Callable, Iterator, overload
+from typing import overload
 
 import numpy as np
 from jaxtyping import Float64

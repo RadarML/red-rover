@@ -1,8 +1,9 @@
 """Channel utilities and types."""
 
+from collections.abc import Iterable, Iterator
 from queue import Queue
 from threading import Thread
-from typing import Generic, Iterable, Iterator, TypeVar
+from typing import Generic, TypeVar
 
 import numpy as np
 

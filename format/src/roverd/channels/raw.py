@@ -1,9 +1,10 @@
 """Raw, uncompressed binary data."""
 
 import io
+from collections.abc import Callable, Iterator, Sequence
 from queue import Queue
 from threading import Thread
-from typing import Any, Callable, Iterator, Optional, Sequence, cast
+from typing import Any, cast
 
 import numpy as np
 from jaxtyping import Shaped
@@ -84,9 +85,8 @@ class RawChannel(Channel):
             f.write(self._serialize(data))
 
     def stream(
-        self, transform: Optional[
-            Callable[[Shaped[np.ndarray, "..."]], Any]
-        ] = None, batch: int = 0
+        self, transform: Callable[
+            [Shaped[np.ndarray, "..."]], Any] | None = None, batch: int = 0
     ) -> Iterator[Shaped[np.ndarray, "..."]]:
         """Get iterable data stream.
 

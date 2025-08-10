@@ -2,8 +2,9 @@
 
 import os
 from abc import ABC
+from collections.abc import Callable, Iterator, Sequence
 from functools import cached_property
-from typing import Any, Callable, Iterator, Optional, Sequence, cast
+from typing import Any, cast
 
 import numpy as np
 from jaxtyping import Shaped
@@ -154,9 +155,8 @@ class Channel(ABC):
             "`.write()` is not implemented for this channel type.")
 
     def stream(
-        self, transform: Optional[
-            Callable[[Shaped[np.ndarray, "..."]], Any]
-        ] = None, batch: int = 0
+        self, transform: Callable[
+            [Shaped[np.ndarray, "..."]], Any] | None = None, batch: int = 0
     ) -> Iterator[Shaped[np.ndarray, "..."]]:
         """Get iterable data stream.
 
@@ -186,6 +186,7 @@ class Channel(ABC):
             stream: stream to consume.
             thread: whether to return immediately, and run in a separate thread
                 instead of returning immediately.
+
         Raises:
             ValueError: data type/shape does not match channel specifications.
         """
@@ -193,9 +194,9 @@ class Channel(ABC):
             "`.consume()` is not implemented for this channel type.")
 
     def stream_prefetch(
-        self, transform: Optional[
-            Callable[[Shaped[np.ndarray, "..."]], Any]
-        ] = None, size: int = 64, batch: int = 0
+        self, transform: Callable[
+            [Shaped[np.ndarray, "..."]], Any] | None = None,
+        size: int = 64, batch: int = 0
     ) -> Iterator[Shaped[np.ndarray, "..."]]:
         """Stream with multi-threaded prefetching.
 

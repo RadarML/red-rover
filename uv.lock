@@ -2460,8 +2460,8 @@ requires-dist = [
     { name = "pyright", marker = "extra == 'dev'", specifier = ">=1.0.0" },
     { name = "pytest", marker = "extra == 'dev'" },
     { name = "pytest-cov", marker = "extra == 'dev'" },
-    { name = "roverd", extras = ["video", "ouster", "ros"], marker = "extra == 'roverd'", directory = "format" },
-    { name = "roverp", extras = ["graphics", "pcd", "ply", "semseg"], marker = "extra == 'roverp'", directory = "processing" },
+    { name = "roverd", extras = ["video", "ouster", "ros"], marker = "extra == 'roverd'", editable = "format" },
+    { name = "roverp", extras = ["graphics", "pcd", "ply", "semseg"], marker = "extra == 'roverp'", editable = "processing" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.10.0" },
     { name = "ruff", marker = "extra == 'docs'", specifier = "==0.12.*" },
 ]
@@ -2551,7 +2551,7 @@ wheels = [
 [[package]]
 name = "roverd"
 version = "0.2.1"
-source = { directory = "format" }
+source = { editable = "format" }
 dependencies = [
     { name = "abstract-dataloader" },
     { name = "beartype" },
@@ -2593,14 +2593,13 @@ requires-dist = [
     { name = "tqdm", marker = "extra == 'ros'" },
     { name = "types-pyyaml" },
     { name = "tyro", specifier = ">=0.9.0" },
-    { name = "xwr", marker = "extra == 'xwr'", git = "ssh://git@github.com/RadarML/xwr.git" },
 ]
-provides-extras = ["video", "ouster", "xwr", "ros"]
+provides-extras = ["video", "ouster", "ros"]
 
 [[package]]
 name = "roverp"
 version = "0.2.1"
-source = { directory = "processing" }
+source = { editable = "processing" }
 dependencies = [
     { name = "beartype" },
     { name = "einops" },

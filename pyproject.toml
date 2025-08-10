@@ -15,8 +15,8 @@ license-files = ["LICEN[CS]E*"]
 dependencies = []
 
 [tool.uv.sources]
-roverd = { path = "./format" }
-roverp = { path = "./processing" }
+roverd = { path = "./format", editable = true}
+roverp = { path = "./processing", editable = true }
 
 [project.optional-dependencies]
 roverd = [ "roverd[video,ouster,ros]" ]
@@ -41,4 +41,39 @@ dev = [
     "matplotlib",
     "ipykernel",
     "ipywidgets"
+]
+
+[project.urls]
+Homepage = "https://github.com/RadarML/red-rover"
+Documentation = "https://radarml.github.io/red-rover/"
+Issues = "https://github.com/RadarML/red-rover/issues"
+
+[tool.ruff]
+line-length = 80
+indent-width = 4
+
+[tool.ruff.lint]
+select = [
+    "W", "N", "I", "D", "NPY"
+]
+ignore = [
+    "D102",  # Inheriting docstrings is allowed
+    "D105",  # Allow silently implemented magic methods (i.e., __repr__)
+    "D107",  # Initializer goes in the class docstring
+    "D401",  # "Imperative mood" NLP doesn't always make sense
+    "D413",  # No blank lines after section is preferred by mkdocstrings
+    "N806",  # We do math, so capitalization should be allowed
+
+    # Must pick one...
+    "D213",  # Pick 'multi-line-summary-first-line'.
+    "D203",  # Pick `no-blank-line-before-class`.
+]
+
+[tool.coverage.report]
+exclude_also = [
+    '^\s*\.\.\.\s*$',
+    'def __repr__',
+    'if __name__ == .__main__.:',
+    'class .*\bProtocol\):',
+    'raise NotImplementedError',
 ]

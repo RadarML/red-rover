@@ -1,8 +1,9 @@
 """High level API for trace & dataset loading."""
 
 import os
+from collections.abc import Callable, Mapping, Sequence
 from functools import cached_property
-from typing import Callable, Mapping, Sequence, TypeVar, cast, overload
+from typing import TypeVar, cast, overload
 
 import numpy as np
 from abstract_dataloader import abstract, generic, spec
