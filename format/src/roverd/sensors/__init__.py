@@ -11,7 +11,7 @@
 | (other) | [`DynamicSensor`][.] | Generic sensor with dynamic channels | none |
 """
 
-from typing import Callable
+from collections.abc import Callable
 
 from .camera import Camera, Semseg
 from .generic import DynamicSensor, Sensor

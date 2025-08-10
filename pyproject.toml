@@ -1,6 +1,6 @@
 [project]
 name = "red-rover"
-version = "0.2.0"
+version = "0.2.1"
 authors = [
   { name="Tianshu Huang", email="tianshu2@andrew.cmu.edu" },
 ]
@@ -12,25 +12,15 @@ classifiers = [
 ]
 license = "MIT"
 license-files = ["LICEN[CS]E*"]
-dependencies = []
 
 [tool.uv.sources]
-roverd = { path = "./format" }
-roverp = { path = "./processing" }
-tss = { path = "./stats" }
+roverd = { path = "./format", editable = true}
+roverp = { path = "./processing", editable = true }
+xwr = { git = "ssh://git@github.com/RadarML/xwr.git" }
 
 [project.optional-dependencies]
 roverd = [ "roverd[video,ouster,ros]" ]
-
 roverp = [ "roverp[graphics,pcd,ply,semseg]" ]
-
-stats = [ "tss" ]
-
-interactive = [
-    "matplotlib",
-    "ipykernel",
-    "ipywidgets"
-]
 
 docs = [
     "mkdocs == 1.6.*",
@@ -38,5 +28,53 @@ docs = [
     "mkdocstrings-python-xref == 1.16.3",
     "mkdocstrings-python == 1.16.6",
     "mkdocstrings == 0.29.*",
-    "ruff == 0.12.*"
+    "ruff == 0.12.*",
+    "xwr"
+]
+
+dev = [
+    "pre-commit >= 4.0.0",
+    "coverage",
+    "pytest",
+    "pytest-cov",
+    "pyright >= 1.0.0",
+    "ruff >= 0.10.0",
+    "matplotlib",
+    "ipykernel",
+    "ipywidgets"
+]
+
+[project.urls]
+Homepage = "https://github.com/RadarML/red-rover"
+Documentation = "https://radarml.github.io/red-rover/"
+Issues = "https://github.com/RadarML/red-rover/issues"
+
+[tool.ruff]
+line-length = 80
+indent-width = 4
+
+[tool.ruff.lint]
+select = [
+    "W", "N", "I", "D", "NPY"
+]
+ignore = [
+    "D102",  # Inheriting docstrings is allowed
+    "D105",  # Allow silently implemented magic methods (i.e., __repr__)
+    "D107",  # Initializer goes in the class docstring
+    "D401",  # "Imperative mood" NLP doesn't always make sense
+    "D413",  # No blank lines after section is preferred by mkdocstrings
+    "N806",  # We do math, so capitalization should be allowed
+
+    # Must pick one...
+    "D213",  # Pick 'multi-line-summary-first-line'.
+    "D203",  # Pick `no-blank-line-before-class`.
+]
+
+[tool.coverage.report]
+exclude_also = [
+    '^\s*\.\.\.\s*$',
+    'def __repr__',
+    'if __name__ == .__main__.:',
+    'class .*\bProtocol\):',
+    'raise NotImplementedError',
 ]

@@ -1,6 +1,6 @@
 [project]
 name = "roverc"
-version = "0.1.0"
+version = "0.2.1"
 authors = [
   { name="Tianshu Huang", email="tianshu2@andrew.cmu.edu" },
 ]
@@ -31,5 +31,5 @@ dependencies = [
 ]
 
 [tool.uv.sources]
-xwr = { git = "ssh://git@github.com/WiseLabCMU/xwr.git" }
+xwr = { git = "ssh://git@github.com/RadarML/xwr.git" }
 roverd = { path = "../format" }

@@ -1,19 +1,12 @@
 """Video (nominally mjpeg) channel."""
 
+from collections.abc import Callable, Iterable, Iterator, Sequence
 from functools import cached_property
 from queue import Queue
 from threading import Thread
+from typing import Any, cast
 
 import numpy as np
-from beartype.typing import (
-    Any,
-    Callable,
-    Iterable,
-    Iterator,
-    Optional,
-    Sequence,
-    cast,
-)
 from jaxtyping import Shaped
 
 from .base import Channel
@@ -92,9 +85,8 @@ class VideoChannel(Channel):
         return np.stack(frames)
 
     def stream(
-        self, transform: Optional[
-            Callable[[Shaped[np.ndarray, "..."]], Any]
-        ] = None, batch: int = 0
+        self, transform: Callable[
+            [Shaped[np.ndarray, "..."]], Any] | None = None, batch: int = 0
     ) -> Iterator[np.ndarray]:
         """Get iterable data stream.
 
@@ -132,6 +124,21 @@ class VideoChannel(Channel):
         cap.release()
         return
 
+    def write(
+        self, data: Data, append: bool = False
+    ) -> None:
+        """Write data.
+
+        Args:
+            data: data to write.
+            append: if `True`, append to the file instead of overwriting it.
+
+        Raises:
+            ValueError: data type/shape does not match channel specifications.
+        """
+        assert isinstance(data, np.ndarray)
+        self.consume(frame for frame in data)
+
     def consume(
         self, stream: Streamable[Data | Sequence[Data]],
         thread: bool = False, fps: float = 10.0
@@ -167,5 +174,6 @@ class VideoChannel(Channel):
             if not isinstance(frame, np.ndarray):
                 raise ValueError("LzmaFrame does not allow raw data.")
             self._verify_type(frame)
-            cap.write(frame)
+            cap.write(self._cv2_module.cvtColor(
+                frame, self._cv2_module.COLOR_RGB2BGR))
         cap.release()

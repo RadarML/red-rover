@@ -8,6 +8,7 @@ tmp*
 
 # Data files
 data*
+*.tar
 collect/data*
 collect/_data*
 processing/data*

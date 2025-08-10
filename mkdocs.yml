@@ -2,7 +2,7 @@ site_name: Red Rover
 repo_url: https://github.com/RadarML/red-rover
 repo_name: RadarML/red-rover
 nav:
-  - home: index.md
+  - about: index.md
   - roverc:
     - Overview: roverc/index.md
     - User Guide:

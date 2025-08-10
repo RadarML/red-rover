@@ -2,10 +2,11 @@
 
 import io
 import lzma
+from collections.abc import Callable, Iterable, Iterator, Sequence
 from multiprocessing.pool import ThreadPool
 from queue import Queue
 from threading import Thread
-from typing import Any, Callable, Iterable, Iterator, Optional, Sequence, cast
+from typing import Any, cast
 
 import numpy as np
 from jaxtyping import Shaped
@@ -38,11 +39,32 @@ class LzmaChannel(RawChannel):
     def _open_w(path, append: bool = False) -> io.BufferedIOBase:
         return lzma.open(path, 'ab' if append else 'wb')
 
+    def read(
+        self, start: int | np.integer = 0, samples: int | np.integer = -1
+    ) -> Shaped[np.ndarray, "..."]:
+        """Read data.
+
+        Args:
+            start: start index to read.
+            samples: number of samples/frames to read. If `-1`, read all data.
+
+        Returns:
+            Read frames as an array, with a leading axis corresponding to
+                the number of `samples`.
+        """
+        with self._open_r(self.path) as f:
+            if start > 0:
+                f.seek(self.size * start, 0)
+            buf = f.read(-1 if samples == -1 else self.size * samples)
+
+        return self.buffer_to_array(buf, batch=True)
+
     def write(self, data: Data, append: bool = False) -> None:
         """Write data.
 
         Args:
             data: data to write.
+            append: only `append=False` is allowed.
 
         Raises:
             ValueError: data type/shape does not match channel specifications.
@@ -128,6 +150,7 @@ class LzmaFrameChannel(Channel):
         Args:
             data: data to write.
             preset: LZMA compression preset (0-9, 0 is fastest, 9 is best).
+            append: only `append=False` is allowed.
 
         Raises:
             ValueError: data type/shape does not match channel specifications.
@@ -141,9 +164,8 @@ class LzmaFrameChannel(Channel):
         self.consume(data, preset=preset)
 
     def stream(
-        self, transform: Optional[
-            Callable[[Shaped[np.ndarray, "..."]], Any]
-        ] = None, batch: int = 0
+        self, transform: Callable[
+            [Shaped[np.ndarray, "..."]], Any] | None = None, batch: int = 0
     ) -> Iterator[np.ndarray]:
         """Get iterable data stream.
 

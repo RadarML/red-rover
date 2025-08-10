@@ -33,7 +33,7 @@ Currently supported channel types:
 | `mjpg`  | [`VideoChannel`][.]     | MJPEG video                            |
 """
 
-from typing import Sequence
+from collections.abc import Sequence
 
 from . import utils
 from .base import Channel

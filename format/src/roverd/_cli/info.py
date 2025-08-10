@@ -28,6 +28,9 @@ def cli_info(path: str, /,) -> None:
 
         ```
         $ roverd info /data/grt/bike/point.out
+        start    1727900496.810
+        length   1865.947
+
         total    61.2 GB (32.8 MB/s)
         radar    29.3 GB (15.7 MB/s, n=37320, t=1865.9s)
             ts        299 KB (rate= 160  B/s)
@@ -52,6 +55,12 @@ def cli_info(path: str, /,) -> None:
         path: path to the trace directory.
     """
     ds = Trace.from_config(path)
+
+    start = max(v.metadata.timestamps[0] for v in ds.sensors.values())
+    end = min(v.metadata.timestamps[-1] for v in ds.sensors.values())
+    print(f"start    {start:.3f}")
+    print(f"length   {end - start:.3f}")
+    print("")
 
     print("total    {} ({})".format(
         _size(ds.filesize),
