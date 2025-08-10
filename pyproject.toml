@@ -16,6 +16,7 @@ license-files = ["LICEN[CS]E*"]
 [tool.uv.sources]
 roverd = { path = "./format", editable = true}
 roverp = { path = "./processing", editable = true }
+xwr = { git = "ssh://git@github.com/RadarML/xwr.git" }
 
 [project.optional-dependencies]
 roverd = [ "roverd[video,ouster,ros]" ]
@@ -27,7 +28,8 @@ docs = [
     "mkdocstrings-python-xref == 1.16.3",
     "mkdocstrings-python == 1.16.6",
     "mkdocstrings == 0.29.*",
-    "ruff == 0.12.*"
+    "ruff == 0.12.*",
+    "xwr"
 ]
 
 dev = [
