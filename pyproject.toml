@@ -1,6 +1,6 @@
 [project]
 name = "red-rover"
-version = "0.2.0"
+version = "0.2.1"
 authors = [
   { name="Tianshu Huang", email="tianshu2@andrew.cmu.edu" },
 ]
@@ -17,20 +17,10 @@ dependencies = []
 [tool.uv.sources]
 roverd = { path = "./format" }
 roverp = { path = "./processing" }
-tss = { path = "./stats" }
 
 [project.optional-dependencies]
 roverd = [ "roverd[video,ouster,ros]" ]
-
 roverp = [ "roverp[graphics,pcd,ply,semseg]" ]
-
-stats = [ "tss" ]
-
-interactive = [
-    "matplotlib",
-    "ipykernel",
-    "ipywidgets"
-]
 
 docs = [
     "mkdocs == 1.6.*",
@@ -39,4 +29,16 @@ docs = [
     "mkdocstrings-python == 1.16.6",
     "mkdocstrings == 0.29.*",
     "ruff == 0.12.*"
+]
+
+dev = [
+    "pre-commit >= 4.0.0",
+    "coverage",
+    "pytest",
+    "pytest-cov",
+    "pyright >= 1.0.0",
+    "ruff >= 0.10.0",
+    "matplotlib",
+    "ipykernel",
+    "ipywidgets"
 ]

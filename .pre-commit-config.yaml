@@ -1,0 +1,14 @@
+repos:
+  - repo: local
+    hooks:
+      - id: ruff
+        name: Lint with ruff
+        entry: uv run --extra dev ruff check
+        language: system
+        types: [python]
+
+      - id: pyright
+        name: Type check with pyright
+        entry: uv run --extra dev pyright
+        language: system
+        types: [python]

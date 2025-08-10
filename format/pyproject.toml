@@ -7,7 +7,7 @@ packages = ["src/roverd"]
 
 [project]
 name = "roverd"
-version = "0.2.0"
+version = "0.2.1"
 authors = [
   { name="Tianshu Huang", email="tianshu2@andrew.cmu.edu" },
 ]
@@ -28,15 +28,10 @@ dependencies = [
     "types-PyYaml",
     "beartype",
     "optree >= 0.16.0",
-    "abstract_dataloader == 0.3.*",
+    "abstract_dataloader >= 0.3.5",
     "tyro>=0.9.0",
     "einops>=0.7.0"
 ]
-
-[project.urls]
-Homepage = "https://github.com/WiseLabCMU/red-rover"
-Documentation = "https://wiselabcmu.github.io/red-rover/"
-Issues = "https://github.com/WiseLabCMU/red-rover/issues"
 
 [project.optional-dependencies]
 video = ["opencv-python-headless"]
@@ -47,5 +42,40 @@ ros = ["rosbags==0.9.19", "scipy", "tqdm"]
 [project.scripts]
 roverd = "roverd:_cli.cli_main"
 
+[project.urls]
+Homepage = "https://github.com/RadarML/red-rover"
+Documentation = "https://radarml.github.io/red-rover/"
+Issues = "https://github.com/RadarML/red-rover/issues"
+
+
 [tool.uv.sources]
-xwr = { git = "ssh://git@github.com/WiseLabCMU/xwr.git" }
+xwr = { git = "ssh://git@github.com/RadarML/xwr.git" }
+
+[tool.ruff]
+line-length = 80
+indent-width = 4
+
+[tool.ruff.lint]
+select = [
+    "W", "N", "I", "D", "NPY"
+]
+ignore = [
+    "D102",  # Inheriting docstrings is allowed
+    "D107",  # Initializer goes in the class docstring
+    "D401",  # "Imperative mood" NLP doesn't always make sense
+    "D413",  # No blank lines after section is preferred by mkdocstrings
+    "N806",  # We do math, so capitalization should be allowed
+
+    # Must pick one...
+    "D213",  # Pick 'multi-line-summary-first-line'.
+    "D203",  # Pick `no-blank-line-before-class`.
+]
+
+[tool.coverage.report]
+exclude_also = [
+    '^\s*\.\.\.\s*$',
+    'def __repr__',
+    'if __name__ == .__main__.:',
+    'class .*\bProtocol\):',
+    'raise NotImplementedError',
+]

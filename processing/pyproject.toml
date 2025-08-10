@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "roverp"
-version = "0.1.0"
+version = "0.2.1"
 authors = [
   { name="Tianshu Huang", email="tianshu2@andrew.cmu.edu" },
 ]
@@ -33,7 +33,7 @@ dependencies = [
     "types-PyYaml",
     "types-Pillow",
     "tyro>=0.9.0",
-    "roverd >= 0.1.0"
+    "roverd[video,ouster] >= 0.1.0"
 ]
 
 [project.optional-dependencies]

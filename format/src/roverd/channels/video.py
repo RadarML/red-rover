@@ -132,6 +132,21 @@ class VideoChannel(Channel):
         cap.release()
         return
 
+    def write(
+        self, data: Data, append: bool = False
+    ) -> None:
+        """Write data.
+
+        Args:
+            data: data to write.
+            append: if `True`, append to the file instead of overwriting it.
+
+        Raises:
+            ValueError: data type/shape does not match channel specifications.
+        """
+        assert isinstance(data, np.ndarray)
+        self.consume(frame for frame in data)
+
     def consume(
         self, stream: Streamable[Data | Sequence[Data]],
         thread: bool = False, fps: float = 10.0
