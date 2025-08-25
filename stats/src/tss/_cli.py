@@ -20,7 +20,7 @@ def _cli(
 ) -> None:
     """Calculate statistics for time series metrics.
 
-    - pipe `tss ... > results.txt` to save the results to a file
+    - pipe `tss ... > results.csv` to save the results to a file
     - use `--config config.yaml` to avoid having to specify all these arguments
 
     Args:

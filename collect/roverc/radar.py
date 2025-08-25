@@ -3,6 +3,7 @@
 import json
 import logging
 import os
+from collections.abc import Sequence
 from queue import Queue
 
 import numpy as np
@@ -24,7 +25,7 @@ class RadarCapture(Capture):
 
     def __init__(
         self, path: str, fps: float = 1.0, report_interval: float = 5.0,
-        log: logging.Logger | None = None, shape: list[int] = []
+        log: logging.Logger | None = None, shape: Sequence[int] = []
     ) -> None:
         super().__init__(
             path=path, fps=fps, report_interval=report_interval, log=log)

@@ -7,13 +7,13 @@ packages = ["src/roverd"]
 
 [project]
 name = "roverd"
-version = "0.2.1"
+version = "0.2.2"
 authors = [
   { name="Tianshu Huang", email="tianshu2@andrew.cmu.edu" },
 ]
 description = "Rover Data Format API."
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.10"
 classifiers = [
     "Programming Language :: Python :: 3",
     "Operating System :: OS Independent"
