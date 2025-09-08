@@ -1,5 +1,6 @@
 """List datasets in a directory."""
 
+import os
 from roverd import Dataset
 
 
@@ -30,4 +31,5 @@ def cli_list(path: str, /, follow_symlinks: bool = False) -> None:
         follow_symlinks: whether to follow symlinks when searching.
     """
     traces = Dataset.find_traces(path, follow_symlinks=follow_symlinks)
-    print('\n'.join(traces))
+    relative_traces = [os.path.relpath(trace, path) for trace in traces]
+    print('\n'.join(relative_traces))
