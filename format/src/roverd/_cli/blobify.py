@@ -32,7 +32,10 @@ def cli_blobify(src: str, dst: str, /,) -> None:
         src: path to the source trace.
         dst: path to the output trace.
     """
-    trace = Trace.from_config(src)
+    trace = Trace.from_config(src, sensors={
+        "_camera": None, "radar": None, "lidar": None,
+        "camera": None, "imu": None,
+    })
 
     os.makedirs(dst)
     shutil.copy(
@@ -67,3 +70,8 @@ def cli_blobify(src: str, dst: str, /,) -> None:
                     ch_copy = s_copy.create(
                         ch_name, cfg, args={"compress": True})
                     ch_copy.consume(channel.stream())
+
+    os.makedirs(os.path.join(dst, "_radar"), exist_ok=True)
+    shutil.copy(
+        os.path.join(src, "_radar", "pose.npz"),
+        os.path.join(dst, "_radar", "pose.npz"))
