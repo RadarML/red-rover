@@ -1,11 +1,11 @@
 [project]
 name = "red-rover"
-version = "0.2.2"
+version = "0.3.0"
 authors = [
   { name="Tianshu Huang", email="tianshu2@andrew.cmu.edu" },
 ]
 
-requires-python = ">=3.12"
+requires-python = "==3.12.*"
 classifiers = [
     "Programming Language :: Python :: 3",
     "Operating System :: OS Independent"
@@ -16,7 +16,6 @@ license-files = ["LICEN[CS]E*"]
 [tool.uv.sources]
 roverd = { path = "./format", editable = true}
 roverp = { path = "./processing", editable = true }
-xwr = { git = "ssh://git@github.com/RadarML/xwr.git" }
 
 [project.optional-dependencies]
 roverd = [ "roverd[video,ouster,ros]" ]
@@ -27,9 +26,10 @@ docs = [
     "mkdocs-material == 9.6.*",
     "mkdocstrings-python-xref == 1.16.3",
     "mkdocstrings-python == 1.16.6",
+    "griffe == 1.8.0",
     "mkdocstrings == 0.29.*",
     "ruff == 0.12.*",
-    "xwr"
+    "xwr >= 0.3.3",
 ]
 
 dev = [

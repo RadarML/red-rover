@@ -1,15 +1,18 @@
 """Channel base class."""
 
 import os
-from abc import ABC
+from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterator, Sequence
 from functools import cached_property
+from multiprocessing.pool import ThreadPool
+from queue import Queue
+from threading import Thread
 from typing import Any, cast
 
 import numpy as np
 from jaxtyping import Shaped
 
-from .utils import Data, Prefetch, Streamable
+from .utils import Buffer, Data, Prefetch, Streamable
 
 
 class Channel(ABC):
@@ -121,10 +124,10 @@ class Channel(ABC):
                 tuple(data.shape[-len(self.shape):]) != tuple(self.shape)
             ):
             raise ValueError(f"Data shape {data.shape} does not match channel "
-                f"shape {self.shape}.")
+                f"shape {self.shape} @ channel:{self.path}.")
         if data.dtype != self.type:
             raise ValueError(f"Data type {data.dtype} does not match channel "
-                f"type {self.type}.")
+                f"type {self.type} @ channel:{self.path}.")
 
     def _serialize(
         self, data: Data | Sequence[Data]

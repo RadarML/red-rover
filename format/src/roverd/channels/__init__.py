@@ -31,12 +31,15 @@ Currently supported channel types:
 | `lzma`  | [`LzmaChannel`][.]      | LZMA-compressed raw data               |
 | `lzmaf` | [`LzmaFrameChannel`][.] | LZMA, but each frame is compressed independently |
 | `mjpg`  | [`VideoChannel`][.]     | MJPEG video                            |
+| `npz`   | [`NPZBlobChannel`][.]   | Sequence of `.npz` files, one per blob |
+| `jpg`   | [`JPEGBlobChannel`][.]  | Sequence of `.jpg` files, one per blob |
 """
 
 from collections.abc import Sequence
 
 from . import utils
 from .base import Channel
+from .blob import BlobChannel, JPEGBlobChannel, NPZBlobChannel
 from .lzma import LzmaChannel, LzmaFrameChannel
 from .raw import RawChannel
 from .video import VideoChannel
@@ -45,13 +48,16 @@ CHANNEL_TYPES: dict[str, type[Channel]] = {
     "raw": RawChannel,
     "lzma": LzmaChannel,
     "lzmaf": LzmaFrameChannel,
-    "mjpg": VideoChannel
+    "mjpg": VideoChannel,
+    "npz": NPZBlobChannel,
+    "jpg": JPEGBlobChannel,
 }
 
 
 def from_config(  # noqa: D417
     path: str, format: str, type: str, shape: Sequence[int],
-    description: str | None = None, desc: str | None = None
+    description: str | None = None, desc: str | None = None,
+    args: dict = {}
 ) -> Channel:
     """Create channel from configuration.
 
@@ -61,6 +67,7 @@ def from_config(  # noqa: D417
         type: data type, using numpy size-in-bytes convention (e.g. u2 for
             2-byte/16-bit unsigned integer).
         shape: shape of the non-time dimensions.
+        args: other arguments to pass to the channel constructor.
 
     Returns:
         Initialized channel object.
@@ -68,10 +75,11 @@ def from_config(  # noqa: D417
     ctype = CHANNEL_TYPES.get(format)
     if ctype is None:
         raise ValueError(f"Unknown channel format: {format}")
-    return ctype(path=path, dtype=type, shape=shape)
+    return ctype(path=path, dtype=type, shape=shape, **args)
 
 
 __all__ = [
     "utils", "Channel",
-    "RawChannel", "LzmaChannel", "LzmaFrameChannel", "VideoChannel"
+    "RawChannel", "LzmaChannel", "LzmaFrameChannel", "VideoChannel",
+    "BlobChannel", "NPZBlobChannel", "JPEGBlobChannel",
 ]
