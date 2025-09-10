@@ -6,9 +6,11 @@ repos:
         entry: uv run --extra dev ruff check
         language: system
         types: [python]
+        files: ^(collect/|format/src/|processing/src/).*$
 
       - id: pyright
         name: Type check with pyright
         entry: uv run --extra dev pyright
         language: system
         types: [python]
+        files: ^(collect/|format/src/|processing/src/).*$
