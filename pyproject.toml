@@ -64,6 +64,7 @@ ignore = [
     "D401",  # "Imperative mood" NLP doesn't always make sense
     "D413",  # No blank lines after section is preferred by mkdocstrings
     "N806",  # We do math, so capitalization should be allowed
+    "N818",  # Exception names
 
     # Must pick one...
     "D213",  # Pick 'multi-line-summary-first-line'.

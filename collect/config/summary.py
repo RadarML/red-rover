@@ -33,11 +33,10 @@ Excess ramp   {(radar.ramp_end_time - radar.adc_start_time - radar.sample_time):
 
 def _cli_main(path: str = '.', /,) -> None:
     """Summarize available configurations.
-    
+
     Args:
         path: Directory containing configuration files.
     """
-
     for name in sorted(os.listdir(path)):
         if name.endswith('.yaml'):
             _print_cfg(os.path.join(path, name))
