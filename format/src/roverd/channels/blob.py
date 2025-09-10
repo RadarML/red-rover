@@ -142,16 +142,18 @@ class BlobChannel(Channel, ABC):
                     data = transform(data)
                 yield data
 
-    def write(self, data: Shaped[np.ndarray, "n ..."]) -> None:
+    def write(self, data: Data, append: bool = False) -> None:
         """Write data.
 
         Args:
             data: data to write, with leading axis corresponding to the number
                 of samples/frames.
+            append: append is currently ot implemented for blob channels.
 
         Raises:
             ValueError: data type/shape does not match channel specifications.
         """
+        assert append is False, "Append is not implemented."
         if not isinstance(data, np.ndarray):
             raise ValueError("BlobChannels do not allow raw data.")
         if len(data.shape) != len(self.shape) + 1:

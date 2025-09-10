@@ -3,7 +3,7 @@
 !!! abstract "TL;DR"
 
     - The [`roverd` data format](#specifications) is an extremely simple, flexible, and extendable data storage format based on simple binary containers.
-    - The [`roverd` API](./api.md) provides an [abstract dataloader-compliant](https://wiselabcmu.github.io/abstract-dataloader/) data loading implementation.
+    - The [`roverd` API](./api.md) provides an [abstract dataloader-compliant](https://radarml.github.io/abstract-dataloader/) data loading implementation.
 
 You can install the `roverd` library from github:
 ```sh
