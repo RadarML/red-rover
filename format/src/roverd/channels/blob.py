@@ -142,6 +142,31 @@ class BlobChannel(Channel, ABC):
                     data = transform(data)
                 yield data
 
+    def write(self, data: Shaped[np.ndarray, "n ..."]) -> None:
+        """Write data.
+
+        Args:
+            data: data to write, with leading axis corresponding to the number
+                of samples/frames.
+
+        Raises:
+            ValueError: data type/shape does not match channel specifications.
+        """
+        if not isinstance(data, np.ndarray):
+            raise ValueError("BlobChannels do not allow raw data.")
+        if len(data.shape) != len(self.shape) + 1:
+            raise ValueError(
+                f"Data shape {data.shape} does not match channel shape "
+                f"{self.shape}.")
+
+        os.makedirs(self.path, exist_ok=True)
+        with ThreadPool(self.workers) as pool:
+            pool.map(
+                lambda i: self._write_blob(self._n_blobs + i, data[i]),
+                range(data.shape[0]))
+
+        self._n_blobs = data.shape[0]
+
     def consume(
         self, stream: Streamable[Data | Sequence[Data]], thread: bool = False,
         append: bool = False

@@ -8,7 +8,7 @@ from roverd import Trace
 from roverd.sensors import DynamicSensor
 
 
-def cli_blobify(src: str, dst: str, /,) -> None:
+def cli_blobify(src: str, dst: str, /, workers: int = 64) -> None:
     """Convert a trace to use blob channels.
 
     ```sh
@@ -31,18 +31,21 @@ def cli_blobify(src: str, dst: str, /,) -> None:
     Args:
         src: path to the source trace.
         dst: path to the output trace.
+        workers: number of worker threads for writing blobs.
     """
+    def _copy(file: str) -> None:
+        shutil.copy(os.path.join(src, file), os.path.join(dst, file))
+
     trace = Trace.from_config(src, sensors={
         "_camera": None, "radar": None, "lidar": None,
         "camera": None, "imu": None,
     })
 
-    os.makedirs(dst)
-    shutil.copy(
-        os.path.join(src, "config.yaml"), os.path.join(dst, "config.yaml"))
+    os.makedirs(dst, exist_ok=True)
     for name, sensor in trace.sensors.items():
         assert isinstance(sensor, DynamicSensor)
-        s_copy = DynamicSensor(os.path.join(dst, name), create=True)
+        s_copy = DynamicSensor(
+            os.path.join(dst, name), create=True, exist_ok=True)
 
         for ch_name, channel in sensor.channels.items():
             if ch_name in {"ts", "valid", "rot", "acc", "avel"}:
@@ -62,16 +65,17 @@ def cli_blobify(src: str, dst: str, /,) -> None:
                         f"{ch_copy.path}/%06d.jpg", shell=True)
                 elif ch_name == 'iq':
                     cfg["format"] = "npz"
-                    ch_copy = s_copy.create(
-                        ch_name, cfg, args={"compress": False})
-                    ch_copy.consume(channel.stream())
+                    ch_copy = s_copy.create(ch_name, cfg, args={
+                        "compress": False, "workers": workers})
+                    ch_copy.write(channel.read())
                 else:
                     cfg["format"] = "npz"
-                    ch_copy = s_copy.create(
-                        ch_name, cfg, args={"compress": True})
-                    ch_copy.consume(channel.stream())
+                    ch_copy = s_copy.create(ch_name, cfg, args={
+                        "compress": True, "workers": workers})
+                    ch_copy.write(channel.read())
 
+    _copy("lidar/lidar.json")
+    _copy("radar/radar.json")
     os.makedirs(os.path.join(dst, "_radar"), exist_ok=True)
-    shutil.copy(
-        os.path.join(src, "_radar", "pose.npz"),
-        os.path.join(dst, "_radar", "pose.npz"))
+    _copy("_radar/pose.npz")
+    _copy("config.yaml")
