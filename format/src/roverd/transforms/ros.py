@@ -99,7 +99,7 @@ def rover_to_rosbag(
             msg = __sensor_msgs_imu(rot, acc, avel, sec, nsec)
             writer.write(
                 connection, ts,
-                cdr_to_ros1(serialize_cdr(msg, msgtype), msgtype))
+                cdr_to_ros1(serialize_cdr(msg, msgtype), msgtype))  # type: ignore
 
         to_pointcloud = ouster.PointCloud(min_range=min_range)
         msgtype = types.sensor_msgs__msg__PointCloud2.__msgtype__
@@ -111,4 +111,4 @@ def rover_to_rosbag(
             msg = __sensor_msgs_pointcloud2(points, sec, nsec)
             writer.write(
                 connection, ts,
-                cdr_to_ros1(serialize_cdr(msg, msgtype), msgtype))
+                cdr_to_ros1(serialize_cdr(msg, msgtype), msgtype))  # type: ignore
