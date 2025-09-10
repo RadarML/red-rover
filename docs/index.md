@@ -43,7 +43,7 @@ The **red rover**[^1] project is an end-to-end system for collecting, loading, a
 
 <div class="grid cards" markdown>
 
-- :material-cube-outline: [`abstract_dataloader`](https://wiselabcmu.github.io/abstract-dataloader/)
+- :material-cube-outline: [`abstract_dataloader`](https://radarml.github.io/abstract-dataloader/)
 
     ---
 
@@ -97,16 +97,16 @@ We also use [pre-commit hooks](https://pre-commit.com/); please install these wi
 
     You can also manually trigger the pre-commit hooks with `uv run pre-commit run`.
 
-**Documentation**: `red-rover` has a single documentation site using `mkdocs` / `mkdocs-material` / `mkdocstrings-python`.
+**Documentation**: `red-rover` has a single documentation site using `mkdocs` / `mkdocs-material` / `mkdocstrings-python`. To build for development:
 
 ```sh
-# Develop
 uv run --extra docs mkdocs serve
-
-# Deploy
-uv run --extra docs mkdocs build
-./update_gh_pages.sh
 ```
+
+!!! info
+
+    The documentation site is automatically built and deployed by GitHub Actions on push to `main`.
+
 
 **Testing**: Currently, only `roverd` comes with unit tests. Run with
 ```sh

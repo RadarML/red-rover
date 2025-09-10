@@ -3,6 +3,7 @@
 import os
 from collections.abc import Callable, Mapping, Sequence
 from functools import cached_property
+from multiprocessing.pool import ThreadPool
 from typing import TypeVar, cast, overload
 
 import numpy as np
@@ -46,7 +47,7 @@ class Trace(abstract.Trace[TSample]):
         cls, path: str, sync: spec.Synchronization = generic.Empty(),
         sensors: Mapping[
             str, Callable[[str], Sensor] | str | None] | None = None,
-        include_virtual: bool = False, name: str | None = None
+        include_virtual: bool = False, name: str | None = None,
     ) -> "Trace":
         """Create a trace from a directory containing a single recording.
 
@@ -193,23 +194,42 @@ class Dataset(abstract.Dataset[TSample]):
         sync: spec.Synchronization = generic.Empty(),
         sensors: Mapping[
             str, Callable[[str], Sensor] | str | None] | None = None,
-        include_virtual: bool = False
+        include_virtual: bool = False, workers: int = 0
     ) -> "Dataset":
         """Create a dataset from a list of directories containing recordings.
 
         Constructor arguments are forwarded to [`Trace.from_config`][^^.].
 
+        !!! tip
+
+            Set `workers=-1` to initialize all traces in parallel. This can
+            greatly speed up initialization on highly distributed filesystems,
+            e.g. blob stores!
+
         Args:
-            paths: paths to dataset directories.
+            paths: paths to trace directories.
             sync: synchronization protocol.
             sensors: sensor types to use.
             include_virtual: if `True`, include virtual sensors as well.
+            workers: number of worker threads to use during initialization. If
+                `=0`, load synchronously; if `<0`, load all traces in parallel.
         """
-        traces = []
-        for p in paths:
-            traces.append(Trace.from_config(
-                p, sync=sync, sensors=sensors,
-                include_virtual=include_virtual))
+        if workers < 0:
+            workers = len(paths)
+
+        if workers == 0:
+            traces = [
+                Trace.from_config(
+                    p, sync=sync, sensors=sensors,
+                    include_virtual=include_virtual)
+                for p in paths]
+        else:
+            with ThreadPool(workers) as pool:
+                traces = pool.map(
+                    lambda p: Trace.from_config(
+                        p, sync=sync, sensors=sensors,
+                        include_virtual=include_virtual),
+                    paths)
 
         return cls(traces=cast(list[Trace[TSample]], traces))  # type: ignore
 

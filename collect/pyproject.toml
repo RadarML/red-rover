@@ -1,6 +1,6 @@
 [project]
 name = "roverc"
-version = "0.2.2"
+version = "0.3.0"
 authors = [
   { name="Tianshu Huang", email="tianshu2@andrew.cmu.edu" },
 ]
@@ -26,10 +26,9 @@ dependencies = [
     "pyserial",
     "opencv-python-headless",
     "ouster-sdk==0.14.0",
-    "xwr>=0.3.0",
-    "roverd[video,ouster,xwr]"
+    "xwr>=0.3.3",
+    "roverd[video,ouster]"
 ]
 
 [tool.uv.sources]
-xwr = { git = "ssh://git@github.com/RadarML/xwr.git" }
 roverd = { path = "../format" }

@@ -7,6 +7,17 @@
     - Positional arguments ("required") are passed as positional command line arguments
     - Named arguments are passed as flagged command line arguments
 
+## `roverd blobify`
+
+:::roverd._cli.cli_blobify
+    options:
+        heading_level: 2
+        show_symbol_type_heading: false
+        show_signature: false
+        separate_signature: false
+        show_root_heading: false
+        show_root_toc_entry: false
+
 ## `roverd extract`
 
 :::roverd._cli.cli_extract
@@ -21,6 +32,17 @@
 ## `roverd info`
 
 :::roverd._cli.cli_info
+    options:
+        heading_level: 2
+        show_symbol_type_heading: false
+        show_signature: false
+        separate_signature: false
+        show_root_heading: false
+        show_root_toc_entry: false
+
+## `roverd list`
+
+:::roverd._cli.cli_list
     options:
         heading_level: 2
         show_symbol_type_heading: false

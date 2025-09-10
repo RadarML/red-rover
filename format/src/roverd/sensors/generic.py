@@ -159,12 +159,16 @@ class DynamicSensor(Sensor[TGenericSample, generic.Metadata]):
         with open(os.path.join(self.path, "meta.json"), 'w') as f:
             json.dump(self.config, f, indent=4)
 
-    def create(self, channel: str, meta: dict) -> channels.Channel:
+    def create(
+        self, channel: str, meta: dict, args: dict = {}
+    ) -> channels.Channel:
         """Create and open new channel.
 
         Args:
             channel: name of new channel.
-            meta: metadata for the new channel.
+            meta: metadata for the new channel; see
+                [`channels.from_config`][roverd.].
+            args: additional arguments to pass to the channel constructor.
 
         Returns:
             The newly created channel; sensor metadata is also flushed to disk,
@@ -172,7 +176,7 @@ class DynamicSensor(Sensor[TGenericSample, generic.Metadata]):
         """
         self.config[channel] = meta
         self.channels[channel] = channels.from_config(
-            path=os.path.join(self.path, channel), **meta)
+            path=os.path.join(self.path, channel), args=args, **meta)
         self._flush_config()
         return self.channels[channel]
 

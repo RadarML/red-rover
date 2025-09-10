@@ -1,0 +1,26 @@
+name: Run CI
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v5
+
+    - name: Install uv with Python 3.12
+      uses: astral-sh/setup-uv@v6
+      with:
+        python-version: "3.12"
+
+    - name: Lint with ruff
+      run: |
+        uv run --extra dev --extra roverd --extra roverp ruff check collect/ format/src/ processing/src/
+
+    - name: Type check with pyright
+      run: |
+        uv run --extra dev --extra roverd --extra roverp pyright collect/ format/src/ processing/src/

@@ -172,7 +172,7 @@ class VideoChannel(Channel):
             self.path, fourcc, fps, (self.shape[1], self.shape[0]))
         for frame in stream:
             if not isinstance(frame, np.ndarray):
-                raise ValueError("LzmaFrame does not allow raw data.")
+                raise ValueError("VideoChannel does not allow raw data.")
             self._verify_type(frame)
             cap.write(self._cv2_module.cvtColor(
                 frame, self._cv2_module.COLOR_RGB2BGR))

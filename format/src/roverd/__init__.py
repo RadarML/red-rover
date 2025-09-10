@@ -3,7 +3,7 @@
 !!! tip "ADL-Compliant"
 
     The `roverd` package implements a fully [Abstract Dataloader](
-    https://wiselabcmu.github.io/abstract-dataloader/)-compliant map-style
+    https://radarml.github.io/abstract-dataloader/)-compliant map-style
     data loader.
 
     Thus, to use the dataloader in practice, in addition to writing custom
@@ -12,7 +12,7 @@
     - [`Nearest`][abstract_dataloader.generic.Nearest] synchronization
     - [`Window`][abstract_dataloader.generic.Window] to load consecutive frames
         as a single sample
-    - [`TransformedDataset`][abstract_dataloader.torch.TransformedDataset] to
+    - [`TransformedDataset`][abstract_dataloader.ext.torch.TransformedDataset] to
         get the [`roverd.Dataset`][roverd.Dataset] into a pytorch dataloader
 
 !!! success "Fully Typed"
@@ -20,7 +20,7 @@
     The `roverd` dataloader is fully typed using generic dataclasses of
     [jaxtyping](https://github.com/patrick-kidger/jaxtyping) arrays following
     the [Abstract Dataloader's recommendations](
-    https://wiselabcmu.github.io/abstract-dataloader/types/), and comes with a
+    https://radarml.github.io/abstract-dataloader/types/), and comes with a
     [type library](types.md) which describes the data types collected by the
     `red-rover` system.
 

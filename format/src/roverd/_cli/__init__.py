@@ -4,8 +4,10 @@ from typing import Annotated, Any, Union
 
 import tyro
 
+from .blobify import cli_blobify
 from .extract import cli_extract
 from .info import cli_info
+from .list import cli_list
 from .rosbag import cli_rosbag
 from .validate import cli_validate
 
@@ -22,7 +24,9 @@ def make_annotation(name, func):
 
 def cli_main() -> None:
     commands = {
+        "blobify": cli_blobify,
         "extract": cli_extract,
+        "list": cli_list,
         "info": cli_info,
         "validate": cli_validate,
         "rosbag": cli_rosbag,

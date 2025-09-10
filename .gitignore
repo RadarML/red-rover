@@ -1,6 +1,9 @@
 # Red Rover
 # -----------------------------------------------------------------------------
 
+# Secrets
+secrets*
+
 # Scratch files
 *tmp*.ipynb
 *scratch*.ipynb
