@@ -22,6 +22,7 @@ roverd = [ "roverd[video,ouster,ros]" ]
 roverp = [ "roverp[graphics,pcd,ply,semseg]" ]
 
 docs = [
+    "abstract-dataloader >= 0.4.0",
     "mkdocs == 1.6.*",
     "mkdocs-material == 9.6.*",
     "mkdocstrings-python-xref == 1.16.3",

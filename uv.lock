@@ -2092,6 +2092,7 @@ dev = [
     { name = "ruff" },
 ]
 docs = [
+    { name = "abstract-dataloader" },
     { name = "griffe" },
     { name = "mkdocs" },
     { name = "mkdocs-material" },
@@ -2110,6 +2111,7 @@ roverp = [
 
 [package.metadata]
 requires-dist = [
+    { name = "abstract-dataloader", marker = "extra == 'docs'", specifier = ">=0.4.0" },
     { name = "coverage", marker = "extra == 'dev'" },
     { name = "griffe", marker = "extra == 'docs'", specifier = "==1.8.0" },
     { name = "ipykernel", marker = "extra == 'dev'" },
