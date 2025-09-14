@@ -1,4 +1,4 @@
-# Roverc: data collection system
+# **roverc**: data collection system
 
 <div class="grid" markdown>
 
@@ -8,17 +8,33 @@
 
 </div>
 
-**Already have a `red-rover` system?**
+<div class="grid cards" markdown>
 
-:material-arrow-right: See the [usage instructions](usage.md), and read the [data collection tips](tips.md).
+- **Already have a `red-rover` system?**
 
-**Considering building a `red-rover` system?**
+    ---
 
-:material-arrow-right: See the [bill of materials](assembly.md).
+    :material-arrow-right: See the [usage instructions](usage.md), and read the [data collection tips](tips.md).
 
-**Trying to set up a `red-rover` system?**
+- **Trying to set up a `red-rover` system?**
 
-:material-arrow-right: Follow the [assembly guide](assembly.md) and the [setup guide](setup.md).
+    ---
+
+    :material-arrow-right: Follow the [assembly guide](assembly.md) and the [setup guide](setup.md).
+
+- **Considering building a `red-rover` system?**
+
+    ---
+
+    :material-arrow-right: See the [bill of materials](assembly.md).
+
+- **Just want to use the data?**
+
+    ---
+
+    :material-arrow-right: Skip forward to the [data format documentation](../roverd/index.md).
+
+</div>
 
 ## Mechanical Design
 

@@ -11,7 +11,7 @@ from typing import Any, cast
 import numpy as np
 from jaxtyping import Shaped
 
-from .base import Channel
+from .abstract import Channel
 from .raw import RawChannel
 from .utils import Buffer, Data, Prefetch, Streamable, batch_iterator
 
