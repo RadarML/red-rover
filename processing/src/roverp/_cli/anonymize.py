@@ -4,7 +4,8 @@ import os
 from typing import cast
 
 import cv2
-from roverd import channels, sensors, types
+from roverd import channels, sensors
+from roverd.channels.utils import Prefetch
 from tqdm import tqdm
 
 
@@ -38,13 +39,9 @@ def cli_anonymize(
         os.path.join(out, "_camera"), create=True, exist_ok=True)
     output = _camera.create("video.avi", camera.config["video.avi"])
 
-    def _apply_image(frame: types.CameraData):
+    def _apply_image(image):
         """Apply face blurring to an image."""
-        image = frame.image[0, 0]
-
         faces = RetinaFace.detect_faces(image)
-
-        breakpoint()
 
         # If no faces detected, return original image
         if not isinstance(faces, dict) or len(faces) == 0:
@@ -71,7 +68,8 @@ def cli_anonymize(
 
         return image
 
-    stream = camera.stream()
-    frame_stream = (
-        _apply_image(frame) for frame in tqdm(stream, total=len(camera)))
+    stream = camera["video.avi"].stream_prefetch()
+    frame_stream = Prefetch(
+        _apply_image(frame) for frame in tqdm(stream, total=len(camera))
+    ).queue
     cast(channels.VideoChannel, output).consume(frame_stream)
