@@ -4,6 +4,7 @@ from typing import Annotated, Any, Union
 
 import tyro
 
+from .anonymize import cli_anonymize
 from .report import cli_report
 from .segment import cli_segment
 from .sensorpose import cli_sensorpose
@@ -21,6 +22,7 @@ def make_annotation(name, func):
 
 def cli_main() -> None:
     commands = {
+        "anonymize": cli_anonymize,
         "report": cli_report,
         "sensorpose": cli_sensorpose,
         "segment": cli_segment,

@@ -1,6 +1,6 @@
 [project]
 name = "red-rover"
-version = "0.3.0"
+version = "0.3.1"
 authors = [
   { name="Tianshu Huang", email="tianshu2@andrew.cmu.edu" },
 ]
@@ -19,7 +19,11 @@ roverp = { path = "./processing", editable = true }
 
 [project.optional-dependencies]
 roverd = [ "roverd[video,ouster,ros]" ]
-roverp = [ "roverp[graphics,pcd,ply,semseg]" ]
+roverp = [ "roverp[graphics,pcd,ply]" ]
+
+# roverp passthroughs
+semseg = [ "roverp[semseg]" ]
+anonymize = [ "roverp[anonymize]" ]
 
 docs = [
     "abstract-dataloader >= 0.4.0",

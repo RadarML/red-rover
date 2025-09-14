@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "roverp"
-version = "0.3.0"
+version = "0.3.1"
 authors = [
   { name="Tianshu Huang", email="tianshu2@andrew.cmu.edu" },
 ]
@@ -37,17 +37,11 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-graphics = [
-    "matplotlib",
-    "pillow",
-    "imageio[ffmpeg]"
-]
+anonymize = [ "retina-face == 0.0.17", "tf-keras == 2.20.1" ]
+graphics = [ "matplotlib", "pillow", "imageio[ffmpeg]" ]
 pcd = [ "pypcd4" ]
 ply = [ "plyfile" ]
-semseg = [
-    "torch",
-    "transformers"
-]
+semseg = [ "torch", "transformers" ]
 
 [tool.uv.sources]
 roverd = { path = "../format" }
