@@ -1,5 +1,25 @@
 """Channel types.
 
+!!! info
+
+    The core API is implemented and documented by the base type
+    [`Channel`][.abstract.].
+
+## Available Types
+
+The following channel types are provided:
+
+| Name    | Class                   | Description                            |
+| ------- | ----------------------- | -------------------------------------- |
+| `raw`   | [`RawChannel`][.]       | Little-endian raw byte array           |
+| `lzma`  | [`LzmaChannel`][.]      | LZMA-compressed raw data               |
+| `lzmaf` | [`LzmaFrameChannel`][.] | LZMA, but each frame is compressed independently |
+| `mjpg`  | [`VideoChannel`][.]     | MJPEG video                            |
+| `npz`   | [`NPZBlobChannel`][.]   | Sequence of `.npz` files, one per blob |
+| `jpg`   | [`JPEGBlobChannel`][.]  | Sequence of `.jpg` files, one per blob |
+
+## Configuration
+
 Channels are conventionally specified by a configuration dict with the
 following fields:
 
@@ -10,6 +30,8 @@ following fields:
 - `desc`: description of the channel; should be human-readable, and is not
   intended for use by scripts.
 
+Use [`from_config`][.] to create channel from a provided configuration.
+
 ???+ quote "Sample Configuration"
 
     ```json
@@ -18,28 +40,13 @@ following fields:
         "desc": "range-azimuth BEV from 3D polar occupancy"
     }
     ```
-
-Currently supported channel types:
-
-!!! info
-
-    The core API is implemented and documented by the base type [`Channel`][.].
-
-| Name    | Class                   | Description                            |
-| ------- | ----------------------- | -------------------------------------- |
-| `raw`   | [`RawChannel`][.]       | Little-endian raw byte array           |
-| `lzma`  | [`LzmaChannel`][.]      | LZMA-compressed raw data               |
-| `lzmaf` | [`LzmaFrameChannel`][.] | LZMA, but each frame is compressed independently |
-| `mjpg`  | [`VideoChannel`][.]     | MJPEG video                            |
-| `npz`   | [`NPZBlobChannel`][.]   | Sequence of `.npz` files, one per blob |
-| `jpg`   | [`JPEGBlobChannel`][.]  | Sequence of `.jpg` files, one per blob |
 """
 
 from collections.abc import Sequence
 
-from . import utils
-from .base import Channel
-from .blob import BlobChannel, JPEGBlobChannel, NPZBlobChannel
+from . import abstract, utils
+from .abstract import Channel
+from .blob import JPEGBlobChannel, NPZBlobChannel
 from .lzma import LzmaChannel, LzmaFrameChannel
 from .raw import RawChannel
 from .video import VideoChannel
@@ -79,7 +86,7 @@ def from_config(  # noqa: D417
 
 
 __all__ = [
-    "utils", "Channel",
+    "abstract", "utils",
     "RawChannel", "LzmaChannel", "LzmaFrameChannel", "VideoChannel",
-    "BlobChannel", "NPZBlobChannel", "JPEGBlobChannel",
+    "NPZBlobChannel", "JPEGBlobChannel",
 ]

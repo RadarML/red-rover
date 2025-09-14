@@ -2,7 +2,9 @@ site_name: Red Rover
 repo_url: https://github.com/RadarML/red-rover
 repo_name: RadarML/red-rover
 nav:
-  - about: index.md
+  - about:
+    - Red Rover: index.md
+    - Development: development.md
   - roverc:
     - Overview: roverc/index.md
     - User Guide:
@@ -27,6 +29,7 @@ nav:
       - roverd.timestamps: roverd/timestamps.md
     - Channels:
       - roverd.channels: roverd/channels.md
+      - roverd.channels.abstract: roverd/abstract.md
       - roverd.channels.utils: roverd/utils.md
   - roverp:
     - Overview: roverp/index.md
