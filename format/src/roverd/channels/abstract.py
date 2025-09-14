@@ -226,8 +226,12 @@ class BlobChannel(Channel, ABC):
     """Base class for blob channels.
 
     Blob channels are stored in folders, with files named `000000.{ext}`,
-    `000001.{ext}`, etc. Note that names are assumed to be indices starting
-    from 0 with a file extension.
+    `000001.{ext}`, etc., for some file extension `{ext} = ".jpg", ".npz",
+    ...`.
+
+    !!! note
+
+        Names are assumed to be indices starting from 0 with a file extension.
 
     Args:
         path: file path.
@@ -354,7 +358,7 @@ class BlobChannel(Channel, ABC):
         Args:
             data: data to write, with leading axis corresponding to the number
                 of samples/frames.
-            append: append is currently ot implemented for blob channels.
+            append: append is currently not implemented for blob channels.
 
         Raises:
             ValueError: data type/shape does not match channel specifications.
