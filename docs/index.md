@@ -1,5 +1,10 @@
 # **Red Rover**: A Multimodal mmWave Radar Spectrum Ecosystem
 
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px;">
+    <img src="duck.jpg" style="width: 100%;">
+    <img src="roverc/images/rover-front.jpg" style="width: 100%;">
+</div>
+
 The **red rover**[^1] project is an end-to-end system for collecting, loading, and processing mmWave radar time signal data along with lidar and camera data designed for both [DART](https://wiselabcmu.github.io/dart/)-style reconstruction and [GRT](https://wiselabcmu.github.io/grt/)-style deep learning.
 
 !!! info
