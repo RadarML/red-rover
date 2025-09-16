@@ -64,7 +64,7 @@
         ```
         **NOTE**: Pipe all processing results to a mounted directory to prevent outputs from being deleted when the docker container stops running.
 
-The provided makefile assumes that there is a `data` folder (possibly symlinked) in the `red-rover/processing` directory. We provide the following commands:
+The provided makefile assumes that there is a `data` folder (possibly symlinked) in the `red-rover/processing` directory, and that rosbags are already created using [`roverd rosbag`](../roverd/cli.md#roverd-rosbag). We provide the following commands:
 
 - `make trajectory`: compute poses.
 - `make lidar`: compute poses and output globally-aligned point clouds.
