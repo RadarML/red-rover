@@ -1,5 +1,11 @@
 # **Red Rover**: A Multimodal mmWave Radar Spectrum Ecosystem
 
+![GitHub](https://img.shields.io/github/license/RadarML/red-rover)
+[![CI](https://github.com/RadarML/red-rover/actions/workflows/ci.yml/badge.svg)](https://github.com/RadarML/red-rover/actions/workflows/ci.yml)
+![GitHub issues](https://img.shields.io/github/issues/RadarML/red-rover)
+![Typed](https://img.shields.io/badge/types-typed-limegreen)
+[![bear-ified](https://raw.githubusercontent.com/beartype/beartype-assets/main/badge/bear-ified.svg)](https://beartype.readthedocs.io)
+
 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px;">
     <img src="duck.jpg" style="width: 100%;">
     <img src="roverc/images/rover-front.jpg" style="width: 100%;">

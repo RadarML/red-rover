@@ -52,6 +52,14 @@ def cli_anonymize(
             if 'facial_area' in face_data:
                 x1, y1, x2, y2 = face_data['facial_area']
 
+                # Expand by 20%
+                width = x2 - x1
+                height = y2 - y1
+                x1 -= int(0.2 * width)
+                y1 -= int(0.2 * height)
+                x2 += int(0.2 * width)
+                y2 += int(0.2 * height)
+
                 # Ensure coordinates are within image bounds
                 x1 = max(0, int(x1))
                 y1 = max(0, int(y1))
@@ -63,7 +71,7 @@ def cli_anonymize(
 
                 # Apply Gaussian blur to the face region
                 if face_region.size > 0:
-                    blurred_face = cv2.GaussianBlur(face_region, (99, 99), 30)
+                    blurred_face = cv2.GaussianBlur(face_region, (99, 99), 15)
                     image[y1:y2, x1:x2] = blurred_face
 
         return image
