@@ -19,10 +19,8 @@ jobs:
 
     - name: Lint with ruff
       run: >
-        uv run --extra dev --extra roverd --extra roverp ruff check collect/ format/src/ processing/src/
+        uv run --all-extras ruff check collect/ format/src/ processing/src/
 
     - name: Type check with pyright
       run: >
-        uv run --extra dev --extra roverd --extra roverp
-        pyright format/src/ processing/src/
-        --ignore processing/src/roverp/_cli/anonymize.py
+        uv run --all-extras pyright format/src/ processing/src/
