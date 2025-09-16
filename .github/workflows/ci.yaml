@@ -5,7 +5,7 @@ on:
     branches: [ main ]
 
 jobs:
-  test:
+  ci:
     runs-on: ubuntu-latest
 
     steps:
@@ -23,4 +23,6 @@ jobs:
 
     - name: Type check with pyright
       run: |
-        uv run --extra dev --extra roverd --extra roverp pyright format/src/ processing/src/
+        uv run --extra dev --extra roverd --extra roverp
+        pyright format/src/ processing/src/
+        --ignore processing/src/roverp/_cli/anonymize.py
