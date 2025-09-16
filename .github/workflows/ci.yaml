@@ -18,11 +18,11 @@ jobs:
         python-version: "3.12"
 
     - name: Lint with ruff
-      run: |
+      run: >
         uv run --extra dev --extra roverd --extra roverp ruff check collect/ format/src/ processing/src/
 
     - name: Type check with pyright
-      run: |
+      run: >
         uv run --extra dev --extra roverd --extra roverp
         pyright format/src/ processing/src/
         --ignore processing/src/roverp/_cli/anonymize.py
