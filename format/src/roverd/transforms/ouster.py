@@ -13,6 +13,7 @@
 """
 
 import os
+import warnings
 
 import numpy as np
 from abstract_dataloader import spec
@@ -30,13 +31,27 @@ class ConfigCache:
         self._by_cfg: dict[str, client.SensorInfo] = {}  # type: ignore
 
     def __get_sensorinfo(self, cfg: str) -> client.SensorInfo:  # type: ignore
-        # ouster-sdk is a naughty, noisy library
-        # it is in fact so noisy, that we have cut it off at the os level...
-        stdout = os.dup(1)
-        os.close(1)
+        # Safe to ignore errors which can occur in rare circumstances for
+        # unknown reasons (possibly related to underlying race conditions in
+        # ouster-sdk)
+        try:
+            # ouster-sdk is a naughty, noisy library
+            # it is in fact so noisy, that we have cut it off at the os level...
+            stdout = os.dup(1)
+            os.close(1)
+        except Exception as e:
+            stdout = None
+            warnings.warn(f"Could not suppress ouster-sdk stdout: {e}")
+
         info = client.SensorInfo(cfg)  # type: ignore
-        os.dup2(stdout, 1)
-        os.close(stdout)
+
+        if stdout is not None:
+            try:
+                os.dup2(stdout, 1)
+                os.close(stdout)
+            except Exception as e:
+                warnings.warn(f"Could not restore ouster-sdk stdout: {e}")
+
         return info
 
     def __getitem__(self, path: str) -> client.SensorInfo:  # type: ignore
