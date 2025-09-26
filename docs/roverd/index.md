@@ -1,5 +1,10 @@
 # **roverd**: data interface
 
+![MIT License](https://img.shields.io/badge/license-MIT-green)
+![Supports Python 3.10+](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13-blue)
+![Typed](https://img.shields.io/badge/types-typed-limegreen)
+[![bear-ified](https://raw.githubusercontent.com/beartype/beartype-assets/main/badge/bear-ified.svg)](https://beartype.readthedocs.io)
+
 !!! abstract "TL;DR"
 
     - The [`roverd` data format](#specifications) is an extremely simple, flexible, and extendable data storage format based on simple binary containers.
