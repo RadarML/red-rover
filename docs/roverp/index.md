@@ -1,5 +1,10 @@
 # **roverp**: data processing
 
+![MIT License](https://img.shields.io/badge/license-MIT-green)
+![Supports Python 3.12+](https://img.shields.io/badge/python-3.12%20%7C%203.13-blue)
+![Typed](https://img.shields.io/badge/types-typed-limegreen)
+[![bear-ified](https://raw.githubusercontent.com/beartype/beartype-assets/main/badge/bear-ified.svg)](https://beartype.readthedocs.io)
+
 The data processing tooling for `red-rover` includes some library components, a number of CLI tools, and a makefile for managing a dockerized cartographer SLAM pipeline.
 
 | Tool | Description | Required Extras |

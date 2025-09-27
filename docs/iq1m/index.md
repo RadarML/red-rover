@@ -1,5 +1,8 @@
 # I/Q-1M: one million i/q frames
 
+![CC BY License](https://img.shields.io/badge/license-CC%20BY-green)
+![Roverd Data Format](https://img.shields.io/badge/data%20format-roverd-purple)
+
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 5px;">
     <img src="images/iq1m-bike.jpg" alt="IQ1M Bike" style="width: 100%; min-width: 200px;">
     <img src="images/iq1m-indoor.jpg" alt="IQ1M Indoor" style="width: 100%; min-width: 200px;">

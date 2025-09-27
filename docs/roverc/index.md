@@ -1,5 +1,10 @@
 # **roverc**: data collection system
 
+![MIT License](https://img.shields.io/badge/license-MIT-green)
+![Supports Python 3.12](https://img.shields.io/badge/python-3.12-blue)
+![Typed](https://img.shields.io/badge/types-typed-limegreen)
+[![bear-ified](https://raw.githubusercontent.com/beartype/beartype-assets/main/badge/bear-ified.svg)](https://beartype.readthedocs.io)
+
 <div class="grid" markdown>
 
 ![Front](images/rover-front.jpg)

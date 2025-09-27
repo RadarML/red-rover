@@ -1,6 +1,6 @@
 [project]
 name = "red-rover"
-version = "0.3.1"
+version = "0.3.2"
 authors = [
   { name="Tianshu Huang", email="tianshu2@andrew.cmu.edu" },
 ]

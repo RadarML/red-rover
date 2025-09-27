@@ -17,7 +17,7 @@ from .camera import Camera, Semseg
 from .generic import DynamicSensor, Sensor
 from .lidar import LidarMetadata, OSLidar, OSLidarDepth
 from .pose import IMU, Pose
-from .radar import XWRRadar
+from .radar import RadarMetadata, XWRRadar
 
 SENSOR_TYPES: dict[str, type[Sensor]] = {
     "radar": XWRRadar,
@@ -56,5 +56,5 @@ def from_config(
 
 __all__ = [
     "DynamicSensor", "Sensor", "XWRRadar", "OSLidarDepth", "OSLidar", "IMU",
-    "Camera", "Semseg", "LidarMetadata"
+    "Pose", "Camera", "Semseg", "LidarMetadata", "RadarMetadata"
 ]
