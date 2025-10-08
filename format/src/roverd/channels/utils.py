@@ -1,6 +1,7 @@
 """Channel utilities and types."""
 
 from collections.abc import Iterable, Iterator
+from dataclasses import dataclass
 from queue import Queue
 from threading import Thread
 from typing import Generic, TypeVar
@@ -19,6 +20,19 @@ Should generally behave as follows:
 """
 
 
+@dataclass
+class ExceptionSentinel:
+    """Sentinel class to indicate an exception, which should bubble up.
+
+    !!! info
+
+        We use an `ExceptionSentinel` wrapping the actual exception in case
+        users want to put an actual `Exception` into a stream.
+    """
+
+    exception: Exception
+
+
 T = TypeVar("T")
 
 Streamable = Iterator[T] | Iterable[T] | Queue[T]
@@ -28,12 +42,18 @@ Streamable = Iterator[T] | Iterable[T] | Queue[T]
 class Buffer(Generic[T]):
     """Simple queue buffer (i.e. queue to iterator) with batching.
 
+    Accepts the following "signals":
+
+    - `None`: indicates that the stream is complete (i.e. `StopIteration`).
+    - `ExceptionSentinel`: indicates that a generic exception occurred, which
+        should be re-raised in the thread which reads from the buffer.
+
     Args:
         queue: queue to use as a buffer. Should return `None` when the stream
             is complete (i.e. `StopIteration`).
     """
 
-    def __init__(self, queue: Queue[T]) -> None:
+    def __init__(self, queue: Queue[T | ExceptionSentinel]) -> None:
         self.queue = queue
 
     def __iter__(self):
@@ -41,6 +61,9 @@ class Buffer(Generic[T]):
 
     def __next__(self) -> T:
         item = self.queue.get()
+        if isinstance(item, ExceptionSentinel):
+            raise item.exception
+
         if item is None:
             raise StopIteration
         else:
@@ -53,6 +76,11 @@ class Prefetch(Buffer):
     Can be used as a prefetched iterator (`for x in Prefetch(...)`), or as a
     queue (`Prefetch(...).queue`). When used as a queue, `None` is put in the
     queue to indicate that the iterator has terminated.
+
+    !!! warning
+
+        Any exceptions raised in the provided iterator are re-raised in the
+        thread which reads the queue.
 
     Args:
         iterator: any python iterator; must never yield `None`.
@@ -68,9 +96,12 @@ class Prefetch(Buffer):
         Thread(target=self._prefetch, daemon=True).start()
 
     def _prefetch(self) -> None:
-        for item in self.iterator:
-            self.queue.put(item)
-        self.queue.put(None)
+        try:
+            for item in self.iterator:
+                self.queue.put(item)
+            self.queue.put(None)
+        except Exception as e:
+            self.queue.put(ExceptionSentinel(e))
 
 
 def batch_iterator(
