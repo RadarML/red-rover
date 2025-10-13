@@ -4,12 +4,6 @@
 
     The [Open Storage Network](https://openstoragenetwork.github.io/) (OSN) is a NSF-funded distributed data sharing and transfer service based on S3 buckets. We currently have a storage allocation on OSN which we are trialing to distribute I/Q-1M.
 
-!!! tip "OSN is on Internet2"
-
-    OSN is connected to [internet2](https://internet2.edu/); institutions connected to internet2 can benefit from high download speeds.
-
-    In our benchmarks from CMU campus, we were able to achieve ~600mbps download and ~1500mbps upload speeds.
-
 ## Set up `rclone`
 
 The best way to interact with OSN is through [rclone](https://rclone.org/docs/).
@@ -82,6 +76,10 @@ rclone sync osn-ro:/cmu-wiselab-iq1m/data ./iq1m -v
 ```
 
 - When using `rclone sync`, you can stop (interrupt with ctrl+C) and resume downloading at any time.
+
+!!! warning
+
+    The full dataset requires about 3.5TB of storage.
 
 You can also download each setting or trace separately:
 ```sh

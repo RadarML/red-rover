@@ -1,10 +1,31 @@
 """Data Type Library.
 
-!!! info
+??? info "Types are generic dataclasses"
 
     Following the recommendations of the [abstract dataloader](
     https://wiselabcmu.github.io/abstract-dataloader/types/), each type is a
     generic dataclass of arrays.
+
+    This means that each type can be specified with a particular array
+    implementation, e.g.,
+    ```
+    CameraData[np.ndarray], CameraData[jnp.ndarray], CameraData[torch.Tensor]
+    ```
+    or left without any specific annotation to implicitly allow any backend
+    to be used, i.e.,
+    ```
+    CameraData = CameraData[np.ndarray | jnp.ndarray | torch.Tensor | ...]
+    ```
+    Finally, callables accepting these types can be annotated using a type
+    variable to designate that the callable preserves the array type:
+    ```
+    from abstract_dataloader.ext.types import TArray
+
+    def example_generic_fn(data: CameraData[TArray]) -> CameraData[TArray]:
+        # if data is CameraData[np.ndarray], we return CameraData[np.ndarray]
+        ...
+    ```
+
 
 Each type in this library is a dataclass of arrays:
 
@@ -35,10 +56,17 @@ from jaxtyping import (
 class XWRRadarIQ(Generic[TArray]):
     """Raw I/Q data.
 
+    !!! info "Named Axes"
+
+        - `slow`: slow time, i.e., number of chirps per frame.
+        - `tx`: transmit antenna.
+        - `rx`: receive antenna.
+        - `fast`: fast time with interleaved IIQQ data, i.e.,
+            `samples_per_chirp * 2`.
+
     Attributes:
-        iq: raw I/Q data in slow-tx-rx-fast order; see the [`xwr` documentation](
-            https://wiselabcmu.github.io/xwr/dca/types/#xwr.capture.types.RadarFrame)
-            for details.
+        iq: raw I/Q data in slow-tx-rx-fast order; see the
+            [`xwr` documentation][xwr.capture.types.RadarFrame] for details.
         timestamps: timestamp for each frame; nominally in seconds.
         range_resolution: range resolution for the modulation used; nominally
             in meters.
@@ -58,6 +86,12 @@ class XWRRadarIQ(Generic[TArray]):
 class XWR4DSpectrum(Generic[TArray]):
     """4D radar spectrum data.
 
+    !!! info "Named Axes"
+        - `doppler`: doppler bins.
+        - `elevation`: elevation angle bins.
+        - `azimuth`: azimuth angle bins.
+        - `range`: range bins.
+
     Attributes:
         spectrum: 4D complex spectrum in doppler-elevation-azimuth-range order.
         timestamps: timestamp for each frame; nominally in seconds.
@@ -76,6 +110,11 @@ class XWR4DSpectrum(Generic[TArray]):
 class Depth(Generic[TArray]):
     """Generic raw depth data.
 
+    !!! info "Named Axes"
+        - `beam`: lidar beam.
+        - `time`: index within each frame where the range measurements are
+            taken.
+
     Attributes:
         rng: raw range measurements in beam-time space; nominally in mm.
         timestamps: timestamp for each frame; nominally in seconds.
@@ -89,13 +128,17 @@ class Depth(Generic[TArray]):
 class PointCloud(Generic[TArray]):
     """Generic point cloud data.
 
+    !!! info "Named Axes"
+        - `n`: points within the point cloud.
+
     Attributes:
-        xyz: point cloud coordinates in meters.
+        xyz: point cloud coordinates, nominally in meters; zero-padded to the
+            same number of points per frame.
         length: number of points in each point cloud.
         timestamps: timestamp for each frame; nominally in seconds.
     """
 
-    xyz: Float32[TArray, "batch t 3"]
+    xyz: Float32[TArray, "batch t n 3"]
     length: Integer[TArray, "#batch #t"]
     timestamps: Float64[TArray, "batch t"]
 
@@ -126,6 +169,11 @@ class OSDepth(Generic[TArray]):
 class OSData(Generic[TArray]):
     """Depth and IR intensity data from an Ouster OSX sensor.
 
+    !!! info "Named Axes"
+        - `beam`: lidar beam.
+        - `time`: index within each frame where the range measurements are
+            taken.
+
     !!! warning
 
         The measurements are recorded in *time* space, so are "staggered,"
@@ -152,6 +200,10 @@ class OSData(Generic[TArray]):
 class CameraData(Generic[TArray]):
     """Video data.
 
+    !!! info "Named Axes"
+        - `height`: image height.
+        - `width`: image width.
+
     Attributes:
         image: raw image data in HWC format.
         timestamps: timestamp for each frame; nominally in seconds.
@@ -164,6 +216,10 @@ class CameraData(Generic[TArray]):
 @dataclass
 class CameraSemseg(Generic[TArray]):
     """Camera-based semantic segmentation.
+
+    !!! info "Named Axes"
+        - `height`: image height.
+        - `width`: image width.
 
     Attributes:
         semseg: segmentation classes.
