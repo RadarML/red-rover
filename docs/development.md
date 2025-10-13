@@ -43,3 +43,16 @@ where `ROVERD_TEST_TRACE` should point to a sample data trace with at least 0.5s
     ```sh
     uv run python -m http.server 8001 -d ./htmlcov
     ```
+
+## Version Control
+
+`red-rover` is currently managed as a mono-repo, with the three components sharing the same version (which is tagged at the repository level as well). When making changes, please remember to update the version in `pyproject.toml` in each subdirectory.
+
+!!! danger "Regenerate `uv.lock` after Version Bumps"
+
+    Since the monorepo root `pyproject.toml` references each submodule, you must regenerate the root `uv.lock` file after changing versions in any submodule!
+
+    To regenerate and update packages, run
+    ```sh
+    uv sync --all-extras --upgrade
+    ```
