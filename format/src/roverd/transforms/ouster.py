@@ -142,6 +142,8 @@ class PointCloud(spec.Transform[types.OSDepth, types.PointCloud]):
         Returns:
             Point cloud data.
         """
+        _batch = data.rng.shape[:2]
+
         meta = self.cache[data.intrinsics]
         mid = id(meta)
 
@@ -149,7 +151,7 @@ class PointCloud(spec.Transform[types.OSDepth, types.PointCloud]):
             self.lut_cache[mid] = client.XYZLut(meta)  # type: ignore
 
         xyz = []
-        for frame in data.rng:
+        for frame in data.rng.reshape(-1, *data.rng.shape[-2:]):
             pc = self.lut_cache[mid](frame).astype(np.float32)
 
             if self.min_range is not None:
@@ -160,7 +162,13 @@ class PointCloud(spec.Transform[types.OSDepth, types.PointCloud]):
 
             xyz.append(pc.reshape(-1, 3)[valid.reshape(-1)])
 
+        padded = np.zeros(
+            (len(xyz), max(x.shape[0] for x in xyz), 3), dtype=np.float32)
+        length = np.array([x.shape[0] for x in xyz], dtype=np.int32)
+        for i, x in enumerate(xyz):
+            padded[i, :x.shape[0]] = x
+
         return types.PointCloud(
-            xyz=np.concatenate(xyz, axis=0),
-            length=np.array([len(x) for x in xyz], dtype=np.int32),
+            xyz=padded.reshape(*_batch, -1, 3),
+            length=length.reshape(_batch),
             timestamps=data.timestamps)

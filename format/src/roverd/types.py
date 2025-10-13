@@ -90,12 +90,13 @@ class PointCloud(Generic[TArray]):
     """Generic point cloud data.
 
     Attributes:
-        xyz: point cloud coordinates in meters.
+        xyz: point cloud coordinates, nominally in meters; zero-padded to the
+            same number of points per frame.
         length: number of points in each point cloud.
         timestamps: timestamp for each frame; nominally in seconds.
     """
 
-    xyz: Float32[TArray, "batch t 3"]
+    xyz: Float32[TArray, "batch t n 3"]
     length: Integer[TArray, "#batch #t"]
     timestamps: Float64[TArray, "batch t"]
 
