@@ -45,13 +45,13 @@ def __sensor_msgs_imu(rot, acc, avel, sec, nsec):
             frame_id="imu_link", stamp=ts),
         orientation=types.geometry_msgs__msg__Quaternion(
             x=rot[0], y=rot[1], z=rot[2], w=rot[3]),
-        orientation_covariance=NULL_COV,
+        orientation_covariance=NULL_COV,  # type: ignore
         angular_velocity=types.geometry_msgs__msg__Vector3(
             x=avel[0], y=avel[1], z=avel[2]),
-        angular_velocity_covariance=NULL_COV,
+        angular_velocity_covariance=NULL_COV,  # type: ignore
         linear_acceleration=types.geometry_msgs__msg__Vector3(
             x=acc[0], y=acc[1], z=acc[2]),
-        linear_acceleration_covariance=NULL_COV)
+        linear_acceleration_covariance=NULL_COV)  # type: ignore
 
 
 # Must be called "x", "y", "z" for cartographer to recognize the channels.
@@ -70,7 +70,7 @@ def __sensor_msgs_pointcloud2(points, sec, nsec):
     return types.sensor_msgs__msg__PointCloud2(
         header=header, height=1, width=points.shape[0],
         fields=__POINTCLOUD2_FIELDS, is_bigendian=False, point_step=3 * 4,
-        row_step=3 * 4, data=data, is_dense=True)
+        row_step=3 * 4, data=data, is_dense=True)  # type: ignore
 
 
 def rover_to_rosbag(

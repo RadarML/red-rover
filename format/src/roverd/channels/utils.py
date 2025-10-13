@@ -35,8 +35,15 @@ class ExceptionSentinel:
 
 T = TypeVar("T")
 
-Streamable = Iterator[T] | Iterable[T] | Queue[T]
-"""Any stream-like container."""
+Streamable = Iterator[T] | Iterable[T] | Queue[T | None | ExceptionSentinel]
+"""Any stream-like container.
+
+!!! warning
+
+    Unlike `Iterator[T]` or `Iterable[T]`, a `Streamable: Queue` may also yield
+    `None` at the end of the stream or `ExceptionSentinel` if an exception
+    occurs in the producer.
+"""
 
 
 class Buffer(Generic[T]):
@@ -53,7 +60,7 @@ class Buffer(Generic[T]):
             is complete (i.e. `StopIteration`).
     """
 
-    def __init__(self, queue: Queue[T | ExceptionSentinel]) -> None:
+    def __init__(self, queue: Queue[T | None | ExceptionSentinel]) -> None:
         self.queue = queue
 
     def __iter__(self):
@@ -63,14 +70,13 @@ class Buffer(Generic[T]):
         item = self.queue.get()
         if isinstance(item, ExceptionSentinel):
             raise item.exception
-
         if item is None:
             raise StopIteration
         else:
             return item
 
 
-class Prefetch(Buffer):
+class Prefetch(Buffer[T]):
     """Simple prefetch queue wrapper (i.e. iterator to queue).
 
     Can be used as a prefetched iterator (`for x in Prefetch(...)`), or as a
