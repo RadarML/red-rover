@@ -4,6 +4,7 @@
 */_camera/segment
 */_camera/segment_i
 */_camera/ts
+*/_camera/video.avi
 */camera/meta.json
 */camera/ts
 */imu/acc
