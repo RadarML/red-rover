@@ -5,6 +5,7 @@ from typing import Annotated, Any, Union
 import tyro
 
 from .blobify import cli_blobify
+from .checksum import cli_checksum
 from .extract import cli_extract
 from .info import cli_info
 from .list import cli_list
@@ -25,6 +26,7 @@ def make_annotation(name, func):
 def cli_main() -> None:
     commands = {
         "blobify": cli_blobify,
+        "checksum": cli_checksum,
         "extract": cli_extract,
         "list": cli_list,
         "info": cli_info,

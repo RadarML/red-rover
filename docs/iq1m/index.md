@@ -46,7 +46,8 @@ The I/Q-1M dataset consists of 1M radar-lidar-camera samples[^1] over 29 hours a
  ┃ ┣ 📜pose.npz             # interpolated cartographer poses with camera timestamps
  ┃ ┣ 📜segment              # lzma-compressed semantic segmentation class maps
  ┃ ┣ 📜segment_i            # byte offsets
- ┃ ┗ 📜ts                   # camera timestamps (same as camera/ts)
+ ┃ ┣ 📜ts                   # camera timestamps (same as camera/ts)
+ ┃ ┗ 📜video.avi            # anonymized video (MJPEG)
  ┣ 📂_lidar
  ┃ ┗ 📜pose.npz             # cartographer poses with lidar timestamps
  ┣ 📂_radar
@@ -73,7 +74,7 @@ The I/Q-1M dataset consists of 1M radar-lidar-camera samples[^1] over 29 hours a
  ┃ ┣ 📜rng_i                # byte offsets
  ┃ ┗ 📜ts                   # lidar timestamps (10Hz)
  ┣ 📂radar
- ┃ ┣ 📜iq                   # raw complex time signal
+ ┃ ┣ 📜iq                   # raw complex time signal (IIQQ format)
  ┃ ┣ 📜meta.json
  ┃ ┣ 📜radar.json           # radar intrinsics
  ┃ ┣ 📜ts                   # radar timestamps (20Hz)

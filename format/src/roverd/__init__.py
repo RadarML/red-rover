@@ -7,11 +7,9 @@
     data loader.
 
     Thus, to use the dataloader in practice, in addition to writing custom
-    ADL-compliant components, you can use generic ADL components:
+    ADL-compliant components, you can use generic ADL components, e.g.:
 
     - [`Nearest`][abstract_dataloader.generic.Nearest] synchronization
-    - [`Window`][abstract_dataloader.generic.Window] to load consecutive frames
-        as a single sample
     - [`TransformedDataset`][abstract_dataloader.ext.torch.TransformedDataset] to
         get the [`roverd.Dataset`][roverd.Dataset] into a pytorch dataloader
 
