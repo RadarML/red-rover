@@ -12,7 +12,6 @@ from tqdm import tqdm
 def _calculate_checksums(
     src: str, dst: str, patterns: list[str] | None = []
 ) -> None:
-    print("Calculating checksums for:", src)
     paths = []
     for root, _, files in os.walk(src):
         for file in files:

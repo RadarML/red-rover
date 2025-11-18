@@ -10,9 +10,7 @@ The best way to interact with OSN is through [rclone](https://rclone.org/docs/).
 
 !!! info
 
-    The I/Q-1m dataset is currently in pre-release, and is not accessible to the general public.
-
-    Ask Tianshu (<tianshu2@andrew.cmu.edu>) for the access keys, or find them on the allocations page in [OSN ColdFront](https://coldfront.osn.mghpcc.org/) if you have been added to the allocation as a user/manager.
+    The I/Q-1m dataset is currently in pre-release; contact <tianshu2@andrew.cmu.edu> for the access keys.
 
 After installing `sudo apt-get install rclone`, you will need to create a configuration with our bucket information:
 
