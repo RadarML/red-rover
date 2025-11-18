@@ -151,7 +151,7 @@ After downloading the dataset, you may wish to verify the integrity of the files
 
 !!! info
 
-    You can find the reference checksum files in the [red-rover repository](https://github.com/RadarML/red-rover/blob/main/iq1m/checksums.tar.gz). See [`roverd checksum`](../roverd/cli.md) for more details about how these checksums are computed and unformatted; the format should be fairly self-explanatory once you `untar` the files.
+    You can find the reference checksum files in the [red-rover repository](https://github.com/RadarML/red-rover/blob/main/iq1m/checksums.tar.gz). See [`roverd checksum`](../roverd/cli.md) for more details about how these checksums are computed and formatted; the format should be fairly self-explanatory once you `untar` the files.
 
 Assuming that you've [installed roverd](../roverd/index.md) into your environment:
 
@@ -164,5 +164,5 @@ Assuming that you've [installed roverd](../roverd/index.md) into your environmen
 2. Compare the calculated checksums against the reference checksums:
 
     ```sh
-    uv run roverd checksum-compare /path/to/original/checksums /path/to/checksums/output
+    uv run roverd checksum /path/to/original/checksums /path/to/checksums/output
     ```

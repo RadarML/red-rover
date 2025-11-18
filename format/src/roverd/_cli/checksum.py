@@ -10,7 +10,7 @@ from tqdm import tqdm
 
 
 def _calculate_checksums(
-    src: str, dst: str, patterns: list[str] | None = []
+    src: str, dst: str, patterns: list[str] | None = None
 ) -> None:
     paths = []
     for root, _, files in os.walk(src):
@@ -37,7 +37,9 @@ def _calculate_checksums(
             f.write(f"{p},{checksum}\n")
 
 
-def _compare_checksums(src: str, dst: str, patterns: list[str] | None) -> int:
+def _compare_checksums(
+    src: str, dst: str, patterns: list[str] | None = None
+) -> int:
     src_checksums = {}
     with open(src, 'r') as f:
         reader = csv.DictReader(f)
