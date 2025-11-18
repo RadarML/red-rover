@@ -41,7 +41,7 @@ nav:
       - roverp.graphics: roverp/graphics.md
   - i/q-1m:
     - Overview: iq1m/index.md
-    - Download via OSN: iq1m/osn.md
+    - Download: iq1m/osn.md
 
 extra_css:
   - stylesheets/extra.css
@@ -135,3 +135,4 @@ markdown_extensions:
   - admonition
   - pymdownx.details
   - footnotes
+  - pymdownx.snippets

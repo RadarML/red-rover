@@ -18,6 +18,16 @@
         show_root_heading: false
         show_root_toc_entry: false
 
+## `roverd checksum`
+
+:::roverd._cli.cli_checksum
+    options:
+        heading_level: 2
+        show_symbol_type_heading: false
+        show_signature: false
+        separate_signature: false
+        show_root_heading: false
+        show_root_toc_entry: false
 
 ## `roverd extract`
 
