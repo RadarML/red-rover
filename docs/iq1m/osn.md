@@ -158,11 +158,15 @@ Assuming that you've [installed roverd](../roverd/index.md) into your environmen
 1. Calculate checksums on your downloaded copy:
 
     ```sh
-    uv run roverd checksum /path/to/downloaded/iq1m /path/to/checksums/output
+    for i in `roverd list /path/to/downloaded/iq1m`; do
+        uv run roverd checksum /path/to/downloaded/iq1m/$i /path/to/checksums/output/$i;
+    done
     ```
 
 2. Compare the calculated checksums against the reference checksums:
 
     ```sh
-    uv run roverd checksum /path/to/original/checksums /path/to/checksums/output
+    for i in `roverd list /path/to/downloaded/iq1m`; do
+        uv run roverd checksum /path/to/original/checksums/$i /path/to/checksums/output/$i;
+    done
     ```
