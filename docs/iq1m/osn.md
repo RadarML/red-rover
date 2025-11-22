@@ -69,13 +69,13 @@ rclone sync osn-ro:/cmu-wiselab-iq1m/checkpoints ./iq1m-checkpoints -v
 
 ??? quote "Checkpoints"
 
-    The current checkpoints are available:
+    The following checkpoints are currently available:
     ```
     $ rclone lsd osn-ro:/cmu-wiselab-iq1m/checkpoints
            0 2025-11-22 12:22:46        -1 base     # base model - 3D occupancy
-           0 2025-11-22 12:22:46        -1 occ2d    # fine tune - 2D occupancy
-           0 2025-11-22 12:22:46        -1 semseg   # fine tune - semantic segmentation
-           0 2025-11-22 12:22:46        -1 vel      # fine tune - ego-motion
+           0 2025-11-22 12:22:46        -1 occ2d    # fine-tune - 2D occupancy
+           0 2025-11-22 12:22:46        -1 semseg   # fine-tune - semantic segmentation
+           0 2025-11-22 12:22:46        -1 vel      # fine-tune - ego-motion
     ```
 
 !!! tip
