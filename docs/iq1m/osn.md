@@ -6,7 +6,7 @@
 
 ## Get Access Keys
 
-The I/Q-1M dataset is fully open-source and permissively licensed, and does not include any usage restrictions. To help us track usage statistics &mdash; and better target and motivate future datasets and extensions &mdash; we do ask that you fill out [this short questionaire](https://docs.google.com/forms/d/e/1FAIpQLSeB3x0Ax-OcuEJZW69Eut-Sqj4i4owa6B40BDg16uPfnRwFbg/viewform?usp=dialog) to get the access keys for our dataset.
+The I/Q-1M dataset is fully open-source and permissively licensed, and does not include any usage restrictions. To help us track usage statistics &mdash; and better target and motivate future datasets and extensions &mdash; we do ask that you fill out [this short questionnaire](https://docs.google.com/forms/d/e/1FAIpQLSeB3x0Ax-OcuEJZW69Eut-Sqj4i4owa6B40BDg16uPfnRwFbg/viewform?usp=dialog) to get the access keys for our dataset.
 
 ## Set Up `rclone`
 
