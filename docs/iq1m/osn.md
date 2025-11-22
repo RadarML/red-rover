@@ -55,14 +55,32 @@ After installing `sudo apt-get install rclone`, you will need to create a config
         rclone copy osn-ro:/cmu-wiselab-iq1m/data/bike/bloomfield.back/config.yaml .
         ```
 
-## Download
+## Download from OSN
 
 To download the full dataset (3.2TB / 2.9TiB), use:
 ```sh
 rclone sync osn-ro:/cmu-wiselab-iq1m/data ./iq1m -v
 ```
 
-- When using `rclone sync`, you can stop (interrupt with ctrl+C) and resume downloading at any time.
+You can also find our pre-trained model checkpoints in the same bucket:
+```sh
+rclone sync osn-ro:/cmu-wiselab-iq1m/checkpoints ./iq1m-checkpoints -v
+```
+
+??? quote "Checkpoints"
+
+    The following checkpoints are currently available:
+    ```
+    $ rclone lsd osn-ro:/cmu-wiselab-iq1m/checkpoints
+           0 2025-11-22 12:22:46        -1 base     # base model - 3D occupancy
+           0 2025-11-22 12:22:46        -1 occ2d    # fine-tune - 2D occupancy
+           0 2025-11-22 12:22:46        -1 semseg   # fine-tune - semantic segmentation
+           0 2025-11-22 12:22:46        -1 vel      # fine-tune - ego-motion
+    ```
+
+!!! tip
+
+    When using `rclone sync`, you can stop (interrupt with ctrl+C) and resume downloading at any time.
 
 !!! warning "Symlink Videos"
 
@@ -90,42 +108,6 @@ rclone sync osn-ro:/cmu-wiselab-iq1m/data ./iq1m -v
     ```
 
     See the `rclone sync` [documentation](https://rclone.org/commands/rclone_sync) for more details and other options.
-
-
-## Upload
-
-!!! info
-
-    We currently have a 5TB bucket provisioned in OSN. To check the current utilization:
-    ```sh
-    rclone size osn-rw:/cmu-wiselab-iq1m
-    ```   
-    
-Create a read/write configuration:
-
-```toml
-[osn-rw]
-type = s3
-provider = Ceph
-access_key_id = # ask tianshu or get this from coldfront
-secret_access_key =   # ...
-endpoint = https://uri.osn.mghpcc.org
-no_check_bucket = true
-```
-
-Then, upload with
-```sh
-rclone sync /data osn-rw:/cmu-wiselab-iq1m/data --include-from iq1m/upload.txt -v
-```
-
-The original instructions from OSN can also be found [here](https://openstoragenetwork.github.io/docs/dataset-access/rclone/).
-
-??? quote "Uploaded Files"
-
-    `iq1m.txt` includes the following:
-    ```
-    --8<-- "iq1m/upload.txt"
-    ```
 
 ## FTP Fallback
 
@@ -158,11 +140,15 @@ Assuming that you've [installed roverd](../roverd/index.md) into your environmen
 1. Calculate checksums on your downloaded copy:
 
     ```sh
-    uv run roverd checksum /path/to/downloaded/iq1m /path/to/checksums/output
+    for i in `roverd list /path/to/downloaded/iq1m`; do
+        uv run roverd checksum /path/to/downloaded/iq1m/$i /path/to/checksums/output/$i;
+    done
     ```
 
 2. Compare the calculated checksums against the reference checksums:
 
     ```sh
-    uv run roverd checksum /path/to/original/checksums /path/to/checksums/output
+    for i in `roverd list /path/to/downloaded/iq1m`; do
+        uv run roverd checksum /path/to/original/checksums/$i /path/to/checksums/output/$i;
+    done
     ```
