@@ -4,7 +4,11 @@
 
     The preferred download method is via the [Open Storage Network](https://openstoragenetwork.github.io/) (OSN), which is a NSF-funded distributed data sharing and transfer service based on S3 buckets. We currently have a storage allocation on OSN which we are trialing to distribute I/Q-1M.
 
-## Set up `rclone`
+## Get Access Keys
+
+The I/Q-1M dataset is fully open-source and permissively licensed, and does not include any usage restrictions. To help us track usage statistics &mdash; and better target and motivate future datasets and extensions &mdash; we do ask that you fill out [this short questionaire](https://docs.google.com/forms/d/e/1FAIpQLSeB3x0Ax-OcuEJZW69Eut-Sqj4i4owa6B40BDg16uPfnRwFbg/viewform?usp=dialog) to get the access keys for our dataset.
+
+## Set Up `rclone`
 
 The best way to interact with OSN is through [rclone](https://rclone.org/docs/).
 
@@ -26,7 +30,7 @@ After installing `sudo apt-get install rclone`, you will need to create a config
     [osn-ro]
     type = s3
     provider = Ceph
-    access_key_id = # ask tianshu or get this from coldfront
+    access_key_id =  # ...
     secret_access_key =   # ...
     endpoint = https://uri.osn.mghpcc.org
     no_check_bucket = true
