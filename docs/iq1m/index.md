@@ -9,10 +9,6 @@
     <img src="images/iq1m-outdoor.jpg" alt="IQ1M Outdoor" style="width: 100%; min-width: 200px;">
 </div>
 
-!!! info
-
-    We are currently working to prepare the dataset for public release and distribution. For the time being, please contact Tianshu Huang (<tianshu2@andrew.cmu.edu>) for access.
-
 ## Overview
 
 The I/Q-1M dataset consists of 1M radar-lidar-camera samples[^1] over 29 hours across indoor, outdoor, and bike-mounted settings, each with a mobile observer:
