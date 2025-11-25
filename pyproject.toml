@@ -68,7 +68,8 @@ ignore = [
     "D107",  # Initializer goes in the class docstring
     "D401",  # "Imperative mood" NLP doesn't always make sense
     "D413",  # No blank lines after section is preferred by mkdocstrings
-    "N806",  # We do math, so capitalization should be allowed
+    "N803",  # We do math, so capitalization should be allowed
+    "N806",
     "N818",  # Exception names
 
     # Must pick one...
