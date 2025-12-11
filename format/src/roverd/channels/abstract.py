@@ -12,7 +12,7 @@ from typing import Any, cast
 import numpy as np
 from jaxtyping import Shaped
 
-from .utils import Buffer, Data, Prefetch, Streamable
+from .utils import Buffer, Data, Prefetch, ReadableQueue, Streamable
 
 
 class Channel(ABC):
@@ -399,7 +399,7 @@ class BlobChannel(Channel, ABC):
         Raises:
             ValueError: data type/shape does not match channel specifications.
         """
-        if isinstance(stream, Queue):
+        if isinstance(stream, ReadableQueue):
             stream = Buffer(stream)
         if thread:
             Thread(target=self.consume, kwargs={"stream": stream}).start()

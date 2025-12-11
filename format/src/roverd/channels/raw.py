@@ -10,7 +10,7 @@ import numpy as np
 from jaxtyping import Shaped
 
 from .abstract import Channel
-from .utils import Buffer, Data, Streamable
+from .utils import Buffer, Data, ReadableQueue, Streamable
 
 
 class RawChannel(Channel):
@@ -134,7 +134,7 @@ class RawChannel(Channel):
         Raises:
             ValueError: data type/shape does not match channel specifications.
         """
-        if isinstance(stream, Queue):
+        if isinstance(stream, ReadableQueue):
             stream = Buffer(stream)
         if thread:
             Thread(target=self.consume, kwargs={"stream": stream}).start()

@@ -4,7 +4,7 @@ from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
 from queue import Queue
 from threading import Thread
-from typing import Generic, TypeVar
+from typing import Generic, Protocol, TypeVar, runtime_checkable
 
 import numpy as np
 
@@ -34,8 +34,28 @@ class ExceptionSentinel:
 
 
 T = TypeVar("T")
+T_co = TypeVar("T_co", covariant=True)
 
-Streamable = Iterator[T] | Iterable[T] | Queue[T | None | ExceptionSentinel]
+
+@runtime_checkable
+class ReadableQueue(Protocol[T_co]):
+    """Protocol for a readable queue.
+
+    !!! info
+
+        This is similar to `queue.Queue`, but only requires the `get` and
+        `empty` methods, and is covariant in the item type.
+    """
+
+    def get(self, block: bool = True, timeout: float | None = None) -> T_co:
+        ...
+
+    def empty(self) -> bool:
+        ...
+
+
+Streamable = (
+    Iterator[T] | Iterable[T] | ReadableQueue[T | None | ExceptionSentinel])
 """Any stream-like container.
 
 !!! warning
@@ -43,6 +63,13 @@ Streamable = Iterator[T] | Iterable[T] | Queue[T | None | ExceptionSentinel]
     Unlike `Iterator[T]` or `Iterable[T]`, a `Streamable: Queue` may also yield
     `None` at the end of the stream or `ExceptionSentinel` if an exception
     occurs in the producer.
+
+!!! danger
+
+    Instead of an invariant `Queue`, a `Streamable` object uses a covariant
+    [`ReadableQueue`][^.], since producers may want to put subtypes of `T` into
+    the queue. Downstream users must check the union against `ReadableQueue`
+    instead of `queue.Queue`.
 """
 
 
@@ -60,7 +87,9 @@ class Buffer(Generic[T]):
             is complete (i.e. `StopIteration`).
     """
 
-    def __init__(self, queue: Queue[T | None | ExceptionSentinel]) -> None:
+    def __init__(
+        self, queue: ReadableQueue[T | None | ExceptionSentinel]
+    ) -> None:
         self.queue = queue
 
     def __iter__(self):
@@ -96,7 +125,7 @@ class Prefetch(Buffer[T]):
     def __init__(
         self, iterator: Iterable[T] | Iterator[T], size: int = 64
     ) -> None:
-        super().__init__(queue=Queue(maxsize=size))
+        self.queue = Queue(maxsize=size)
         self.iterator = iterator
 
         Thread(target=self._prefetch, daemon=True).start()
