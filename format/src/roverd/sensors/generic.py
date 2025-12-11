@@ -35,6 +35,7 @@ class Sensor(abstract.Sensor[TSample, TMetadata]):
             [`roverd.timestamps`][roverd.timestamps]), or `None`.
         past: number of past samples to include.
         future: number of future samples to include.
+        args: additional arguments to pass to channel constructors.
 
     Attributes:
         path: path to sensor data directory.
@@ -46,7 +47,8 @@ class Sensor(abstract.Sensor[TSample, TMetadata]):
         self, path: str,
         correction: str | None | Callable[
             [Float64[np.ndarray, "N"]], Float64[np.ndarray, "N"]] = None,
-        past: int = 0, future: int = 0
+        past: int = 0, future: int = 0,
+        args: dict[str, dict] = {}
     ) -> None:
 
         self.path = path
@@ -60,6 +62,11 @@ class Sensor(abstract.Sensor[TSample, TMetadata]):
         except (FileNotFoundError, json.JSONDecodeError) as e:
             raise ValueError(
                 "{}: no valid 'metadata.json' found.".format(str(e)))
+
+        # Merge additional args into config for each channel
+        for name, channel_args in args.items():
+            if name in self.config:
+                self.config[name]['args'] = channel_args
 
         self.channels = {
             name: channels.from_config(

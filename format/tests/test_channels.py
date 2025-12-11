@@ -53,6 +53,63 @@ def test_video_channel(tmp_path):
         assert streamed_data.shape == data.shape
 
 
+def test_video_channel_resolution(tmp_path):
+    """Test VideoChannel with resolution downsampling."""
+    shape = (3, 64, 128, 3)  # Original shape: 3 frames, 64x128 resolution
+    data = (_create_random_data(shape) * 255).astype(np.uint8)
+
+    # Write at full resolution
+    VideoChannel(
+        str(tmp_path / "full.avi"), shape=shape[1:], dtype=data.dtype
+    ).write(data)
+
+    # Read with different resolutions
+    resolutions = [
+        ((64, 32), (3, 32, 64, 3)),  # Half size: (width, height) -> (samples, height, width, channels)
+        ((32, 16), (3, 16, 32, 3)),  # Quarter size
+    ]
+
+    for resolution, expected_shape in resolutions:
+        channel = VideoChannel(
+            str(tmp_path / "full.avi"),
+            shape=shape[1:],
+            dtype=data.dtype,
+            resolution=resolution
+        )
+
+        # Test via .read()
+        read_data = channel.read()
+        assert read_data.shape == expected_shape, \
+            f"Expected {expected_shape}, got {read_data.shape} for resolution {resolution}"
+
+        # Test via .stream()
+        streamed_data = np.array(list(channel.stream()))
+        assert streamed_data.shape == expected_shape
+
+
+@pytest.mark.parametrize("interp", ["nearest", "linear", "cubic", "area", "lanczos"])
+def test_video_channel_interpolation(tmp_path, interp):
+    """Test VideoChannel with different interpolation methods."""
+    shape = (2, 64, 64, 3)
+    data = (_create_random_data(shape) * 255).astype(np.uint8)
+
+    VideoChannel(
+        str(tmp_path / "test.avi"), shape=shape[1:], dtype=data.dtype
+    ).write(data)
+
+    # Read with downsampling using specified interpolation
+    channel = VideoChannel(
+        str(tmp_path / "test.avi"),
+        shape=shape[1:],
+        dtype=data.dtype,
+        resolution=(32, 32),
+        interp=interp
+    )
+
+    read_data = channel.read()
+    assert read_data.shape == (2, 32, 32, 3)
+
+
 @pytest.mark.parametrize("ctype", [LzmaFrameChannel, RawChannel, VideoChannel])
 def test_random_reading(ctype, tmp_path):
     """Test random reading for channels."""

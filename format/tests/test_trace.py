@@ -36,7 +36,9 @@ def test_dataset_api(test_trace_path, smooth):
             "camera": partial(sensors.Camera, correction="auto"),
             "imu": partial(sensors.IMU, correction="auto"),}
     else:
-        spec = {"radar": "auto", "lidar": "auto", "camera": "auto", "imu": "auto"}
+        spec = {
+            "radar": "auto", "lidar": "auto",
+            "camera": "auto", "imu": "auto"}
 
     dataset = Dataset.from_config(
         [test_trace_path], sync=generic.Nearest("lidar"),
