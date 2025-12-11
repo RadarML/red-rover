@@ -10,7 +10,7 @@ import numpy as np
 from jaxtyping import Shaped
 
 from .abstract import Channel
-from .utils import Buffer, Data, Streamable
+from .utils import Buffer, Data, ReadableQueue, Streamable
 
 
 class VideoChannel(Channel):
@@ -209,7 +209,7 @@ class VideoChannel(Channel):
         Raises:
             ValueError: data type/shape does not match channel specifications.
         """
-        if isinstance(stream, Queue):
+        if isinstance(stream, ReadableQueue):
             stream = cast(Iterable[Data], Buffer(stream))
         if thread:
             Thread(
