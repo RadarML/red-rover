@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from functools import partial
-from typing import overload
+from typing import Literal, overload
 
 import numpy as np
 from abstract_dataloader import generic
@@ -16,6 +16,16 @@ from .generic import Sensor
 class Camera(Sensor[types.CameraData[np.ndarray], generic.Metadata]):
     """Generic RGB camera.
 
+    !!! tip
+
+        To reduce peak memory usage when loading long video sequences, you can
+        specify the `resolution` (and `interp` method) parameters, which
+        resizes frames on-the-fly during loading.
+
+        We use OpenCV for reading and resizing; see [`InterpolationFlags`](
+        https://docs.opencv.org/3.4/da/d54/group__imgproc__transform.html#ga5bb5a1fea74ea38e1a5445ca803ff121)
+        for details about interpolation methods.
+
     Args:
         path: path to sensor data directory. Must contain a `lidar.json` file
             with ouster lidar intrinsics.
@@ -26,18 +36,25 @@ class Camera(Sensor[types.CameraData[np.ndarray], generic.Metadata]):
             uses `smooth(interval=30.)`.
         past: number of past samples to include.
         future: number of future samples to include.
+        resolution: optional `(width, height)` output resolution for resizing.
+        interp: interpolation method for resizing.
     """
 
     def __init__(
         self, path: str, key: str = "video.avi",
         correction: str | None | Callable[
             [Float64[np.ndarray, "N"]], Float64[np.ndarray, "N"]] = None,
-        past: int = 0, future: int = 0
+        past: int = 0, future: int = 0,
+        resolution: tuple[int, int] | None = None,
+        interp: Literal[
+            "nearest", "linear", "cubic", "area", "lanczos"] = "area"
     ) -> None:
         if correction == "auto":
             correction = partial(timestamps.smooth, interval=30.)
 
-        super().__init__(path, correction=correction, past=past, future=future)
+        super().__init__(
+            path, correction=correction, past=past, future=future,
+            args={key: {"resolution": resolution, "interp": interp}})
         self.metadata = generic.Metadata(
             timestamps=self.correction(
                 self.channels["ts"].read(start=0, samples=-1)))

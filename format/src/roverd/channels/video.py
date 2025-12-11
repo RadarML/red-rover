@@ -4,7 +4,7 @@ from collections.abc import Callable, Iterable, Iterator, Sequence
 from functools import cached_property
 from queue import Queue
 from threading import Thread
-from typing import Any, cast
+from typing import Any, Literal, cast
 
 import numpy as np
 from jaxtyping import Shaped
@@ -23,17 +23,55 @@ class VideoChannel(Channel):
         tested. Using `opencv-python-headless` instead of the default opencv
         should alleviate some of these issues.
 
+    !!! tip
+
+        To reduce peak memory usage when loading long video sequences, you can
+        specify the `resolution` (and `interp` method) parameters, which
+        resizes frames on-the-fly during loading.
+
+        We use OpenCV for reading and resizing; see [`InterpolationFlags`](
+        https://docs.opencv.org/3.4/da/d54/group__imgproc__transform.html#ga5bb5a1fea74ea38e1a5445ca803ff121)
+        for details about interpolation methods.
+
     Args:
         path: file path.
         dtype: data type, or string name of dtype (e.g. `u1`, `f4`).
-        shape: data shape.
+        shape: data shape of the stored video.
+        resolution: optional `(width, height)` output resolution for resizing.
+        interp: interpolation method for resizing.
 
     Attributes:
         path: file path.
         type: numpy data type.
-        shape: sample data shape.
+        shape: sample data shape (original stored resolution).
+        resolution: output resolution if resizing is enabled.
+        interp: interpolation method for resizing.
         size: total file size, in bytes.
     """
+
+    def __init__(
+        self, path: str, dtype: str | type | np.dtype, shape: Sequence[int],
+        resolution: tuple[int, int] | None = None,
+        interp: Literal[
+            "nearest", "linear", "cubic", "area", "lanczos"] = "area"
+    ) -> None:
+        super().__init__(path, dtype, shape)
+        self.resolution = resolution
+        self.interp = interp
+
+        # Pre-compute interpolation flag if resizing is enabled
+        if resolution is not None:
+            cv2 = self._cv2_module
+            interp_mapping = {
+                "nearest": cv2.INTER_NEAREST,
+                "linear": cv2.INTER_LINEAR,
+                "cubic": cv2.INTER_CUBIC,
+                "area": cv2.INTER_AREA,
+                "lanczos": cv2.INTER_LANCZOS4,
+            }
+            self._interp_flag = interp_mapping[interp]
+        else:
+            self._interp_flag = None
 
     @cached_property
     def _cv2_module(self):
@@ -45,6 +83,14 @@ class VideoChannel(Channel):
                 "Could not import cv2. `opencv-python` or "
                 "`opencv-python-headless` must be installed in order to use "
                 "video encoding or decoding.")
+
+    def _resize_frame(self, frame: np.ndarray) -> np.ndarray:
+        """Resize frame if resolution is specified."""
+        if self.resolution is None:
+            return frame
+        assert self._interp_flag is not None
+        return self._cv2_module.resize(
+            frame, self.resolution, interpolation=self._interp_flag)
 
     def read(
         self, start: int | np.integer = 0, samples: int | np.integer = -1
@@ -75,7 +121,9 @@ class VideoChannel(Channel):
             ret, frame = cap.read()
             # if `samples == -1`, this is never satisfied.
             if ret and len(frames) != samples:
-                frames.append(frame[..., ::-1])
+                # Convert BGR to RGB and apply resizing if configured
+                frame = self._resize_frame(frame[..., ::-1])
+                frames.append(frame)
             else:
                 break
 
@@ -111,10 +159,12 @@ class VideoChannel(Channel):
 
             ret, frame = cap.read()
             if ret:
+                # Convert BGR to RGB and apply resizing if configured
+                frame = self._resize_frame(frame[..., ::-1])
                 if batch == 0:
-                    yield transform(frame[..., ::-1])
+                    yield transform(frame)
                 else:
-                    frames.append(frame[..., ::-1])
+                    frames.append(frame)
             else:
                 break
 

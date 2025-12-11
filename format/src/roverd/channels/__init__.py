@@ -86,7 +86,7 @@ def from_config(  # noqa: D417
 
 
 __all__ = [
-    "abstract", "utils",
+    "abstract", "utils", "Channel",
     "RawChannel", "LzmaChannel", "LzmaFrameChannel", "VideoChannel",
     "NPZBlobChannel", "JPEGBlobChannel",
 ]
