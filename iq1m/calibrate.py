@@ -64,7 +64,7 @@ def _calibrate_fisheye_camera(objpoints: list, imgpoints: list, shape: tuple):
     return K, D, ret
 
 
-def _save_camera_parameters(K, D, output, shape):  # noqa D803
+def _save_camera_parameters(K, D, output, shape):
     os.makedirs(output, exist_ok=True)
     image_width, image_height = shape
 
@@ -102,7 +102,7 @@ def _save_camera_parameters(K, D, output, shape):  # noqa D803
         json.dump(camera_ns_params, f, indent=4)
 
 
-def _visualize_undistortion(K, D, pattern: str, output_path: str):  # noqa D803
+def _visualize_undistortion(K, D, pattern: str, output_path: str):
     fname = list(glob.glob(pattern))[0]
     img = cv2.imread(fname)
 
@@ -139,8 +139,6 @@ def cli_calibrate(
         rows: Number of inner corners in rows.
         cols: Number of inner corners in columns.
         output_dir: Output directory for camera parameters.
-        visualize: Show undistortion visualization.
-        vis_output: Save visualization to file instead of showing.
     """
     objpoints, imgpoints, shape = _find_chessboard_corners(images, rows, cols)
 
