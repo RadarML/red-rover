@@ -23,7 +23,7 @@ Red Rover is packaged as a mono-repo with three main modules that can be install
 
 ### Configuration Files
 
-- `pyproject.toml` - Root project dependencies and metadata (version 0.3.3)
+- `pyproject.toml` - Root project dependencies and metadata
 - `mkdocs.yml` - Documentation configuration
 - Each submodule has its own `pyproject.toml`
 
@@ -146,45 +146,6 @@ See module-specific AGENTS.md files:
 - Use admonitions: `!!! info`, `!!! warning`, `!!! tip`, `!!! danger`
 - Code blocks with language tags
 - Use grid cards for navigation
-
-## Shared Patterns
-
-### CLI Usage
-
-**Common CLI Patterns** (using [tyro](https://brentyi.github.io/tyro/)):
-- Positional arguments: command line positionals
-- Named arguments: flagged arguments (e.g., `--channel`, `--output`)
-- Help: `{command} --help`
-- Verbose: `{command} --verbose` (where available)
-
-### Data Validation
-
-**Standard Validation**:
-```bash
-roverd validate /path/to/trace    # Check trace integrity
-roverd info /path/to/trace        # Display trace information
-roverd list /path/to/trace        # List available channels
-```
-
-**Common Validation Checks**:
-- Verify timestamp monotonicity across sensors
-- Check file sizes match metadata shapes
-- Validate channel data can be read
-- Test random access (first, middle, last frames)
-
-### Testing Patterns
-
-**Test Environment Setup**:
-```bash
-export ROVERD_TEST_TRACE=/data/roverd/test-trace  # Point to test data
-pytest -ra --cov --cov-report=html --cov-report=term
-```
-
-**Coverage Requirements**:
-- Test trace needs ≥0.5s data across all modalities
-- Test random access patterns
-- Validate all supported channel types
-- Check transform pipeline functionality
 
 ## Shared Patterns
 
