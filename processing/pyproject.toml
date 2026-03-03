@@ -44,7 +44,7 @@ ply = [ "plyfile" ]
 semseg = [ "torch", "transformers" ]
 
 [tool.uv.sources]
-roverd = { path = "../format" }
+roverd = { path = "../format", editable = true }
 
 [project.urls]
 Homepage = "https://github.com/RadarML/red-rover"
