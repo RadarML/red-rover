@@ -35,6 +35,7 @@ docs = [
     "mkdocstrings == 0.29.*",
     "ruff == 0.12.*",
     "xwr >= 0.3.3",
+    "click == 8.2.1"
 ]
 
 dev = [

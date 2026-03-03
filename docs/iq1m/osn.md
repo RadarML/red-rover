@@ -12,10 +12,6 @@ The I/Q-1M dataset is fully open-source and permissively licensed, and does not 
 
 The best way to interact with OSN is through [rclone](https://rclone.org/docs/).
 
-!!! info
-
-    The I/Q-1m dataset is currently in pre-release; contact <tianshu2@andrew.cmu.edu> for the access keys.
-
 After installing `sudo apt-get install rclone`, you will need to create a configuration with our bucket information:
 
 - Find the config file name using `rclone config file`.
