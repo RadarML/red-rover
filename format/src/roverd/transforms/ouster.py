@@ -30,6 +30,15 @@ class ConfigCache:
         self._by_path: dict[str, client.SensorInfo] = {}  # type: ignore
         self._by_cfg: dict[str, client.SensorInfo] = {}  # type: ignore
 
+    def __getstate__(self) -> dict[str, dict]:
+        """Drop SDK objects during pickling."""
+        return {"_by_path": {}, "_by_cfg": {}}
+    
+    def __setstate__(self, state: dict[str, dict]) -> None:
+        """Restore an empty cache after unpickling."""
+        self._by_path = {}
+        self._by_cfg = {}
+
     def __get_sensorinfo(self, cfg: str) -> client.SensorInfo:  # type: ignore
         # Safe to ignore errors which can occur in rare circumstances for
         # unknown reasons (possibly related to underlying race conditions in
