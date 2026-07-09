@@ -250,7 +250,7 @@ class _LidarXYZLut:
         Returns:
             XYZ in meters; zero where `r == 0`.
         """
-        r = r.astype(np.float64)
+        r = r.astype(np.float64, copy=False)
         x = (r - self.beam_r) * self.dx + self.bx * self.cos_enc
         y = (r - self.beam_r) * self.dy + self.bx * self.sin_enc
         z = (r - self.beam_r) * self.dz + self.bz
