@@ -1,6 +1,6 @@
 [project]
 name = "roverc"
-version = "0.3.4"
+version = "0.3.5"
 authors = [
   { name="Tianshu Huang", email="tianshu2@andrew.cmu.edu" },
 ]
@@ -27,7 +27,7 @@ dependencies = [
     "opencv-python-headless",
     "ouster-sdk==0.14.0",
     "xwr>=0.3.3",
-    "roverd[video,ouster]"
+    "roverd[video]"
 ]
 
 [tool.uv.sources]
