@@ -1,6 +1,6 @@
 [project]
 name = "red-rover"
-version = "0.3.4"
+version = "0.3.5"
 authors = [
   { name="Tianshu Huang", email="tianshu2@andrew.cmu.edu" },
 ]
@@ -18,7 +18,7 @@ roverd = { path = "./format", editable = true}
 roverp = { path = "./processing", editable = true }
 
 [project.optional-dependencies]
-roverd = [ "roverd[video,ouster,ros]" ]
+roverd = [ "roverd[video,ros]" ]
 roverp = [ "roverp[graphics,pcd,ply]" ]
 
 # roverp passthroughs
