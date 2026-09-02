@@ -1,7 +1,10 @@
 """`roverd.channels` unit tests."""
 
+import errno
+
 import numpy as np
 import pytest
+import roverd.channels.raw as raw_module
 from roverd.channels import (
     LzmaChannel,
     LzmaFrameChannel,
@@ -33,6 +36,68 @@ def test_raw(ctype, dtype, tmp_path):
         # Test reading via .stream
         streamed_data = np.array(list(channel.stream(transform=lambda x: x * 2)))
         np.testing.assert_array_equal(streamed_data, data * 2)
+
+
+def test_rawchannel_retries_transient_eio(monkeypatch, tmp_path):
+    """Retry a transient EIO and return the requested data."""
+    data = np.arange(12, dtype=np.int16).reshape(3, 4)
+    channel = RawChannel(str(tmp_path / "raw"), shape=(4,), dtype=data.dtype)
+    channel.write(data)
+    open_r = channel._open_r
+    attempts = 0
+    delays = []
+
+    def flaky_open(path):
+        nonlocal attempts
+        attempts += 1
+        if attempts < 3:
+            raise OSError(errno.EIO, "transient read failure", path)
+        return open_r(path)
+
+    monkeypatch.setattr(channel, "_open_r", flaky_open)
+    monkeypatch.setattr(raw_module.time, "sleep", delays.append)
+
+    np.testing.assert_array_equal(channel.read(), data)
+    assert attempts == 3
+    assert delays == [0.25, 0.5]
+
+
+def test_rawchannel_stops_after_bounded_eio_retries(monkeypatch, tmp_path):
+    """Propagate EIO after the bounded retry budget is exhausted."""
+    channel = RawChannel(str(tmp_path / "raw"), shape=(4,), dtype=np.int16)
+    attempts = 0
+    delays = []
+
+    def failing_open(path):
+        nonlocal attempts
+        attempts += 1
+        raise OSError(errno.EIO, "persistent read failure", path)
+
+    monkeypatch.setattr(channel, "_open_r", failing_open)
+    monkeypatch.setattr(raw_module, "_RAW_READ_ATTEMPTS", 3)
+    monkeypatch.setattr(raw_module.time, "sleep", delays.append)
+
+    with pytest.raises(OSError, match="persistent read failure"):
+        channel.read(samples=1)
+    assert attempts == 3
+    assert delays == [0.25, 0.5]
+
+
+def test_rawchannel_does_not_retry_other_oserrors(monkeypatch, tmp_path):
+    """Propagate non-EIO operating-system errors immediately."""
+    channel = RawChannel(str(tmp_path / "raw"), shape=(4,), dtype=np.int16)
+    attempts = 0
+
+    def denied_open(path):
+        nonlocal attempts
+        attempts += 1
+        raise OSError(errno.EACCES, "permission denied", path)
+
+    monkeypatch.setattr(channel, "_open_r", denied_open)
+
+    with pytest.raises(OSError, match="permission denied"):
+        channel.read(samples=1)
+    assert attempts == 1
 
 
 def test_video_channel(tmp_path):

@@ -1,6 +1,9 @@
 """Raw, uncompressed binary data."""
 
+import errno
 import io
+import logging
+import time
 from collections.abc import Callable, Iterator, Sequence
 from queue import Queue
 from threading import Thread
@@ -11,6 +14,11 @@ from jaxtyping import Shaped
 
 from .abstract import Channel
 from .utils import Buffer, Data, ReadableQueue, Streamable
+
+logger = logging.getLogger(__name__)
+
+_RAW_READ_ATTEMPTS = 5
+_RAW_READ_INITIAL_BACKOFF_SECONDS = 0.25
 
 
 class RawChannel(Channel):
@@ -60,15 +68,27 @@ class RawChannel(Channel):
             Read frames as an array, with a leading axis corresponding to
                 the number of `samples`.
         """
-        with self._open_r(self.path) as f:
-            if start > 0:
-                f.seek(self.size * start, 0)
+        for attempt in range(_RAW_READ_ATTEMPTS):
+            try:
+                with self._open_r(self.path) as f:
+                    if start > 0:
+                        f.seek(self.size * start, 0)
 
-            size = self.filesize if samples == -1 else samples * self.size
-            buf = bytearray(size)
-            f.readinto(memoryview(buf))
+                    size = self.filesize if samples == -1 else samples * self.size
+                    buf = bytearray(size)
+                    f.readinto(memoryview(buf))
+                return self.buffer_to_array(buf, batch=True)
+            except OSError as exc:
+                if exc.errno != errno.EIO or attempt + 1 >= _RAW_READ_ATTEMPTS:
+                    raise
+                delay = _RAW_READ_INITIAL_BACKOFF_SECONDS * 2**attempt
+                logger.warning(
+                    "I/O error reading %s; retrying in %.2fs (attempt %d/%d).",
+                    self.path, delay, attempt + 2, _RAW_READ_ATTEMPTS,
+                )
+                time.sleep(delay)
 
-        return self.buffer_to_array(buf, batch=True)
+        raise RuntimeError("unreachable")
 
     def write(self, data: Data, append: bool = False) -> None:
         """Write data.
